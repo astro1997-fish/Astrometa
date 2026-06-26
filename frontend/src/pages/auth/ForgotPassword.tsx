@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Rocket, Mail, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Rocket, Mail, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 

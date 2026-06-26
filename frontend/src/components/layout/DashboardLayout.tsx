@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, Briefcase, ArrowLeftRight, Wallet,
-  ArrowUpCircle, Settings, MessageSquare, Menu, X,
+  ArrowUpCircle, Settings, MessageSquare, Menu,
   Rocket, LogOut, Bell
 } from 'lucide-react'
 import { clsx } from 'clsx'

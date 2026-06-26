@@ -18,8 +18,6 @@ import {
 interface Balance    { unified_usd_balance: number }
 interface Investment { id: string; package_type: string; amount_usd: number; projected_return_pct: string; status: string; manager_name: string }
 interface Transaction{ id: string; type: string; amount_usd: number; method: string; status: string; created_at: string }
-interface PortfolioUpdate { created_at: string; new_balance: number }
-
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
 

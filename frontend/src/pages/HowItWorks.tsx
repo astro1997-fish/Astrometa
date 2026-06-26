@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { useTranslation } from 'react-i18next'
 import { UserPlus, Wallet, TrendingUp, Shield, BarChart3, Lock, RefreshCw, Globe } from 'lucide-react'
 import { SectionHeader } from '@/components/ui/index'
 import { Link } from 'react-router-dom'

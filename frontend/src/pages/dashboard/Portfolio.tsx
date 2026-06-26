@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { TrendingUp, Calendar, User, AlertCircle, Plus } from 'lucide-react'
+import { TrendingUp, Calendar, User, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { SkeletonCard, Badge } from '@/components/ui/index'
-import { clsx } from 'clsx'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 interface Investment {

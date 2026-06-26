@@ -15,8 +15,6 @@ type CryptoOption = 'btc' | 'eth' | 'usdc' | 'usdt'
 type UsdtChain    = 'erc20' | 'trc20' | 'bep20'
 type FiatProvider = 'stripe' | 'paystack' | 'paypal'
 
-interface DepositAddress { coin: string; chain: string; address: string }
-
 const COINS: { id: CryptoOption; label: string; icon: string; minDeposit: string }[] = [
   { id: 'btc',  label: 'Bitcoin',  icon: '₿',  minDeposit: '0.001 BTC'  },
   { id: 'eth',  label: 'Ethereum', icon: 'Ξ',  minDeposit: '0.01 ETH'   },

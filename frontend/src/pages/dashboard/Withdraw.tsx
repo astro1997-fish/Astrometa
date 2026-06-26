@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { AlertTriangle, Clock, CheckCircle2, AlertCircle } from 'lucide-react'
+import { AlertTriangle, Clock, CheckCircle2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
-import { clsx } from 'clsx'
 
 const METHODS = ['btc', 'eth', 'usdc', 'usdt', 'bank_transfer', 'paypal']
 

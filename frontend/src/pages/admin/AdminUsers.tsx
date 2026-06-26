@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Badge, SkeletonTable } from '@/components/ui/index'
-import { Check, X, Search, Plus, Trash2 } from 'lucide-react'
+import { Check, X, Search, Plus } from 'lucide-react'
 import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
 
 const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
 
 // ── Admin Users ───────────────────────────────────────────────────
-export function AdminUsers() {
+export default function AdminUsers() {
   const [users, setUsers]     = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search,  setSearch]  = useState('')

@@ -1,6 +1,5 @@
 // About.tsx
 import { motion } from 'framer-motion'
-import { SectionHeader } from '@/components/ui/index'
 import { Target, Eye, Heart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 

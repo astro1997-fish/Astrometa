@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { authLimiter } from '../index'
+import { authLimiter } from '../middleware/rateLimiter'
 import { requireAuth, requireAdmin, type AuthRequest } from '../middleware/auth'
 import { supabase } from '../lib/supabase'
 import { emailService } from '../services/email'

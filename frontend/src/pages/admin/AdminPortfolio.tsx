@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Edit3, Send, TrendingUp, X, Check, ChevronDown } from 'lucide-react'
+import { Search, Edit3, Send, TrendingUp, X, ChevronDown } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
@@ -29,7 +29,6 @@ export default function AdminPortfolio() {
 
   // Edit state
   const [newBalance,     setNewBalance]     = useState('')
-  const [profitLoss,     setProfitLoss]     = useState('')
   const [returnRate,     setReturnRate]     = useState('')
   const [status,         setEditStatus]     = useState('')
   const [manager,        setManager]        = useState('')
@@ -77,7 +76,6 @@ export default function AdminPortfolio() {
   const openEditor = (inv: InvestorRow) => {
     setSelected(inv)
     setNewBalance(inv.balance.toString())
-    setProfitLoss('')
     setReturnRate(inv.projected_return_pct)
     setEditStatus(inv.status)
     setManager(inv.manager_name)

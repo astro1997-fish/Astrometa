@@ -14,7 +14,7 @@ import adminRoutes    from './routes/admin'
 import { errorHandler } from './middleware/errorHandler'
 
 const app  = express()
-const PORT = process.env.PORT ?? 4000
+const PORT = process.env.PORT ?? 8000
 
 // ── Security headers ────────────────────────────────────────────────
 app.use(helmet({
@@ -32,7 +32,7 @@ app.use(helmet({
 
 // ── CORS ────────────────────────────────────────────────────────────
 app.use(cors({
-  origin:      process.env.FRONTEND_URL ?? 'http://localhost:3000',
+  origin:      process.env.FRONTEND_URL ?? 'http://localhost:5000',
   credentials: true,
   methods:     ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
@@ -50,21 +50,13 @@ app.use(xssClean())
 
 // ── Global rate limit ───────────────────────────────────────────────
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,   // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max:      100,
   standardHeaders: true,
   legacyHeaders:   false,
   message: { error: 'Too many requests. Please try again later.' },
 })
 app.use(globalLimiter)
-
-// ── Auth rate limit (stricter) ──────────────────────────────────────
-export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max:      5,
-  message:  { error: 'Too many auth attempts. Please wait 15 minutes.' },
-  skipSuccessfulRequests: true,
-})
 
 // ── Health check ────────────────────────────────────────────────────
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
@@ -90,7 +82,7 @@ app.use('/api/admin',     adminRoutes)
 // ── Error handler ───────────────────────────────────────────────────
 app.use(errorHandler)
 
-app.listen(PORT, () => {
+app.listen(Number(PORT), 'localhost', () => {
   console.log(`✅  ASTRO META-TRADE API running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`)
 })
 

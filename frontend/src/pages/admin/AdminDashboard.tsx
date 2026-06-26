@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Users, DollarSign, TrendingUp, Clock, ArrowUpRight } from 'lucide-react'
+import { Users, DollarSign, TrendingUp, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { SkeletonCard } from '@/components/ui/index'
 
