@@ -1,0 +1,20 @@
+{
+  "name": "ASTRO META-TRADE",
+  "short_name": "AstroTrade",
+  "description": "Intelligent Crypto Investment, Managed by Experts",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070D1F",
+  "theme_color": "#1A56DB",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "lang": "en"
+}

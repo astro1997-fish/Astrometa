@@ -191,3 +191,5 @@ adminRouter.post('/send-message', async (req, res, next) => {
     res.json({ success: true })
   } catch (err) { next(err) }
 })
+
+export default authRouter
