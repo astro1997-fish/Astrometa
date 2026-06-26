@@ -1,0 +1,1 @@
+export { AdminAddresses as default } from './AdminUsers'

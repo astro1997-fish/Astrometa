@@ -1,0 +1,1 @@
+export { AdminWithdrawals as default } from './AdminUsers'

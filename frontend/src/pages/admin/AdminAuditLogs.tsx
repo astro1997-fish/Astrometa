@@ -1,0 +1,1 @@
+export { AdminAuditLogs as default } from './AdminUsers'
