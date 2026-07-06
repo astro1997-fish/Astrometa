@@ -403,6 +403,59 @@ adminRouter.post('/btc-wallet', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// Health-check endpoint — queries Blockstream for the first derived address
+adminRouter.get('/btc-wallet/health-check', async (_req, res, next) => {
+  try {
+    const { default: axios } = await import('axios')
+    const { getXpub, deriveBtcAddress } = await import('../services/btcMonitor')
+
+    const xpub = await getXpub()
+    if (!xpub) return res.status(400).json({ error: 'No xpub configured' })
+
+    let firstAddress: string
+    try {
+      firstAddress = deriveBtcAddress(xpub, 0)
+    } catch {
+      return res.status(400).json({ error: 'Could not derive address from configured xpub' })
+    }
+
+    // Fetch address stats from Blockstream
+    const BLOCKSTREAM_API = 'https://blockstream.info/api'
+    const { data: addrInfo } = await axios.get<{
+      address: string
+      chain_stats:   { funded_txo_count: number; funded_txo_sum: number; spent_txo_count: number; tx_count: number }
+      mempool_stats: { funded_txo_count: number; funded_txo_sum: number; spent_txo_count: number; tx_count: number }
+    }>(`${BLOCKSTREAM_API}/address/${firstAddress}`, { timeout: 15_000 })
+
+    const txCount    = addrInfo.chain_stats.tx_count + addrInfo.mempool_stats.tx_count
+    const balanceSat = addrInfo.chain_stats.funded_txo_sum - (addrInfo.chain_stats.spent_txo_count > 0
+      ? addrInfo.chain_stats.funded_txo_sum  // approximation: treat spent UTXOs as zero balance
+      : 0)
+
+    // Use the proper funded - spent calculation
+    const fundedSat  = addrInfo.chain_stats.funded_txo_sum
+    const spentSat   = addrInfo.mempool_stats.funded_txo_sum  // mempool unspent
+    const balanceBtc = (addrInfo.chain_stats.funded_txo_sum - addrInfo.chain_stats.spent_txo_count * 0) / 1e8
+
+    // Simpler: just report raw stats — the client can display them
+    res.json({
+      success:     true,
+      address:     firstAddress,
+      txCount,
+      chainTxCount:   addrInfo.chain_stats.tx_count,
+      mempoolTxCount: addrInfo.mempool_stats.tx_count,
+      fundedSat:   addrInfo.chain_stats.funded_txo_sum,
+      fundedBtc:   addrInfo.chain_stats.funded_txo_sum / 1e8,
+      hasHistory:  txCount > 0,
+    })
+  } catch (err: any) {
+    if (err?.response?.status === 400 || err?.response?.status === 404) {
+      return res.status(502).json({ error: 'Blockstream could not find this address — check your xpub.' })
+    }
+    next(err)
+  }
+})
+
 adminRouter.delete('/btc-wallet', async (_req, res, next) => {
   try {
     if (process.env.BTC_XPUB) {

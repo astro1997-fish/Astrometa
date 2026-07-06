@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   Bitcoin, CheckCircle2, XCircle, AlertTriangle, Loader2,
-  Copy, Check, Trash2, ShieldCheck, Info,
+  Copy, Check, Trash2, ShieldCheck, Info, Activity, Wifi,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
@@ -35,6 +35,18 @@ export default function AdminBitcoinWallet() {
   const [previewAddr,  setPreviewAddr]  = useState<string | null>(null)
   const [copiedAddr,   setCopiedAddr]   = useState(false)
   const [showRemove,   setShowRemove]   = useState(false)
+
+  interface HealthResult {
+    address:        string
+    txCount:        number
+    chainTxCount:   number
+    mempoolTxCount: number
+    fundedBtc:      number
+    hasHistory:     boolean
+  }
+  const [healthResult,  setHealthResult]  = useState<HealthResult | null>(null)
+  const [healthLoading, setHealthLoading] = useState(false)
+  const [healthError,   setHealthError]   = useState<string | null>(null)
 
   const loadStatus = async () => {
     setLoading(true)
@@ -101,6 +113,20 @@ export default function AdminBitcoinWallet() {
       toast.error(err.response?.data?.error ?? 'Failed to remove xpub')
     } finally {
       setRemoving(false)
+    }
+  }
+
+  const runHealthCheck = async () => {
+    setHealthLoading(true)
+    setHealthResult(null)
+    setHealthError(null)
+    try {
+      const { data } = await api.get<HealthResult>('/api/admin/btc-wallet/health-check')
+      setHealthResult(data)
+    } catch (err: any) {
+      setHealthError(err.response?.data?.error ?? 'Health check failed — could not reach Blockstream')
+    } finally {
+      setHealthLoading(false)
     }
   }
 
@@ -184,6 +210,62 @@ export default function AdminBitcoinWallet() {
                 </p>
               </div>
             )}
+
+            {/* ── Health check ─────────────────────────────────────────── */}
+            <div className="pt-1 border-t border-gray-100 dark:border-white/10">
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  onClick={runHealthCheck}
+                  disabled={healthLoading}
+                  className="btn-ghost text-xs flex items-center gap-1.5 py-1.5 px-3"
+                >
+                  {healthLoading
+                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking…</>
+                    : <><Activity className="w-3.5 h-3.5 text-blue-500" /> Run a health check</>}
+                </button>
+              </div>
+
+              {healthError && (
+                <div className="mt-2 flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/40 rounded-xl px-3 py-2.5 text-xs text-red-700 dark:text-red-400">
+                  <XCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  {healthError}
+                </div>
+              )}
+
+              {healthResult && !healthError && (
+                <div className="mt-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                    <Wifi className="w-3.5 h-3.5 text-emerald-500" />
+                    Blockstream health check — address m/0/0
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
+                    <span className="text-gray-400 dark:text-gray-500">Address</span>
+                    <code className="font-mono text-gray-700 dark:text-gray-300 truncate">{healthResult.address}</code>
+                    <span className="text-gray-400 dark:text-gray-500">Confirmed txs</span>
+                    <span>{healthResult.chainTxCount}</span>
+                    <span className="text-gray-400 dark:text-gray-500">Mempool txs</span>
+                    <span>{healthResult.mempoolTxCount}</span>
+                    <span className="text-gray-400 dark:text-gray-500">Total received</span>
+                    <span>{healthResult.fundedBtc.toFixed(8)} BTC</span>
+                  </div>
+                  {healthResult.hasHistory ? (
+                    <div className="flex items-start gap-1.5 text-xs text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      This address has transaction history — the xpub is monitoring the right wallet.
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-lg px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+                      <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      <span>
+                        <strong>No transaction history yet.</strong> Before going live, consider sending a small
+                        test payment to this address and confirming it appears in your wallet — this verifies
+                        the xpub is monitoring the correct wallet.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {status.source === 'db' && (
               <div className="pt-2">
