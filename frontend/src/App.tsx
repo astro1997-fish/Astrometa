@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import { Suspense, lazy } from 'react'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import { NotificationProvider } from '@/contexts/NotificationContext'
 import PageLoader from '@/components/ui/PageLoader'
 import MainLayout from '@/components/layout/MainLayout'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -72,6 +73,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <NotificationProvider>
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -138,6 +140,7 @@ export default function App() {
           />
           <CookieBanner />
         </BrowserRouter>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   )

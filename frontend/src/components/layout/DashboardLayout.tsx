@@ -1,15 +1,16 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, Briefcase, ArrowLeftRight, Wallet,
   ArrowUpCircle, Settings, MessageSquare, Menu,
-  Rocket, LogOut, Bell
+  Rocket, LogOut, Bell, CheckCheck, Trash2, CircleDollarSign,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useNotifications } from '@/contexts/NotificationContext'
 import { Moon, Sun } from 'lucide-react'
 
 const NAV = [
@@ -26,8 +27,29 @@ export default function DashboardLayout() {
   const { t } = useTranslation()
   const { user, profile, signOut } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { notifications, unreadCount, markAllRead, clearAll } = useNotifications()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const handleBellClick = () => {
+    setNotifOpen(prev => {
+      if (!prev) markAllRead()
+      return !prev
+    })
+  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -140,10 +162,100 @@ export default function DashboardLayout() {
           </button>
           <div className="flex-1 lg:flex-none" />
           <div className="flex items-center gap-2">
-            <button className="btn-ghost w-9 h-9 p-0 relative">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-400" />
-            </button>
+            <div ref={notifRef} className="relative">
+              <button
+                onClick={handleBellClick}
+                className="btn-ghost w-9 h-9 p-0 relative"
+                aria-label="Notifications"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+                {unreadCount === 0 && notifications.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-gray-300 dark:bg-white/20" />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {notifOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-11 w-80 bg-white dark:bg-[#0D1627] border border-gray-100 dark:border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">Notifications</span>
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={clearAll}
+                          className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+
+                    {/* List */}
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center gap-2 py-10 text-gray-400 dark:text-gray-600">
+                          <Bell className="w-6 h-6" />
+                          <p className="text-sm">No notifications yet</p>
+                        </div>
+                      ) : (
+                        notifications.map(n => (
+                          <div
+                            key={n.id}
+                            className={clsx(
+                              'flex items-start gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5 last:border-0 transition-colors',
+                              !n.read ? 'bg-brand-50/60 dark:bg-brand-400/5' : '',
+                            )}
+                          >
+                            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                              <CircleDollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                Deposit confirmed
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                ${n.amountUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {n.coin} added to your balance
+                              </p>
+                              <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">
+                                {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                            {!n.read && (
+                              <span className="w-2 h-2 rounded-full bg-brand-400 shrink-0 mt-1.5" />
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    {notifications.length > 0 && (
+                      <div className="px-4 py-2.5 border-t border-gray-100 dark:border-white/10">
+                        <button
+                          onClick={() => { navigate('/dashboard/transactions'); setNotifOpen(false) }}
+                          className="flex items-center gap-1.5 text-xs text-brand-500 dark:text-brand-400 hover:underline font-medium"
+                        >
+                          <CheckCheck className="w-3.5 h-3.5" />
+                          View all transactions
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 
