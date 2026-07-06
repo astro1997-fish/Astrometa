@@ -37,13 +37,30 @@ const MIN_CONFIRMATIONS = parseInt(process.env.BTC_MIN_CONFIRMATIONS ?? '3', 10)
 // ── Address derivation ──────────────────────────────────────────────────────
 
 /**
- * Derive a native-segwit (P2WPKH / bech32) BTC address from an xpub.
+ * Derive a native-segwit (P2WPKH / bech32) BTC address from an xpub or zpub.
  * Path convention: m/0/<index>  (external chain, one address per deposit).
+ *
+ * Sparrow Wallet exports "zpub…" for Native Segwit (P2WPKH) accounts.
+ * zpub uses version bytes 0x04b24746 instead of xpub's 0x0488b21e — the
+ * underlying key material is identical; we just pass the matching network
+ * object so bip32.fromBase58() accepts the prefix.
  */
 export function deriveBtcAddress(xpub: string, index: number): string {
-  const node    = bip32.fromBase58(xpub)
+  const ZPUB_NETWORK = {
+    ...bitcoin.networks.bitcoin,
+    bip32: {
+      public:  0x04b24746,  // zpub
+      private: 0x04b2430c,  // zprv
+    },
+  }
+
+  const network = xpub.startsWith('zpub') ? ZPUB_NETWORK : undefined
+  const node    = bip32.fromBase58(xpub, network)
   const child   = node.derive(0).derive(index)
-  const { address } = bitcoin.payments.p2wpkh({ pubkey: Buffer.from(child.publicKey) })
+  const { address } = bitcoin.payments.p2wpkh({
+    pubkey:  Buffer.from(child.publicKey),
+    network: bitcoin.networks.bitcoin,  // always derive mainnet bech32 address
+  })
   if (!address) throw new Error(`Failed to derive BTC address at index ${index}`)
   return address
 }
@@ -257,11 +274,19 @@ export function startBtcMonitor() {
     return
   }
 
-  // Validate xpub on startup
+  // Validate xpub/zpub on startup using the same prefix-aware logic as deriveBtcAddress
+  const SUPPORTED_PREFIXES = ['xpub', 'zpub']
+  if (!SUPPORTED_PREFIXES.some(p => xpub.startsWith(p))) {
+    console.error(
+      `[BTC] Invalid BTC_XPUB prefix "${xpub.slice(0, 4)}" — only xpub and zpub are supported. ` +
+      `Export the account-level xpub (or zpub for Native Segwit) from your wallet's master public key settings.`
+    )
+    return
+  }
   try {
-    bip32.fromBase58(xpub)
-  } catch {
-    console.error('[BTC] Invalid BTC_XPUB — BTC deposit monitor not started')
+    deriveBtcAddress(xpub, 0)   // dry-run: uses the same zpub-aware parsing
+  } catch (e) {
+    console.error('[BTC] Invalid BTC_XPUB — could not derive test address:', e)
     return
   }
 

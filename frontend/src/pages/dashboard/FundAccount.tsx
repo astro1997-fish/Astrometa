@@ -94,20 +94,26 @@ export default function FundAccount() {
   const [copied,       setCopied]       = useState<string | null>(null)
 
   // Which coins the backend currently supports (driven by env vars)
-  const [capabilities, setCapabilities] = useState<Record<CryptoOption, boolean>>({
+  const [capabilities,     setCapabilities]     = useState<Record<CryptoOption, boolean>>({
     eth: false, usdt: false, usdc: false, btc: false,
   })
+  const [capabilitiesLoaded, setCapabilitiesLoaded] = useState(false)
+  const [capabilitiesError,  setCapabilitiesError]  = useState(false)
 
-  useEffect(() => {
+  const fetchCapabilities = () => {
+    setCapabilitiesError(false)
     api.get('/api/payments/capabilities')
       .then(({ data }) => {
         setCapabilities(data)
+        setCapabilitiesLoaded(true)
         // Auto-select the first available coin
         const first = COINS.find(c => data[c.id])
         if (first) setCoin(first.id)
       })
-      .catch(() => {/* non-fatal — all coins stay disabled */})
-  }, [])
+      .catch(() => setCapabilitiesError(true))
+  }
+
+  useEffect(() => { fetchCapabilities() }, [])
 
   const [depositInfo,    setDepositInfo]    = useState<DepositInfo | null>(null)
   const [loadingDeposit, setLoadingDeposit] = useState(false)
@@ -304,6 +310,16 @@ export default function FundAccount() {
         {method === 'crypto' ? (
           <motion.div key="crypto" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-5">
 
+            {/* Capabilities fetch error banner */}
+            {capabilitiesError && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 dark:border-red-400/20 bg-red-50 dark:bg-red-400/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+                <span>Could not load available deposit methods. Check your connection.</span>
+                <button onClick={fetchCapabilities} className="shrink-0 font-semibold underline underline-offset-2">
+                  Retry
+                </button>
+              </div>
+            )}
+
             {/* Coin selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -365,10 +381,16 @@ export default function FundAccount() {
             {!depositInfo && (
               <button
                 onClick={createDeposit}
-                disabled={loadingDeposit}
-                className="btn-primary w-full justify-center"
+                disabled={loadingDeposit || !capabilitiesLoaded || !capabilities[coin]}
+                className="btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingDeposit ? 'Generating deposit…' : `Generate ${currentCoin.label} Deposit`}
+                {loadingDeposit
+                  ? 'Generating deposit…'
+                  : !capabilitiesLoaded
+                  ? 'Loading…'
+                  : !capabilities[coin]
+                  ? `${currentCoin.label} — Coming Soon`
+                  : `Generate ${currentCoin.label} Deposit`}
               </button>
             )}
 
