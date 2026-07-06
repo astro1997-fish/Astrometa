@@ -7,7 +7,12 @@
 import axios from 'axios'
 import { supabase } from './supabase'
 
-const api = axios.create()
+// In development Vite proxies /api → localhost:8000 so no base URL is needed.
+// In production (Netlify frontend + Render backend) set VITE_API_URL to the
+// Render service URL, e.g. https://astro-meta-trade.onrender.com
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? '',
+})
 
 api.interceptors.request.use(async (config) => {
   const { data: { session } } = await supabase.auth.getSession()
