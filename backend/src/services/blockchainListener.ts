@@ -35,7 +35,13 @@ const MIN_CONFIRMATIONS = parseInt(process.env.MIN_CONFIRMATIONS ?? '12', 10)
 // Holds the last successfully fetched ETH/USD price and when it was fetched.
 // Used as a fallback when CoinGecko is unreachable so in-flight deposits are
 // never silently dropped due to a transient API outage.
+//
+// The cache is also persisted to the `system_settings` table under the key
+// `eth_price_cache` so it survives server restarts.  On startup the in-memory
+// cache is seeded from the DB, meaning the `pending_price` retry loop can run
+// immediately after a cold restart without waiting for the next CoinGecko poll.
 const ETH_PRICE_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+const ETH_PRICE_CACHE_DB_KEY  = 'eth_price_cache'
 
 interface EthPriceCache {
   price:    number
@@ -45,10 +51,68 @@ interface EthPriceCache {
 let ethPriceCache: EthPriceCache | null = null
 
 /**
+ * Persist the current in-memory ETH price cache to the `system_settings`
+ * table so it survives server restarts.  Fire-and-forget — failures are
+ * logged but never thrown, so the caller's happy path is unaffected.
+ */
+async function persistEthPriceCache(cache: EthPriceCache): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert(
+        { key: ETH_PRICE_CACHE_DB_KEY, value: JSON.stringify(cache), updated_at: new Date().toISOString() },
+        { onConflict: 'key' },
+      )
+    if (error) {
+      console.warn('[Blockchain] Failed to persist ETH price cache to DB:', error.message)
+    }
+  } catch (err) {
+    console.warn('[Blockchain] Failed to persist ETH price cache to DB:', (err as Error).message)
+  }
+}
+
+/**
+ * Seed the in-memory ETH price cache from the database on startup.
+ * This means a cold restart does not lose the last known price, so
+ * the `pending_price` retry loop can re-price deposits immediately.
+ */
+export async function loadEthPriceCacheFromDb(): Promise<void> {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', ETH_PRICE_CACHE_DB_KEY)
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[Blockchain] Could not load ETH price cache from DB:', error.message)
+      return
+    }
+
+    if (!data?.value) {
+      console.log('[Blockchain] No persisted ETH price cache found — will fetch fresh on first deposit')
+      return
+    }
+
+    const parsed: EthPriceCache = JSON.parse(data.value)
+    if (parsed.price > 0 && parsed.fetchedAt) {
+      ethPriceCache = parsed
+      const ageSec = Math.round((Date.now() - parsed.fetchedAt) / 1000)
+      console.log(`[Blockchain] Seeded ETH price cache from DB: ${parsed.price} (${ageSec}s old)`)
+    }
+  } catch (err) {
+    console.warn('[Blockchain] Failed to parse persisted ETH price cache:', (err as Error).message)
+  }
+}
+
+/**
  * Fetch the current ETH/USD price from CoinGecko, caching the result for
  * ETH_PRICE_CACHE_TTL_MS.  On failure, returns the cached price (even if
  * stale) so in-flight deposits survive a transient outage.  Returns null
  * only when no price has ever been successfully fetched.
+ *
+ * Every successful fetch is also written to the `system_settings` table so
+ * the price survives a server restart (see `loadEthPriceCacheFromDb`).
  */
 export async function fetchEthUsdPrice(): Promise<number | null> {
   // Return cache if still fresh
@@ -64,7 +128,10 @@ export async function fetchEthUsdPrice(): Promise<number | null> {
     })
     const price: number = data['ethereum']?.usd ?? 0
     if (price > 0) {
-      ethPriceCache = { price, fetchedAt: Date.now() }
+      const newCache: EthPriceCache = { price, fetchedAt: Date.now() }
+      ethPriceCache = newCache
+      // Persist to DB asynchronously — don't await to avoid slowing the caller
+      persistEthPriceCache(newCache).catch(() => {/* already logged inside */})
       return price
     }
     // CoinGecko returned 0 — treat as failure, fall through to stale cache
@@ -315,7 +382,7 @@ export function getListenerStatus(): ListenerStatus {
   }
 }
 
-export function startBlockchainListener() {
+export async function startBlockchainListener() {
   const rpcUrl       = process.env.ETH_RPC_URL
   const contractAddr = process.env.CONTRACT_ADDRESS
 
@@ -327,6 +394,11 @@ export function startBlockchainListener() {
     console.warn('[Blockchain] CONTRACT_ADDRESS not set — listener not started (deploy the contract first)')
     return
   }
+
+  // Seed the in-memory price cache from the database before the listener
+  // starts so the pending_price retry loop can run on a cold restart without
+  // waiting for the next CoinGecko poll interval.
+  await loadEthPriceCacheFromDb()
 
   const provider = new ethers.JsonRpcProvider(rpcUrl)
   const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider)

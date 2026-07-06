@@ -420,5 +420,17 @@ CREATE POLICY "admins_all_system_settings" ON public.system_settings
 ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS failure_reason TEXT;
 
 -- ============================================================
+-- ETH price cache persistence
+-- ============================================================
+-- The blockchain listener persists the last successfully fetched ETH/USD
+-- price to system_settings under the key 'eth_price_cache' so the value
+-- survives server restarts.  On startup, fetchEthUsdPrice seeds its
+-- in-memory cache from this row, meaning the pending_price retry loop can
+-- re-price deferred deposits immediately after a cold restart.
+--
+-- No schema change needed — system_settings already has (key, value, updated_at).
+-- The backend upserts JSON: { "price": <number>, "fetchedAt": <ms epoch> }.
+
+-- ============================================================
 -- DONE ✅
 -- ============================================================

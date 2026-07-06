@@ -17,10 +17,19 @@ export declare const TOKEN_MAP: Record<string, {
     decimals: number;
 }>;
 /**
+ * Seed the in-memory ETH price cache from the database on startup.
+ * This means a cold restart does not lose the last known price, so
+ * the `pending_price` retry loop can re-price deposits immediately.
+ */
+export declare function loadEthPriceCacheFromDb(): Promise<void>;
+/**
  * Fetch the current ETH/USD price from CoinGecko, caching the result for
  * ETH_PRICE_CACHE_TTL_MS.  On failure, returns the cached price (even if
  * stale) so in-flight deposits survive a transient outage.  Returns null
  * only when no price has ever been successfully fetched.
+ *
+ * Every successful fetch is also written to the `system_settings` table so
+ * the price survives a server restart (see `loadEthPriceCacheFromDb`).
  */
 export declare function fetchEthUsdPrice(): Promise<number | null>;
 /**
@@ -65,5 +74,5 @@ export interface ListenerStatus {
  * traffic and is exposed only as `silenceWarning` for informational purposes.
  */
 export declare function getListenerStatus(): ListenerStatus;
-export declare function startBlockchainListener(): void;
+export declare function startBlockchainListener(): Promise<void>;
 export declare function retryPendingPriceTransactions(): Promise<void>;

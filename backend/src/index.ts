@@ -135,7 +135,12 @@ if (isProd) {
 app.use(errorHandler)
 
 // ── Blockchain listeners ────────────────────────────────────────────
-startBlockchainListener()
+// startBlockchainListener is async (seeds ETH price cache from DB first).
+// We intentionally do not await it here so the HTTP server starts immediately;
+// the listener and retry loop attach themselves once the seed completes.
+startBlockchainListener().catch((err) =>
+  console.error('[Blockchain] Failed to start listener:', err),
+)
 startBtcMonitor()
 
 // Listen on 0.0.0.0 so Replit deployment (and Docker) can reach the port
