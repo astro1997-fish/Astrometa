@@ -340,22 +340,22 @@ export default function FundAccount() {
                   )}
                 </div>
 
-                {/* QR code + contract address */}
+                {/* QR code + payment info */}
                 <div className="flex items-start gap-4">
                   <div className="shrink-0 p-3 bg-white rounded-xl border border-gray-100 dark:border-white/10">
-                    <QRCode value={depositInfo.contractAddress} size={100} />
+                    <QRCode value={depositInfo.paymentId} size={100} />
                   </div>
                   <div className="flex-1 min-w-0 space-y-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                        Contract address (send {currentCoin.label} here)
+                        Payment ID
                       </label>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 font-mono truncate text-gray-700 dark:text-gray-300">
-                          {depositInfo.contractAddress}
+                          {depositInfo.paymentId}
                         </code>
                         <button
-                          onClick={() => copyText(depositInfo.contractAddress, 'Address')}
+                          onClick={() => copyText(depositInfo.paymentId, 'Payment ID')}
                           className="btn-ghost w-9 h-9 p-0 shrink-0"
                         >
                           {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -364,22 +364,24 @@ export default function FundAccount() {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                        Payment ID (required in transaction data)
+                        Amount to send
                       </label>
-                      <code className="block text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 font-mono break-all text-gray-700 dark:text-gray-300">
-                        {depositInfo.paymentId}
-                      </code>
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                        {depositInfo.cryptoAmount
+                          ? `${depositInfo.cryptoAmount} ${depositInfo.coin.toUpperCase()}`
+                          : `${depositInfo.amountUsd} USD`}
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Warning */}
-                <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl p-3">
-                  <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                    Send only <strong>{currentCoin.label}</strong> to this address.
-                    {depositInfo.coin !== 'eth' && ' You must include the Payment ID in the transaction data, or use the "Pay with Wallet" button below which does this automatically.'}
-                    {' '}Your balance will be credited automatically after on-chain confirmation.
+                {/* Critical warning: must use wallet button, not plain send */}
+                <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-xl p-3">
+                  <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
+                    <strong>Do not send {currentCoin.label} directly to a wallet address.</strong>{' '}
+                    Deposits must go through our smart contract to be credited. Use the{' '}
+                    <strong>"Pay with Wallet"</strong> button below — it handles everything automatically.
                   </p>
                 </div>
 
@@ -412,21 +414,6 @@ export default function FundAccount() {
                        txStep === 'depositing' ? 'Step 2/2: Sending…' :
                        'Pay with Wallet (MetaMask)'}
                     </button>
-
-                    {/* Manual instructions */}
-                    {depositInfo.coin !== 'eth' && (
-                      <details className="text-xs text-gray-500 dark:text-gray-400">
-                        <summary className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
-                          Manual send instructions (advanced)
-                        </summary>
-                        <ol className="mt-2 ml-4 list-decimal space-y-1 leading-relaxed">
-                          <li>Open your wallet and go to the {currentCoin.label} token.</li>
-                          <li>Approve the contract address above to spend {depositInfo.cryptoAmount} {currentCoin.label}.</li>
-                          <li>Call <code className="font-mono">depositToken(tokenAddress, amount, paymentId)</code> on the contract.</li>
-                          <li>Use Payment ID: <code className="font-mono break-all">{depositInfo.paymentId}</code></li>
-                        </ol>
-                      </details>
-                    )}
 
                     {/* New deposit link */}
                     <button

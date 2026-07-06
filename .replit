@@ -73,3 +73,7 @@ VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 VITE_SUPABASE_URL = "https://szoowwutahefnjnsevkc.supabase.co"
 CONTRACT_ADDRESS = ""
 OWNER_WALLET = "0xf2BA87c0DCbA20Ba7dC3218fFeddc71a552f68Ce"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000

@@ -295,6 +295,24 @@ CREATE POLICY "admins_all_admin_messages" ON public.admin_messages
   );
 
 -- ============================================================
+-- increment_balance RPC
+-- Used by the blockchain listener for atomic, race-safe balance updates.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.increment_balance(p_user_id UUID, p_amount NUMERIC)
+RETURNS VOID AS $
+BEGIN
+  UPDATE public.balances
+  SET unified_usd_balance = unified_usd_balance + p_amount,
+      updated_at          = NOW()
+  WHERE user_id = p_user_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Balance row not found for user %', p_user_id;
+  END IF;
+END;
+$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================
 -- SEED: Make first user admin (update email below)
 -- ============================================================
 -- UPDATE public.users SET role = 'admin' WHERE email = 'admin@yourdomain.com';

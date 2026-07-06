@@ -1,1 +1,2 @@
 - [Dark mode base styles](dark-mode-base.md) — globals.css must define html/html.dark base text colors + all @layer components (.card, .btn-*, .badge-*, .input, .skeleton, .sidebar-link, etc.) or inherited text stays browser-default black in dark mode.
+- [Crypto deposit on-chain design](crypto-deposit-design.md) — uses AstroPaymentReceiver contract + blockchain listener; CONTRACT_ADDRESS env var activates it.

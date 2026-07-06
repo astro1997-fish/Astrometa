@@ -17,6 +17,9 @@ import { errorHandler } from './middleware/errorHandler'
 const app  = express()
 const PORT = process.env.PORT ?? 8000
 
+// ── Trust proxy (required for rate-limit + HTTPS redirect behind Replit) ──
+app.set('trust proxy', 1)
+
 // ── Security headers ────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
