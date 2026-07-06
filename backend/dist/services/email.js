@@ -160,4 +160,43 @@ exports.emailService = {
       `),
         });
     },
+    /**
+     * Sends an alert to the admin when the Ethereum blockchain listener appears
+     * to have stalled or lost its provider connection.
+     */
+    async sendListenerAlert(reason, details) {
+        const checkedAt = new Date().toISOString();
+        await transporter.sendMail({
+            from: FROM,
+            to: process.env.ADMIN_EMAIL ?? process.env.SMTP_USER,
+            subject: '🚨 [ASTRO META-TRADE] Blockchain Listener Alert — Action Required',
+            html: baseTemplate('Blockchain Listener Alert', `
+        <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:20px;margin:0 0 24px;">
+          <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#991B1B;">⚠️ Blockchain Listener Issue Detected</p>
+          <p style="margin:0;font-size:13px;color:#B91C1C;">Crypto deposits may stop being credited until this is resolved.</p>
+        </div>
+        <h2 style="color:#111827;font-size:18px;font-weight:700;margin:0 0 12px;">What happened</h2>
+        <div style="padding:14px 16px;background:#F9FAFB;border-radius:10px;border-left:3px solid #EF4444;margin:0 0 20px;">
+          <p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">${reason}</p>
+        </div>
+        <h2 style="color:#111827;font-size:18px;font-weight:700;margin:0 0 12px;">Details</h2>
+        <pre style="background:#F3F4F6;border-radius:8px;padding:14px;font-size:12px;color:#374151;white-space:pre-wrap;word-break:break-all;margin:0 0 24px;">${details}
+Checked at: ${checkedAt}</pre>
+        <h2 style="color:#111827;font-size:18px;font-weight:700;margin:0 0 12px;">Recommended actions</h2>
+        <ol style="color:#6B7280;font-size:14px;line-height:1.9;margin:0 0 24px;padding-left:20px;">
+          <li>Check the backend server logs for provider errors.</li>
+          <li>Verify your Ethereum RPC endpoint (<code>ETH_RPC_URL</code>) is reachable.</li>
+          <li>Restart the backend service if the provider connection has dropped.</li>
+          <li>Manually credit any stuck deposits via the admin panel if needed.</li>
+        </ol>
+        <a href="${process.env.FRONTEND_URL}/admin"
+           style="display:inline-block;background:#DC2626;color:#fff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;">
+          Open Admin Panel →
+        </a>
+        <p style="margin:24px 0 0;font-size:12px;color:#9CA3AF;">
+          Alerts are rate-limited to one per hour. Check <code>/health</code> on the API for real-time listener status.
+        </p>
+      `),
+        });
+    },
 };

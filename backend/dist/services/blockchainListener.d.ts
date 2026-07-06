@@ -17,6 +17,13 @@ export declare const TOKEN_MAP: Record<string, {
     decimals: number;
 }>;
 /**
+ * Fetch the current ETH/USD price from CoinGecko, caching the result for
+ * ETH_PRICE_CACHE_TTL_MS.  On failure, returns the cached price (even if
+ * stale) so in-flight deposits survive a transient outage.  Returns null
+ * only when no price has ever been successfully fetched.
+ */
+export declare function fetchEthUsdPrice(): Promise<number | null>;
+/**
  * Atomically transitions a transaction from pending → confirmed and credits
  * the user's balance in a single conditional update.
  *
@@ -25,5 +32,30 @@ export declare const TOKEN_MAP: Record<string, {
  */
 export declare function atomicCredit(txId: string, userId: string, amountUsd: number, txHash: string, eventKey: string, // `${txHash}:${logIndex}` — uniqueness guard
 fromStatuses?: string[]): Promise<boolean>;
-export declare function getUsdValue(token: string, rawAmount: bigint, decimals: number): Promise<number>;
+/**
+ * Convert a raw on-chain amount to its USD value.
+ *
+ * Returns null (instead of 0) when the ETH price cannot be determined —
+ * the caller is responsible for deferring the credit rather than dropping it.
+ */
+export declare function getUsdValue(token: string, rawAmount: bigint, decimals: number): Promise<number | null>;
+export interface ListenerStatus {
+    active: boolean;
+    lastEventAt: string | null;
+    lastCheckedAt: string | null;
+    healthy: boolean;
+    silenceSec: number | null;
+    silenceWarning: boolean;
+    message: string;
+}
+/**
+ * Returns a snapshot of the blockchain listener's health for external monitors.
+ *
+ * `healthy` is false only when the RPC provider or contract is unreachable —
+ * genuine connection failures that prevent events from being processed.
+ * Event silence alone (no PaymentReceived in a while) is normal during low
+ * traffic and is exposed only as `silenceWarning` for informational purposes.
+ */
+export declare function getListenerStatus(): ListenerStatus;
 export declare function startBlockchainListener(): void;
+export declare function retryPendingPriceTransactions(): Promise<void>;

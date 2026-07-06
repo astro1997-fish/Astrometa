@@ -192,6 +192,103 @@ export async function getUsdValue(
   return amount * price
 }
 
+// ── Listener health state ──────────────────────────────────────────────────
+// Exported so the /health endpoint can surface real-time status.
+
+export interface ListenerStatus {
+  active:        boolean        // true while the listener is configured and running
+  lastEventAt:   string | null  // ISO timestamp of last PaymentReceived event
+  lastCheckedAt: string | null  // ISO timestamp of last health probe
+  healthy:       boolean        // false only on confirmed provider/contract failure
+  silenceSec:    number | null  // seconds since last event — informational, not a failure signal
+  silenceWarning: boolean       // true when silence exceeds threshold but provider is still healthy
+  message:       string         // human-readable status description
+}
+
+const listenerState = {
+  active:        false,
+  lastEventAt:   null as number | null,  // Date.now() of last event
+  startedAt:     null as number | null,
+  lastCheckedAt: null as number | null,
+  healthy:       true,
+  lastAlertAt:   null as number | null,  // Date.now() of last admin alert sent
+}
+
+// How long with no events before we consider the listener stalled.
+// Mainnet blocks arrive every ~12 s, so 10 min with zero events is suspicious.
+// Set LISTENER_SILENCE_THRESHOLD_MS in env to override (useful on testnets).
+const LISTENER_SILENCE_THRESHOLD_MS =
+  parseInt(process.env.LISTENER_SILENCE_THRESHOLD_MS ?? String(10 * 60 * 1000), 10)
+
+// How often to run the health probe.
+const LISTENER_HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000  // 5 minutes
+
+// Minimum gap between admin alert emails (avoid inbox flooding).
+const ALERT_COOLDOWN_MS = 60 * 60 * 1000  // 1 hour
+
+/**
+ * Returns a snapshot of the blockchain listener's health for external monitors.
+ *
+ * `healthy` is false only when the RPC provider or contract is unreachable —
+ * genuine connection failures that prevent events from being processed.
+ * Event silence alone (no PaymentReceived in a while) is normal during low
+ * traffic and is exposed only as `silenceWarning` for informational purposes.
+ */
+export function getListenerStatus(): ListenerStatus {
+  if (!listenerState.active) {
+    return {
+      active:         false,
+      lastEventAt:    null,
+      lastCheckedAt:  null,
+      healthy:        true,   // "not configured" is not an error state
+      silenceSec:     null,
+      silenceWarning: false,
+      message:        'Listener not configured (ETH_RPC_URL or CONTRACT_ADDRESS missing)',
+    }
+  }
+
+  const now        = Date.now()
+  const silenceSec = listenerState.lastEventAt
+    ? Math.round((now - listenerState.lastEventAt) / 1000)
+    : listenerState.startedAt
+      ? Math.round((now - listenerState.startedAt!) / 1000)
+      : null
+
+  // Silence warning: threshold exceeded — but only after the startup grace period
+  const pastGrace =
+    listenerState.startedAt !== null &&
+    now - listenerState.startedAt > LISTENER_SILENCE_THRESHOLD_MS
+
+  const silenceWarning =
+    pastGrace &&
+    silenceSec !== null &&
+    silenceSec * 1000 > LISTENER_SILENCE_THRESHOLD_MS
+
+  let message: string
+  if (!listenerState.healthy) {
+    message = 'Provider unreachable or contract not found — check RPC connection'
+  } else if (silenceWarning) {
+    const silenceMin = Math.round(silenceSec! / 60)
+    message = `Provider healthy — no events for ${silenceMin} min (normal if no deposits)`
+  } else {
+    message = 'Listener healthy'
+  }
+
+  return {
+    active:         true,
+    lastEventAt:    listenerState.lastEventAt
+      ? new Date(listenerState.lastEventAt).toISOString()
+      : null,
+    lastCheckedAt:  listenerState.lastCheckedAt
+      ? new Date(listenerState.lastCheckedAt).toISOString()
+      : null,
+    healthy:        listenerState.healthy,
+    silenceSec,
+    silenceWarning,
+    message,
+  }
+}
+
 export function startBlockchainListener() {
   const rpcUrl       = process.env.ETH_RPC_URL
   const contractAddr = process.env.CONTRACT_ADDRESS
@@ -208,6 +305,10 @@ export function startBlockchainListener() {
   const provider = new ethers.JsonRpcProvider(rpcUrl)
   const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider)
 
+  listenerState.active    = true
+  listenerState.startedAt = Date.now()
+  listenerState.healthy   = true
+
   console.log(`[Blockchain] Listening for PaymentReceived on ${contractAddr} (min ${MIN_CONFIRMATIONS} confirmations)`)
 
   contract.on(
@@ -219,6 +320,10 @@ export function startBlockchainListener() {
       rawAmount: bigint,
       event:     ethers.EventLog,
     ) => {
+      // Record that we are alive
+      listenerState.lastEventAt = Date.now()
+      listenerState.healthy     = true
+
       const txHash   = event.transactionHash
       const logIndex = event.index
       const eventKey = `${txHash}:${logIndex}`
@@ -312,13 +417,105 @@ export function startBlockchainListener() {
     },
   )
 
-  // Reconnect on provider errors
+  // Mark unhealthy on provider errors
   provider.on('error', (err) => {
     console.error('[Blockchain] Provider error:', err.message)
+    listenerState.healthy = false
   })
 
   // Retry any transactions that were deferred due to missing ETH price
   startPendingPriceRetryLoop()
+
+  // Periodic health checks
+  startListenerHealthCheck(provider, contractAddr)
+}
+
+// ── Listener health check ──────────────────────────────────────────────────
+
+async function runListenerHealthCheck(
+  provider:     ethers.JsonRpcProvider,
+  contractAddr: string,
+): Promise<void> {
+  listenerState.lastCheckedAt = Date.now()
+  const now = Date.now()
+
+  // 1. Verify provider connectivity by fetching the latest block number.
+  let providerOk = false
+  try {
+    await provider.getBlockNumber()
+    providerOk = true
+  } catch (err) {
+    console.error('[Blockchain] Health check: provider unreachable —', (err as Error).message)
+  }
+
+  // 2. Check contract reachability (light call — no gas, no writes).
+  let contractOk = false
+  if (providerOk) {
+    try {
+      const code = await provider.getCode(contractAddr)
+      contractOk = code !== '0x' && code !== ''  // non-empty = contract deployed
+    } catch (err) {
+      console.error('[Blockchain] Health check: contract unreachable —', (err as Error).message)
+    }
+  }
+
+  // 3. Healthy = provider reachable AND contract deployed.
+  //    Event silence is NOT a failure criterion — no deposits during a quiet period
+  //    is normal and does not indicate the listener is broken.
+  const isHealthy = providerOk && contractOk
+  listenerState.healthy = isHealthy
+
+  if (isHealthy) {
+    console.log('[Blockchain] Health check: OK (provider reachable, contract found)')
+    return
+  }
+
+  // Build a clear reason string for logs + alert email
+  const reasons: string[] = []
+  if (!providerOk) reasons.push('RPC provider unreachable')
+  if (!contractOk) reasons.push('contract not found at address (code = 0x)')
+
+  const reason = reasons.join('; ')
+  console.warn(`[Blockchain] Health check FAILED: ${reason}`)
+
+  // 4. Send admin alert — rate-limited to ALERT_COOLDOWN_MS
+  const cooldownOk =
+    listenerState.lastAlertAt === null ||
+    now - listenerState.lastAlertAt > ALERT_COOLDOWN_MS
+
+  if (!cooldownOk) {
+    console.log('[Blockchain] Alert suppressed (within cooldown window)')
+    return
+  }
+
+  listenerState.lastAlertAt = now
+
+  try {
+    await emailService.sendListenerAlert(
+      reason,
+      `Contract: ${contractAddr}\nChecked at: ${new Date(now).toISOString()}`,
+    )
+    console.warn('[Blockchain] Admin alert email sent')
+  } catch (alertErr) {
+    console.error('[Blockchain] Failed to send admin alert email:', (alertErr as Error).message)
+  }
+}
+
+function startListenerHealthCheck(
+  provider:     ethers.JsonRpcProvider,
+  contractAddr: string,
+): void {
+  // Run once shortly after startup, then on the regular interval
+  setTimeout(
+    () => runListenerHealthCheck(provider, contractAddr),
+    30_000,  // 30 s after startup — let things settle first
+  )
+  setInterval(
+    () => runListenerHealthCheck(provider, contractAddr),
+    LISTENER_HEALTH_CHECK_INTERVAL_MS,
+  )
+  console.log('[Blockchain] Health check scheduled (interval: 5 min, silence threshold: ' +
+    `${Math.round(LISTENER_SILENCE_THRESHOLD_MS / 60000)} min)`)
 }
 
 // ── Pending-price retry loop ───────────────────────────────────────────────

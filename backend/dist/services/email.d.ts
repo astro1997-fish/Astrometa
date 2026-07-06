@@ -8,4 +8,9 @@ export declare const emailService: {
         subject: string;
         message: string;
     }): Promise<void>;
+    /**
+     * Sends an alert to the admin when the Ethereum blockchain listener appears
+     * to have stalled or lost its provider connection.
+     */
+    sendListenerAlert(reason: string, details: string): Promise<void>;
 };

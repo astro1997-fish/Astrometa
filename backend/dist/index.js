@@ -59,7 +59,15 @@ const globalLimiter = (0, express_rate_limit_1.default)({
 });
 app.use(globalLimiter);
 // ── Health check ────────────────────────────────────────────────────
-app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
+app.get('/health', (_req, res) => {
+    const listener = (0, blockchainListener_1.getListenerStatus)();
+    const status = listener.active && !listener.healthy ? 'degraded' : 'ok';
+    res.status(status === 'ok' ? 200 : 503).json({
+        status,
+        ts: new Date().toISOString(),
+        listener,
+    });
+});
 // ── HTTPS redirect in production ────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
     app.use((req, res, next) => {

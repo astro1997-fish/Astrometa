@@ -5,7 +5,7 @@ import cors from 'cors'
 import rateLimit from 'express-rate-limit'
 import xssClean from 'xss-clean'
 
-import { startBlockchainListener } from './services/blockchainListener'
+import { startBlockchainListener, getListenerStatus } from './services/blockchainListener'
 import { startBtcMonitor }         from './services/btcMonitor'
 import authRoutes     from './routes/auth'
 import paymentRoutes  from './routes/payments'
@@ -64,7 +64,15 @@ const globalLimiter = rateLimit({
 app.use(globalLimiter)
 
 // ── Health check ────────────────────────────────────────────────────
-app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
+app.get('/health', (_req, res) => {
+  const listener = getListenerStatus()
+  const status   = listener.active && !listener.healthy ? 'degraded' : 'ok'
+  res.status(status === 'ok' ? 200 : 503).json({
+    status,
+    ts:       new Date().toISOString(),
+    listener,
+  })
+})
 
 // ── HTTPS redirect in production ────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {

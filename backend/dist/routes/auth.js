@@ -309,8 +309,8 @@ exports.adminRouter.post('/deposits/:id/retry', async (req, res, next) => {
                     return res.status(400).json({ error: `Unknown token ${token}` });
                 usdValue = await getUsdValue(tokenInfo.symbol, rawAmount, tokenInfo.decimals);
             }
-            if (usdValue <= 0)
-                return res.status(400).json({ error: 'ETH price returned $0 — use manual amountUsd override instead' });
+            if (!usdValue || usdValue <= 0)
+                return res.status(400).json({ error: 'ETH price unavailable or returned $0 — use manual amountUsd override instead' });
             effectiveTxHash = txHash;
             eventKey = `${txHash}:${logIndex}`;
         }
