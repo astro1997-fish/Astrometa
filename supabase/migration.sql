@@ -313,6 +313,37 @@ END;
 $ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================================
+-- GRANTS
+-- Tables created via raw SQL are not auto-granted in Supabase.
+-- service_role needs ALL so the backend (service key) can bypass RLS.
+-- authenticated needs SELECT/INSERT/UPDATE/DELETE for user-facing ops.
+-- anon needs SELECT for public read-only endpoints.
+-- ============================================================
+
+GRANT USAGE ON SCHEMA public TO service_role, authenticated, anon;
+
+GRANT ALL ON ALL TABLES    IN SCHEMA public TO service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
+GRANT ALL ON ALL ROUTINES  IN SCHEMA public TO service_role;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES    IN SCHEMA public TO authenticated;
+GRANT USAGE, SELECT                  ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
+
+-- Ensure future tables created in this schema are also covered
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT ALL ON TABLES    TO service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT ALL ON SEQUENCES TO service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES    TO authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT USAGE, SELECT                  ON SEQUENCES TO authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT ON TABLES TO anon;
+
+-- ============================================================
 -- SEED: Make first user admin (update email below)
 -- ============================================================
 -- UPDATE public.users SET role = 'admin' WHERE email = 'admin@yourdomain.com';
