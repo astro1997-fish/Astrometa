@@ -331,4 +331,24 @@ router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res,
   }
 })
 
+// GET /api/payments/deposits — recent crypto deposits for the logged-in user
+router.get('/deposits', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const userId = req.userId!
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('id, method, amount_usd, status, tx_hash, btc_address, created_at')
+      .eq('user_id', userId)
+      .eq('type', 'deposit')
+      .in('method', ['eth', 'usdt', 'usdc', 'btc'])
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (error) throw error
+    res.json(data ?? [])
+  } catch (err) {
+    next(err)
+  }
+})
+
 export default router
