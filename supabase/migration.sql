@@ -318,6 +318,31 @@ $ LANGUAGE plpgsql SECURITY DEFINER;
 -- UPDATE public.users SET role = 'admin' WHERE email = 'admin@yourdomain.com';
 
 -- ============================================================
+-- ETH price-cache resilience: pending_price status + metadata column
+-- ============================================================
+
+-- Allow transactions to be held in pending_price when CoinGecko is
+-- unavailable at confirmation time.  The retry loop re-prices and credits
+-- them once the price feed recovers.
+ALTER TABLE public.transactions
+  DROP CONSTRAINT IF EXISTS transactions_status_check;
+
+ALTER TABLE public.transactions
+  ADD CONSTRAINT transactions_status_check
+  CHECK (status IN ('pending', 'confirmed', 'failed', 'pending_price'));
+
+-- Metadata column: stores JSON payload needed to re-price a pending_price
+-- transaction (raw ETH amount, token, txHash, eventKey).  Also used by
+-- the BTC and ETH payment routes to store coin-specific deposit details.
+ALTER TABLE public.transactions
+  ADD COLUMN IF NOT EXISTS metadata TEXT;
+
+-- Fast lookup for the retry loop
+CREATE INDEX IF NOT EXISTS idx_transactions_pending_price
+  ON public.transactions (status)
+  WHERE status = 'pending_price';
+
+-- ============================================================
 -- BTC HD-wallet deposit support
 -- ============================================================
 
