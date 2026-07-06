@@ -126,14 +126,44 @@ function satsToBtc(sats: number): number {
   return sats / 1e8
 }
 
-/** Fetch BTC/USD price from CoinGecko */
-async function getBtcUsdPrice(): Promise<number> {
-  const { default: axios } = await import('axios')
-  const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
-    params:  { ids: 'bitcoin', vs_currencies: 'usd' },
-    timeout: 10_000,
-  })
-  return data['bitcoin']?.usd ?? 0
+// ── BTC price cache ──────────────────────────────────────────────────────────
+
+const BTC_PRICE_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+let cachedBtcPrice: number | null = null
+let btcPriceCachedAt: number      = 0
+
+/** Fetch BTC/USD price from CoinGecko, with a 5-minute in-memory cache.
+ *  Returns the cached price if CoinGecko is unreachable.
+ *  Returns null only when no cached value is available either.
+ */
+async function getBtcUsdPrice(): Promise<number | null> {
+  const now = Date.now()
+  if (cachedBtcPrice !== null && now - btcPriceCachedAt < BTC_PRICE_CACHE_TTL_MS) {
+    return cachedBtcPrice
+  }
+
+  try {
+    const { default: axios } = await import('axios')
+    const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+      params:  { ids: 'bitcoin', vs_currencies: 'usd' },
+      timeout: 10_000,
+    })
+    const price: number = data['bitcoin']?.usd ?? 0
+    if (price > 0) {
+      cachedBtcPrice  = price
+      btcPriceCachedAt = now
+    }
+    return price > 0 ? price : cachedBtcPrice
+  } catch (e) {
+    if (cachedBtcPrice !== null) {
+      const ageMin = ((now - btcPriceCachedAt) / 60_000).toFixed(1)
+      console.warn(`[BTC] CoinGecko unreachable — using cached price ${cachedBtcPrice} (${ageMin} min old)`)
+      return cachedBtcPrice
+    }
+    console.warn('[BTC] CoinGecko unreachable and no cached price available')
+    return null
+  }
 }
 
 // ── Atomic credit ────────────────────────────────────────────────────────────
@@ -235,7 +265,7 @@ async function loadPendingBtcDeposits(): Promise<PendingBtcDeposit[]> {
   }))
 }
 
-async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcPrice: number): Promise<void> {
+async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcPrice: number | null): Promise<void> {
   let txs: BlockstreamTx[]
   try {
     txs = await fetchAddressTxs(deposit.btcAddress)
@@ -262,14 +292,25 @@ async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcP
     if (satsReceived <= 0) continue
 
     const btcAmount = satsToBtc(satsReceived)
-    const usdValue  = btcAmount * btcPrice
+
+    if (btcPrice === null) {
+      // Transaction is confirmed on-chain but we can't convert to USD yet.
+      // Log and leave the deposit pending — it will be credited on the next
+      // cycle once a price is available.
+      console.warn(
+        `[BTC] ${deposit.btcAddress}: tx ${tx.txid} confirmed (${btcAmount} BTC) but BTC/USD price unavailable — will retry next cycle`,
+      )
+      continue
+    }
+
+    const usdValue = btcAmount * btcPrice
 
     if (usdValue <= 0) {
       console.warn(`[BTC] Cannot compute USD value (price=${btcPrice}) — skipping`)
       continue
     }
 
-    console.log(`[BTC] Confirmed: ${btcAmount} BTC (≈$${usdValue.toFixed(2)}) → ${deposit.btcAddress} | txid: ${tx.txid}`)
+    console.log(`[BTC] Confirmed: ${btcAmount} BTC (≈${usdValue.toFixed(2)}) → ${deposit.btcAddress} | txid: ${tx.txid}`)
 
     // atomicCreditBtc is idempotent via the status=pending conditional update.
     // If this deposit was already confirmed (e.g. a prior poll cycle), it
@@ -287,17 +328,21 @@ async function runPollCycle(): Promise<void> {
   const [deposits, chainHeight, btcPrice] = await Promise.all([
     loadPendingBtcDeposits(),
     fetchBlockchainHeight().catch(() => 0),
-    getBtcUsdPrice().catch(() => 0),
+    getBtcUsdPrice(),
   ])
 
   if (deposits.length === 0) return
 
-  if (chainHeight === 0 || btcPrice === 0) {
-    console.warn('[BTC] Could not fetch chain height or BTC price — skipping poll cycle')
+  if (chainHeight === 0) {
+    console.warn('[BTC] Could not fetch chain height — skipping poll cycle')
     return
   }
 
-  console.log(`[BTC] Polling ${deposits.length} pending deposit(s) | height=${chainHeight} price=${btcPrice}`)
+  if (btcPrice === null) {
+    console.warn('[BTC] BTC/USD price unavailable (CoinGecko down, no cache) — checking confirmations only; USD credit deferred')
+  }
+
+  console.log(`[BTC] Polling ${deposits.length} pending deposit(s) | height=${chainHeight} price=${btcPrice ?? 'unavailable'}`)
 
   await Promise.allSettled(deposits.map(d => pollDeposit(d, chainHeight, btcPrice)))
 }
