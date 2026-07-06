@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Moon, Sun, Menu, X, Globe, ChevronDown, Rocket } from 'lucide-react'
@@ -24,6 +24,7 @@ export default function Navbar() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
+  const location = useLocation()
   const [scrolled, setScrolled]   = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [langOpen, setLangOpen]   = useState(false)
@@ -34,6 +35,11 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Close mobile menu whenever the route changes
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
 
   const handleSignOut = async () => {
     await signOut()
