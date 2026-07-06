@@ -21,8 +21,21 @@
  *    because the uniqueness key is btc_address, not the on-chain txid.
  */
 /**
- * Derive a native-segwit (P2WPKH / bech32) BTC address from an xpub.
+ * Return the active BTC xpub.
+ * Priority: BTC_XPUB env var → system_settings DB row → null (not configured).
+ * The result is cached until `clearXpubCache()` is called.
+ */
+export declare function getXpub(): Promise<string | null>;
+/** Call after saving/deleting xpub from DB so the next poll picks it up */
+export declare function clearXpubCache(): void;
+/**
+ * Derive a native-segwit (P2WPKH / bech32) BTC address from an xpub or zpub.
  * Path convention: m/0/<index>  (external chain, one address per deposit).
+ *
+ * Sparrow Wallet exports "zpub…" for Native Segwit (P2WPKH) accounts.
+ * zpub uses version bytes 0x04b24746 instead of xpub's 0x0488b21e — the
+ * underlying key material is identical; we just pass the matching network
+ * object so bip32.fromBase58() accepts the prefix.
  */
 export declare function deriveBtcAddress(xpub: string, index: number): string;
 export declare function startBtcMonitor(): void;

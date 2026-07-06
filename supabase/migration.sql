@@ -360,5 +360,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_btc_active_address
   WHERE method = 'btc' AND btc_address IS NOT NULL AND status IN ('pending', 'confirmed');
 
 -- ============================================================
+-- System settings (key-value store for admin-managed config)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.system_settings (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Only admins can read/write system_settings via the JS client.
+-- The backend service-role key bypasses RLS entirely.
+ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "admins_all_system_settings" ON public.system_settings
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ============================================================
 -- DONE ✅
 -- ============================================================

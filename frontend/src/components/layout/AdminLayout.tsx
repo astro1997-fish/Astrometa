@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   LayoutDashboard, Users, Briefcase, ArrowUpCircle,
-  Wallet, FileText, Rocket, LogOut, Shield, AlertCircle
+  Wallet, FileText, Rocket, LogOut, Shield, AlertCircle, Bitcoin
 } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -14,6 +14,7 @@ const NAV = [
   { to: '/admin/addresses',    icon: Wallet,          label: 'Deposit Addresses' },
   { to: '/admin/audit',        icon: FileText,        label: 'Audit Logs' },
   { to: '/admin/deposits',     icon: AlertCircle,     label: 'Stuck Deposits' },
+  { to: '/admin/bitcoin',      icon: Bitcoin,         label: 'Bitcoin Wallet' },
 ]
 
 export default function AdminLayout() {

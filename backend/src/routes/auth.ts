@@ -293,6 +293,124 @@ adminRouter.post('/deposits/:id/retry', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// ── BTC wallet config ──────────────────────────────────────────────────────
+
+adminRouter.get('/btc-wallet', async (_req, res, next) => {
+  try {
+    Promise.resolve().then(async () => {
+      const { deriveBtcAddress } = await import('../services/btcMonitor')
+
+      const envXpub = process.env.BTC_XPUB
+      let source: 'env' | 'db' | 'none' = 'none'
+      let xpub: string | null = null
+
+      if (envXpub) {
+        source = 'env'
+        xpub   = envXpub
+      } else {
+        const { data } = await import('../lib/supabase').then(m =>
+          m.supabase.from('system_settings').select('value').eq('key', 'btc_xpub').maybeSingle()
+        )
+        if (data?.value) { source = 'db'; xpub = data.value }
+      }
+
+      if (!xpub) return res.json({ configured: false, source: 'none' })
+
+      let firstAddress: string | null = null
+      let valid = false
+      try {
+        // deriveBtcAddress handles both xpub and zpub version bytes
+        firstAddress = deriveBtcAddress(xpub, 0)
+        valid = true
+      } catch { /* invalid */ }
+
+      const isTestnet = xpub.startsWith('tpub') || xpub.startsWith('upub') || xpub.startsWith('vpub')
+
+      res.json({ configured: true, source, valid, firstAddress, isTestnet })
+    }).catch(next)
+  } catch (err) { next(err) }
+})
+
+// Preview endpoint — validates format and returns first derived address without saving
+adminRouter.post('/btc-wallet/preview', async (req, res, next) => {
+  try {
+    const { xpub } = z.object({ xpub: z.string().min(50) }).parse(req.body)
+    const { deriveBtcAddress } = await import('../services/btcMonitor')
+
+    try {
+      // deriveBtcAddress handles xpub and zpub version bytes natively
+      const firstAddress = deriveBtcAddress(xpub, 0)
+      const isTestnet = xpub.startsWith('tpub') || xpub.startsWith('upub') || xpub.startsWith('vpub')
+      return res.json({ success: true, firstAddress, isTestnet })
+    } catch {
+      return res.status(400).json({ error: 'Invalid xpub format' })
+    }
+  } catch (err) { next(err) }
+})
+
+adminRouter.post('/btc-wallet', async (req, res, next) => {
+  try {
+    const { xpub } = z.object({ xpub: z.string().min(50) }).parse(req.body)
+
+    // Validate cryptographically using deriveBtcAddress, which handles xpub and zpub
+    const { deriveBtcAddress, clearXpubCache, startBtcMonitor } = await import('../services/btcMonitor')
+
+    let firstAddress: string
+    try {
+      firstAddress = deriveBtcAddress(xpub, 0)
+    } catch {
+      return res.status(400).json({ error: 'Invalid xpub — could not parse the key. Check for typos or extra spaces.' })
+    }
+
+    const isTestnet = xpub.startsWith('tpub') || xpub.startsWith('upub') || xpub.startsWith('vpub')
+
+    // Store in system_settings (upsert)
+    const { supabase } = await import('../lib/supabase')
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert({ key: 'btc_xpub', value: xpub, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+    if (error) throw error
+
+    // Clear in-memory xpub cache so the monitor + payments route pick up the new value,
+    // then ensure the monitor loop is running (idempotent — safe to call multiple times).
+    clearXpubCache()
+    startBtcMonitor()  // activates polling if not already running
+
+    // Audit log
+    await supabase.from('audit_logs').insert({
+      action:    'btc_xpub_updated',
+      metadata:  JSON.stringify({ firstAddress, isTestnet, source: 'admin_ui' }),
+      ip_address: 'admin',
+    })
+
+    res.json({ success: true, firstAddress, isTestnet })
+  } catch (err) { next(err) }
+})
+
+adminRouter.delete('/btc-wallet', async (_req, res, next) => {
+  try {
+    if (process.env.BTC_XPUB) {
+      return res.status(409).json({
+        error: 'BTC_XPUB is set via environment variable and cannot be removed from the UI. Remove the secret from your deployment settings instead.',
+      })
+    }
+
+    const { supabase } = await import('../lib/supabase')
+    await supabase.from('system_settings').delete().eq('key', 'btc_xpub')
+
+    const { clearXpubCache } = await import('../services/btcMonitor')
+    clearXpubCache()
+
+    await supabase.from('audit_logs').insert({
+      action:    'btc_xpub_removed',
+      metadata:  JSON.stringify({ source: 'admin_ui' }),
+      ip_address: 'admin',
+    })
+
+    res.json({ success: true })
+  } catch (err) { next(err) }
+})
+
 adminRouter.post('/send-message', async (req, res, next) => {
   try {
     const schema = z.object({

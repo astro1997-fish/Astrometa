@@ -34,6 +34,39 @@ const BLOCKSTREAM_API   = 'https://blockstream.info/api'
 const POLL_INTERVAL_MS  = 60_000          // poll every 60 s
 const MIN_CONFIRMATIONS = parseInt(process.env.BTC_MIN_CONFIRMATIONS ?? '3', 10)
 
+// ── xpub resolution (env → DB fallback) ─────────────────────────────────────
+
+/** In-memory cache so we don't hit the DB on every poll cycle */
+let cachedXpub: string | null | undefined = undefined // undefined = not yet loaded
+
+/**
+ * Return the active BTC xpub.
+ * Priority: BTC_XPUB env var → system_settings DB row → null (not configured).
+ * The result is cached until `clearXpubCache()` is called.
+ */
+export async function getXpub(): Promise<string | null> {
+  if (process.env.BTC_XPUB) return process.env.BTC_XPUB
+
+  if (cachedXpub !== undefined) return cachedXpub
+
+  try {
+    const { data } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'btc_xpub')
+      .maybeSingle()
+    cachedXpub = data?.value ?? null
+  } catch {
+    cachedXpub = null
+  }
+  return cachedXpub as string | null
+}
+
+/** Call after saving/deleting xpub from DB so the next poll picks it up */
+export function clearXpubCache() {
+  cachedXpub = undefined
+}
+
 // ── Address derivation ──────────────────────────────────────────────────────
 
 /**
@@ -247,6 +280,10 @@ async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcP
 }
 
 async function runPollCycle(): Promise<void> {
+  // Dynamic xpub check — no-op until an admin configures the wallet
+  const xpub = await getXpub()
+  if (!xpub) return
+
   const [deposits, chainHeight, btcPrice] = await Promise.all([
     loadPendingBtcDeposits(),
     fetchBlockchainHeight().catch(() => 0),
@@ -260,39 +297,30 @@ async function runPollCycle(): Promise<void> {
     return
   }
 
-  console.log(`[BTC] Polling ${deposits.length} pending deposit(s) | height=${chainHeight} price=$${btcPrice}`)
+  console.log(`[BTC] Polling ${deposits.length} pending deposit(s) | height=${chainHeight} price=${btcPrice}`)
 
   await Promise.allSettled(deposits.map(d => pollDeposit(d, chainHeight, btcPrice)))
 }
 
 // ── Public entry point ──────────────────────────────────────────────────────
+//
+// Design: the polling interval runs unconditionally once started.  Each
+// runPollCycle() checks getXpub() dynamically so the monitor automatically
+// activates when an admin saves an xpub via the UI (no restart needed) and
+// becomes a no-op again if the xpub is removed.
+//
+// startBtcMonitor() is idempotent — safe to call multiple times (e.g. after
+// saving a new xpub).  Only one interval is ever registered.
+
+let monitorRunning = false
 
 export function startBtcMonitor() {
-  const xpub = process.env.BTC_XPUB
-  if (!xpub) {
-    console.warn('[BTC] BTC_XPUB not set — BTC deposit monitor not started')
-    return
-  }
+  if (monitorRunning) return   // already running — nothing to do
 
-  // Validate xpub/zpub on startup using the same prefix-aware logic as deriveBtcAddress
-  const SUPPORTED_PREFIXES = ['xpub', 'zpub']
-  if (!SUPPORTED_PREFIXES.some(p => xpub.startsWith(p))) {
-    console.error(
-      `[BTC] Invalid BTC_XPUB prefix "${xpub.slice(0, 4)}" — only xpub and zpub are supported. ` +
-      `Export the account-level xpub (or zpub for Native Segwit) from your wallet's master public key settings.`
-    )
-    return
-  }
-  try {
-    deriveBtcAddress(xpub, 0)   // dry-run: uses the same zpub-aware parsing
-  } catch (e) {
-    console.error('[BTC] Invalid BTC_XPUB — could not derive test address:', e)
-    return
-  }
+  monitorRunning = true
+  console.log(`[BTC] Monitor loop started (min ${MIN_CONFIRMATIONS} confirmations, polling every ${POLL_INTERVAL_MS / 1000}s)`)
 
-  console.log(`[BTC] Monitor started (min ${MIN_CONFIRMATIONS} confirmations, polling every ${POLL_INTERVAL_MS / 1000}s)`)
-
-  // Run immediately, then on interval
+  // Run once immediately (best-effort), then on a fixed interval.
   runPollCycle().catch(e => console.error('[BTC] Poll cycle error:', e))
   setInterval(
     () => runPollCycle().catch(e => console.error('[BTC] Poll cycle error:', e)),

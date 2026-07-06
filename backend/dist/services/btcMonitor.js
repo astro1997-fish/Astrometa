@@ -58,6 +58,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getXpub = getXpub;
+exports.clearXpubCache = clearXpubCache;
 exports.deriveBtcAddress = deriveBtcAddress;
 exports.startBtcMonitor = startBtcMonitor;
 const bitcoin = __importStar(require("bitcoinjs-lib"));
@@ -70,15 +72,61 @@ const bip32 = (0, bip32_1.default)(ecc);
 const BLOCKSTREAM_API = 'https://blockstream.info/api';
 const POLL_INTERVAL_MS = 60000; // poll every 60 s
 const MIN_CONFIRMATIONS = parseInt(process.env.BTC_MIN_CONFIRMATIONS ?? '3', 10);
+// ── xpub resolution (env → DB fallback) ─────────────────────────────────────
+/** In-memory cache so we don't hit the DB on every poll cycle */
+let cachedXpub = undefined; // undefined = not yet loaded
+/**
+ * Return the active BTC xpub.
+ * Priority: BTC_XPUB env var → system_settings DB row → null (not configured).
+ * The result is cached until `clearXpubCache()` is called.
+ */
+async function getXpub() {
+    if (process.env.BTC_XPUB)
+        return process.env.BTC_XPUB;
+    if (cachedXpub !== undefined)
+        return cachedXpub;
+    try {
+        const { data } = await supabase_1.supabase
+            .from('system_settings')
+            .select('value')
+            .eq('key', 'btc_xpub')
+            .maybeSingle();
+        cachedXpub = data?.value ?? null;
+    }
+    catch {
+        cachedXpub = null;
+    }
+    return cachedXpub;
+}
+/** Call after saving/deleting xpub from DB so the next poll picks it up */
+function clearXpubCache() {
+    cachedXpub = undefined;
+}
 // ── Address derivation ──────────────────────────────────────────────────────
 /**
- * Derive a native-segwit (P2WPKH / bech32) BTC address from an xpub.
+ * Derive a native-segwit (P2WPKH / bech32) BTC address from an xpub or zpub.
  * Path convention: m/0/<index>  (external chain, one address per deposit).
+ *
+ * Sparrow Wallet exports "zpub…" for Native Segwit (P2WPKH) accounts.
+ * zpub uses version bytes 0x04b24746 instead of xpub's 0x0488b21e — the
+ * underlying key material is identical; we just pass the matching network
+ * object so bip32.fromBase58() accepts the prefix.
  */
 function deriveBtcAddress(xpub, index) {
-    const node = bip32.fromBase58(xpub);
+    const ZPUB_NETWORK = {
+        ...bitcoin.networks.bitcoin,
+        bip32: {
+            public: 0x04b24746, // zpub
+            private: 0x04b2430c, // zprv
+        },
+    };
+    const network = xpub.startsWith('zpub') ? ZPUB_NETWORK : undefined;
+    const node = bip32.fromBase58(xpub, network);
     const child = node.derive(0).derive(index);
-    const { address } = bitcoin.payments.p2wpkh({ pubkey: Buffer.from(child.publicKey) });
+    const { address } = bitcoin.payments.p2wpkh({
+        pubkey: Buffer.from(child.publicKey),
+        network: bitcoin.networks.bitcoin, // always derive mainnet bech32 address
+    });
     if (!address)
         throw new Error(`Failed to derive BTC address at index ${index}`);
     return address;
@@ -220,6 +268,10 @@ async function pollDeposit(deposit, chainHeight, btcPrice) {
     }
 }
 async function runPollCycle() {
+    // Dynamic xpub check — no-op until an admin configures the wallet
+    const xpub = await getXpub();
+    if (!xpub)
+        return;
     const [deposits, chainHeight, btcPrice] = await Promise.all([
         loadPendingBtcDeposits(),
         fetchBlockchainHeight().catch(() => 0),
@@ -231,26 +283,25 @@ async function runPollCycle() {
         console.warn('[BTC] Could not fetch chain height or BTC price — skipping poll cycle');
         return;
     }
-    console.log(`[BTC] Polling ${deposits.length} pending deposit(s) | height=${chainHeight} price=$${btcPrice}`);
+    console.log(`[BTC] Polling ${deposits.length} pending deposit(s) | height=${chainHeight} price=${btcPrice}`);
     await Promise.allSettled(deposits.map(d => pollDeposit(d, chainHeight, btcPrice)));
 }
 // ── Public entry point ──────────────────────────────────────────────────────
+//
+// Design: the polling interval runs unconditionally once started.  Each
+// runPollCycle() checks getXpub() dynamically so the monitor automatically
+// activates when an admin saves an xpub via the UI (no restart needed) and
+// becomes a no-op again if the xpub is removed.
+//
+// startBtcMonitor() is idempotent — safe to call multiple times (e.g. after
+// saving a new xpub).  Only one interval is ever registered.
+let monitorRunning = false;
 function startBtcMonitor() {
-    const xpub = process.env.BTC_XPUB;
-    if (!xpub) {
-        console.warn('[BTC] BTC_XPUB not set — BTC deposit monitor not started');
-        return;
-    }
-    // Validate xpub on startup
-    try {
-        bip32.fromBase58(xpub);
-    }
-    catch {
-        console.error('[BTC] Invalid BTC_XPUB — BTC deposit monitor not started');
-        return;
-    }
-    console.log(`[BTC] Monitor started (min ${MIN_CONFIRMATIONS} confirmations, polling every ${POLL_INTERVAL_MS / 1000}s)`);
-    // Run immediately, then on interval
+    if (monitorRunning)
+        return; // already running — nothing to do
+    monitorRunning = true;
+    console.log(`[BTC] Monitor loop started (min ${MIN_CONFIRMATIONS} confirmations, polling every ${POLL_INTERVAL_MS / 1000}s)`);
+    // Run once immediately (best-effort), then on a fixed interval.
     runPollCycle().catch(e => console.error('[BTC] Poll cycle error:', e));
     setInterval(() => runPollCycle().catch(e => console.error('[BTC] Poll cycle error:', e)), POLL_INTERVAL_MS);
 }

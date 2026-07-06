@@ -38,7 +38,8 @@ const AdminPortfolio  = lazy(() => import('@/pages/admin/AdminPortfolio'))
 const AdminWithdrawals = lazy(() => import('@/pages/admin/AdminWithdrawals'))
 const AdminAddresses  = lazy(() => import('@/pages/admin/AdminAddresses'))
 const AdminAuditLogs  = lazy(() => import('@/pages/admin/AdminAuditLogs'))
-const AdminDeposits   = lazy(() => import('@/pages/admin/AdminDeposits'))
+const AdminDeposits       = lazy(() => import('@/pages/admin/AdminDeposits'))
+const AdminBitcoinWallet  = lazy(() => import('@/pages/admin/AdminBitcoinWallet'))
 
 // Legal pages
 const Terms   = lazy(() => import('@/pages/legal/Terms'))
@@ -114,6 +115,7 @@ export default function App() {
                 <Route path="addresses"     element={<AdminAddresses />} />
                 <Route path="audit"         element={<AdminAuditLogs />} />
                 <Route path="deposits"      element={<AdminDeposits />} />
+                <Route path="bitcoin"       element={<AdminBitcoinWallet />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

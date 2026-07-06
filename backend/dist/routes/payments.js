@@ -98,13 +98,19 @@ router.post('/create-session', auth_1.requireAuth, async (req, res, next) => {
     }
 });
 // GET /api/payments/capabilities — which coins are currently active
-router.get('/capabilities', (_req, res) => {
-    res.json({
-        btc: !!process.env.BTC_XPUB,
-        eth: !!process.env.CONTRACT_ADDRESS,
-        usdt: !!process.env.CONTRACT_ADDRESS,
-        usdc: !!process.env.CONTRACT_ADDRESS,
-    });
+router.get('/capabilities', async (_req, res, next) => {
+    try {
+        const xpub = await (0, btcMonitor_1.getXpub)();
+        res.json({
+            btc: !!xpub,
+            eth: !!process.env.CONTRACT_ADDRESS,
+            usdt: !!process.env.CONTRACT_ADDRESS,
+            usdc: !!process.env.CONTRACT_ADDRESS,
+        });
+    }
+    catch (err) {
+        next(err);
+    }
 });
 // GET /api/payments/crypto-rate?coin=ethereum
 router.get('/crypto-rate', async (req, res, next) => {
@@ -135,7 +141,7 @@ router.post('/create-crypto-deposit', auth_1.requireAuth, async (req, res, next)
         const userId = req.userId;
         // ── BTC: HD-wallet address derivation ─────────────────────────────────
         if (coin === 'btc') {
-            const xpub = process.env.BTC_XPUB;
+            const xpub = await (0, btcMonitor_1.getXpub)();
             if (!xpub) {
                 return res.status(503).json({ error: 'BTC deposits are not yet active. Please contact support.' });
             }

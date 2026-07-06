@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { randomBytes } from 'crypto'
 import { requireAuth, type AuthRequest } from '../middleware/auth'
 import { supabase } from '../lib/supabase'
-import { deriveBtcAddress } from '../services/btcMonitor'
+import { deriveBtcAddress, getXpub } from '../services/btcMonitor'
 
 const router = Router()
 
@@ -117,13 +117,16 @@ router.post('/create-session', requireAuth, async (req: AuthRequest, res, next) 
 })
 
 // GET /api/payments/capabilities — which coins are currently active
-router.get('/capabilities', (_req, res) => {
-  res.json({
-    btc:  !!process.env.BTC_XPUB,
-    eth:  !!process.env.CONTRACT_ADDRESS,
-    usdt: !!process.env.CONTRACT_ADDRESS,
-    usdc: !!process.env.CONTRACT_ADDRESS,
-  })
+router.get('/capabilities', async (_req, res, next) => {
+  try {
+    const xpub = await getXpub()
+    res.json({
+      btc:  !!xpub,
+      eth:  !!process.env.CONTRACT_ADDRESS,
+      usdt: !!process.env.CONTRACT_ADDRESS,
+      usdc: !!process.env.CONTRACT_ADDRESS,
+    })
+  } catch (err) { next(err) }
 })
 
 // GET /api/payments/crypto-rate?coin=ethereum
@@ -158,7 +161,7 @@ router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res,
 
     // ── BTC: HD-wallet address derivation ─────────────────────────────────
     if (coin === 'btc') {
-      const xpub = process.env.BTC_XPUB
+      const xpub = await getXpub()
       if (!xpub) {
         return res.status(503).json({ error: 'BTC deposits are not yet active. Please contact support.' })
       }
