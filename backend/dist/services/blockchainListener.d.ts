@@ -30,8 +30,16 @@ export declare function fetchEthUsdPrice(): Promise<number | null>;
  * Returns true if credit was applied, false if the transaction was already
  * confirmed (idempotent — safe to call multiple times).
  */
+export interface AuditOverride {
+    action: string;
+    source: string;
+    mode: 'manual' | 'chain';
+    adminId: string;
+    ip?: string;
+}
 export declare function atomicCredit(txId: string, userId: string, amountUsd: number, txHash: string, eventKey: string, // `${txHash}:${logIndex}` — uniqueness guard
-fromStatuses?: string[]): Promise<boolean>;
+fromStatuses?: string[], // statuses eligible for transition
+auditOverride?: AuditOverride): Promise<boolean>;
 /**
  * Convert a raw on-chain amount to its USD value.
  *

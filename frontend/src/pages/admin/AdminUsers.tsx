@@ -286,6 +286,7 @@ export function AdminAuditLogs() {
   }, [])
 
   const actionColor = (action: string) => {
+    if (action === 'deposit_admin_retry') return 'badge-violet'
     if (action.includes('login'))    return 'badge-blue'
     if (action.includes('deposit'))  return 'badge-green'
     if (action.includes('withdraw')) return 'badge-gold'

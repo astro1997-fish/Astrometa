@@ -111,15 +111,9 @@ async function fetchEthUsdPrice() {
     // No cache at all — caller must handle the missing price
     return null;
 }
-/**
- * Atomically transitions a transaction from pending → confirmed and credits
- * the user's balance in a single conditional update.
- *
- * Returns true if credit was applied, false if the transaction was already
- * confirmed (idempotent — safe to call multiple times).
- */
 async function atomicCredit(txId, userId, amountUsd, txHash, eventKey, // `${txHash}:${logIndex}` — uniqueness guard
-fromStatuses = ['pending']) {
+fromStatuses = ['pending'], // statuses eligible for transition
+auditOverride) {
     // 1. Transition status → confirmed.
     //    The .in('status', fromStatuses) guard makes this a no-op on replay.
     const { data: updated, error: txErr } = await supabase_1.supabase
@@ -167,12 +161,30 @@ fromStatuses = ['pending']) {
         console.warn('[Blockchain] Confirmation email failed (non-fatal):', e);
     }
     try {
-        await supabase_1.supabase.from('audit_logs').insert({
-            user_id: userId,
-            action: 'deposit_confirmed',
-            metadata: JSON.stringify({ amountUsd, txId, txHash, eventKey }),
-            ip_address: 'blockchain',
-        });
+        if (auditOverride) {
+            await supabase_1.supabase.from('audit_logs').insert({
+                user_id: userId,
+                action: auditOverride.action,
+                metadata: JSON.stringify({
+                    amountUsd,
+                    txId,
+                    txHash,
+                    eventKey,
+                    source: auditOverride.source,
+                    mode: auditOverride.mode,
+                    adminId: auditOverride.adminId,
+                }),
+                ip_address: auditOverride.ip ?? 'admin',
+            });
+        }
+        else {
+            await supabase_1.supabase.from('audit_logs').insert({
+                user_id: userId,
+                action: 'deposit_confirmed',
+                metadata: JSON.stringify({ amountUsd, txId, txHash, eventKey }),
+                ip_address: 'blockchain',
+            });
+        }
     }
     catch (e) {
         console.warn('[Blockchain] Audit log failed (non-fatal):', e);
@@ -300,7 +312,14 @@ function startBlockchainListener() {
             // ── Wait for finality ──────────────────────────────────────────────
             const receipt = await provider.waitForTransaction(txHash, MIN_CONFIRMATIONS);
             if (!receipt || receipt.status !== 1) {
-                console.warn(`[Blockchain] Transaction ${txHash} failed or reverted — skipping`);
+                const reason = receipt ? 'Transaction reverted on chain' : 'Receipt not found — transaction may have been dropped';
+                console.warn(`[Blockchain] Transaction ${txHash} ${receipt ? 'reverted' : 'not found'} — skipping`);
+                // Best-effort: mark the deposit with a failure reason so admins know why it is stuck
+                await supabase_1.supabase
+                    .from('transactions')
+                    .update({ failure_reason: reason })
+                    .eq('tx_hash', paymentId)
+                    .in('status', ['pending']);
                 return;
             }
             // ── Look up pending transaction ────────────────────────────────────
@@ -328,6 +347,11 @@ function startBlockchainListener() {
                 const tokenInfo = exports.TOKEN_MAP[token.toLowerCase()];
                 if (!tokenInfo) {
                     console.warn(`[Blockchain] Unknown token ${token} — cannot determine USD value`);
+                    await supabase_1.supabase
+                        .from('transactions')
+                        .update({ failure_reason: `Unknown token ${token} — not in supported token list` })
+                        .eq('id', txRecord.id)
+                        .in('status', ['pending']);
                     return;
                 }
                 usdValue = await getUsdValue(tokenInfo.symbol, rawAmount, tokenInfo.decimals);
@@ -340,6 +364,7 @@ function startBlockchainListener() {
                     .from('transactions')
                     .update({
                     status: 'pending_price',
+                    failure_reason: 'ETH price unavailable — no cache at confirmation time (retry loop will re-price)',
                     metadata: JSON.stringify({
                         rawAmount: rawAmount.toString(),
                         token: isETH ? 'ETH' : token,
@@ -364,6 +389,11 @@ function startBlockchainListener() {
             }
             if (usdValue <= 0) {
                 console.warn(`[Blockchain] USD value is 0 for paymentId ${paymentId} — skipping credit`);
+                await supabase_1.supabase
+                    .from('transactions')
+                    .update({ failure_reason: 'ETH price returned $0 at confirmation time — use manual USD override' })
+                    .eq('id', txRecord.id)
+                    .in('status', ['pending']);
                 return;
             }
             // ── Atomic, idempotent credit ──────────────────────────────────────

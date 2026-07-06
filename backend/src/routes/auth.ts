@@ -190,7 +190,7 @@ adminRouter.get('/deposits', async (_req, res, next) => {
   } catch (err) { next(err) }
 })
 
-adminRouter.post('/deposits/:id/retry', async (req, res, next) => {
+adminRouter.post('/deposits/:id/retry', async (req: AuthRequest, res, next) => {
   try {
     const { id } = req.params
     const schema = z.object({
@@ -282,11 +282,19 @@ adminRouter.post('/deposits/:id/retry', async (req, res, next) => {
       eventKey        = `manual:${id}`
     }
 
-    // Pass both eligible from-statuses so failed deposits can also be credited
+    // Pass both eligible from-statuses so failed deposits can also be credited.
+    // Include audit override so the log entry is distinct from automatic blockchain credits.
     const { atomicCredit } = await import('../services/blockchainListener')
     const credited = await atomicCredit(
       txRecord.id, txRecord.user_id, usdValue, effectiveTxHash, eventKey,
       ['pending', 'failed'],
+      {
+        action:  'deposit_admin_retry',
+        source:  'admin_retry',
+        mode:    txHash ? 'chain' : 'manual',
+        adminId: req.userId!,
+        ip:      req.ip ?? req.socket?.remoteAddress ?? 'admin',
+      },
     )
 
     res.json({ success: true, credited, amountUsd: usdValue })

@@ -9,6 +9,8 @@ const helmet_1 = __importDefault(require("helmet"));
 const cors_1 = __importDefault(require("cors"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const xss_clean_1 = __importDefault(require("xss-clean"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const blockchainListener_1 = require("./services/blockchainListener");
 const btcMonitor_1 = require("./services/btcMonitor");
 const auth_1 = __importDefault(require("./routes/auth"));
@@ -36,8 +38,27 @@ app.use((0, helmet_1.default)({
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
 }));
 // ── CORS ────────────────────────────────────────────────────────────
+// In production the frontend is served from the same origin as the API, so
+// same-origin requests never hit CORS. Cross-origin callers (webhooks, a
+// separate mobile app) still need the header. We use an explicit allowlist
+// rather than origin:true to avoid reflecting arbitrary origins with
+// credentials, which opens credentialed cross-origin reads for attackers.
+const isProd = process.env.NODE_ENV === 'production';
+const allowedOrigins = new Set([
+    'http://localhost:5000',
+    'http://localhost:8000',
+    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+    ...(process.env.PRODUCTION_URL ? [process.env.PRODUCTION_URL] : []),
+]);
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:5000',
+    origin: (origin, cb) => {
+        // Allow requests with no Origin header (server-to-server, curl, Stripe webhooks)
+        if (!origin)
+            return cb(null, true);
+        if (allowedOrigins.has(origin))
+            return cb(null, true);
+        cb(new Error(`CORS: origin "${origin}" not allowed`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
@@ -84,12 +105,31 @@ app.use('/api/webhooks', webhooks_1.default);
 app.use('/api/portfolio', portfolio_1.default);
 app.use('/api/support', support_1.default);
 app.use('/api/admin', admin_1.default);
-// ── Error handler ───────────────────────────────────────────────────
+// ── Static frontend (production only) ───────────────────────────────
+// Must come BEFORE errorHandler so errors from static/sendFile are caught.
+// The SPA fallback is scoped to non-/api paths so unknown API routes
+// return JSON 404 from the error handler, not index.html.
+if (isProd) {
+    const distDir = path_1.default.resolve(__dirname, '../../frontend/dist');
+    if (fs_1.default.existsSync(distDir)) {
+        app.use(express_1.default.static(distDir));
+        // SPA fallback — only for non-API GET requests
+        app.get(/^(?!\/api).*$/, (_req, res) => {
+            res.sendFile(path_1.default.join(distDir, 'index.html'));
+        });
+        console.log(`[Static] Serving frontend from ${distDir}`);
+    }
+    else {
+        console.warn('[Static] frontend/dist not found — run "npm run build" in frontend/');
+    }
+}
+// ── Error handler (must be last) ────────────────────────────────────
 app.use(errorHandler_1.errorHandler);
 // ── Blockchain listeners ────────────────────────────────────────────
 (0, blockchainListener_1.startBlockchainListener)();
 (0, btcMonitor_1.startBtcMonitor)();
-app.listen(Number(PORT), 'localhost', () => {
+// Listen on 0.0.0.0 so Replit deployment (and Docker) can reach the port
+app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`✅  ASTRO META-TRADE API running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`);
 });
 exports.default = app;

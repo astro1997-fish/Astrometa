@@ -216,7 +216,7 @@ exports.adminRouter.get('/deposits', async (_req, res, next) => {
     try {
         const { data, error } = await supabase_1.supabase
             .from('transactions')
-            .select('id, user_id, amount_usd, tx_hash, created_at, method, status, users!inner(full_name, email)')
+            .select('id, user_id, amount_usd, tx_hash, created_at, method, status, failure_reason, users!inner(full_name, email)')
             .eq('type', 'deposit')
             .in('status', ['pending', 'failed'])
             .not('tx_hash', 'is', null)
@@ -320,9 +320,16 @@ exports.adminRouter.post('/deposits/:id/retry', async (req, res, next) => {
             effectiveTxHash = txRecord.tx_hash ?? `manual:${id}`;
             eventKey = `manual:${id}`;
         }
-        // Pass both eligible from-statuses so failed deposits can also be credited
+        // Pass both eligible from-statuses so failed deposits can also be credited.
+        // Include audit override so the log entry is distinct from automatic blockchain credits.
         const { atomicCredit } = await Promise.resolve().then(() => __importStar(require('../services/blockchainListener')));
-        const credited = await atomicCredit(txRecord.id, txRecord.user_id, usdValue, effectiveTxHash, eventKey, ['pending', 'failed']);
+        const credited = await atomicCredit(txRecord.id, txRecord.user_id, usdValue, effectiveTxHash, eventKey, ['pending', 'failed'], {
+            action: 'deposit_admin_retry',
+            source: 'admin_retry',
+            mode: txHash ? 'chain' : 'manual',
+            adminId: req.userId,
+            ip: req.ip ?? req.socket?.remoteAddress ?? 'admin',
+        });
         res.json({ success: true, credited, amountUsd: usdValue });
     }
     catch (err) {

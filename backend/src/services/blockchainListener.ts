@@ -91,13 +91,22 @@ export async function fetchEthUsdPrice(): Promise<number | null> {
  * Returns true if credit was applied, false if the transaction was already
  * confirmed (idempotent — safe to call multiple times).
  */
+export interface AuditOverride {
+  action:  string          // replaces 'deposit_confirmed' in audit_logs
+  source:  string          // e.g. 'admin_retry'
+  mode:    'manual' | 'chain'
+  adminId: string          // UUID of the acting admin
+  ip?:     string          // request IP, if available
+}
+
 export async function atomicCredit(
-  txId:         string,
-  userId:       string,
-  amountUsd:    number,
-  txHash:       string,
-  eventKey:     string,         // `${txHash}:${logIndex}` — uniqueness guard
-  fromStatuses: string[] = ['pending'],  // statuses eligible for transition
+  txId:          string,
+  userId:        string,
+  amountUsd:     number,
+  txHash:        string,
+  eventKey:      string,         // `${txHash}:${logIndex}` — uniqueness guard
+  fromStatuses:  string[] = ['pending'],  // statuses eligible for transition
+  auditOverride?: AuditOverride, // when set, writes a distinct audit entry for admin actions
 ): Promise<boolean> {
   // 1. Transition status → confirmed.
   //    The .in('status', fromStatuses) guard makes this a no-op on replay.
@@ -152,12 +161,29 @@ export async function atomicCredit(
   }
 
   try {
-    await supabase.from('audit_logs').insert({
-      user_id:    userId,
-      action:     'deposit_confirmed',
-      metadata:   JSON.stringify({ amountUsd, txId, txHash, eventKey }),
-      ip_address: 'blockchain',
-    })
+    if (auditOverride) {
+      await supabase.from('audit_logs').insert({
+        user_id:    userId,
+        action:     auditOverride.action,
+        metadata:   JSON.stringify({
+          amountUsd,
+          txId,
+          txHash,
+          eventKey,
+          source:  auditOverride.source,
+          mode:    auditOverride.mode,
+          adminId: auditOverride.adminId,
+        }),
+        ip_address: auditOverride.ip ?? 'admin',
+      })
+    } else {
+      await supabase.from('audit_logs').insert({
+        user_id:    userId,
+        action:     'deposit_confirmed',
+        metadata:   JSON.stringify({ amountUsd, txId, txHash, eventKey }),
+        ip_address: 'blockchain',
+      })
+    }
   } catch (e) {
     console.warn('[Blockchain] Audit log failed (non-fatal):', e)
   }
