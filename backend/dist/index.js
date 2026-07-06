@@ -9,6 +9,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const cors_1 = __importDefault(require("cors"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const xss_clean_1 = __importDefault(require("xss-clean"));
+const blockchainListener_1 = require("./services/blockchainListener");
 const auth_1 = __importDefault(require("./routes/auth"));
 const payments_1 = __importDefault(require("./routes/payments"));
 const webhooks_1 = __importDefault(require("./routes/webhooks"));
@@ -74,6 +75,8 @@ app.use('/api/support', support_1.default);
 app.use('/api/admin', admin_1.default);
 // ── Error handler ───────────────────────────────────────────────────
 app.use(errorHandler_1.errorHandler);
+// ── Blockchain listener ─────────────────────────────────────────────
+(0, blockchainListener_1.startBlockchainListener)();
 app.listen(Number(PORT), 'localhost', () => {
     console.log(`✅  ASTRO META-TRADE API running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`);
 });

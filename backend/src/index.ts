@@ -5,6 +5,7 @@ import cors from 'cors'
 import rateLimit from 'express-rate-limit'
 import xssClean from 'xss-clean'
 
+import { startBlockchainListener } from './services/blockchainListener'
 import authRoutes     from './routes/auth'
 import paymentRoutes  from './routes/payments'
 import webhookRoutes  from './routes/webhooks'
@@ -81,6 +82,9 @@ app.use('/api/admin',     adminRoutes)
 
 // ── Error handler ───────────────────────────────────────────────────
 app.use(errorHandler)
+
+// ── Blockchain listener ─────────────────────────────────────────────
+startBlockchainListener()
 
 app.listen(Number(PORT), 'localhost', () => {
   console.log(`✅  ASTRO META-TRADE API running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`)
