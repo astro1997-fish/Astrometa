@@ -1,14 +1,17 @@
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
-# Install dependencies from backend
+# Copy package files and install ALL dependencies (including devDeps for tsc)
 COPY backend/package*.json ./
-RUN npm ci
+RUN npm install
 
-# Copy backend source and build
+# Copy source and compile TypeScript
 COPY backend/ .
 RUN npm run build
+
+# Prune devDependencies after build
+RUN npm prune --production
 
 EXPOSE 8000
 ENV NODE_ENV=production
