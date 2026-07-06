@@ -4,6 +4,8 @@ import helmet from 'helmet'
 import cors from 'cors'
 import rateLimit from 'express-rate-limit'
 import xssClean from 'xss-clean'
+import path from 'path'
+import fs from 'fs'
 
 import { startBlockchainListener, getListenerStatus } from './services/blockchainListener'
 import { startBtcMonitor }         from './services/btcMonitor'
@@ -36,8 +38,27 @@ app.use(helmet({
 }))
 
 // ── CORS ────────────────────────────────────────────────────────────
+// In production the frontend is served from the same origin as the API, so
+// same-origin requests never hit CORS. Cross-origin callers (webhooks, a
+// separate mobile app) still need the header. We use an explicit allowlist
+// rather than origin:true to avoid reflecting arbitrary origins with
+// credentials, which opens credentialed cross-origin reads for attackers.
+const isProd = process.env.NODE_ENV === 'production'
+
+const allowedOrigins = new Set<string>([
+  'http://localhost:5000',
+  'http://localhost:8000',
+  ...(process.env.FRONTEND_URL   ? [process.env.FRONTEND_URL]   : []),
+  ...(process.env.PRODUCTION_URL ? [process.env.PRODUCTION_URL] : []),
+])
+
 app.use(cors({
-  origin:      process.env.FRONTEND_URL ?? 'http://localhost:5000',
+  origin: (origin, cb) => {
+    // Allow requests with no Origin header (server-to-server, curl, Stripe webhooks)
+    if (!origin) return cb(null, true)
+    if (allowedOrigins.has(origin)) return cb(null, true)
+    cb(new Error(`CORS: origin "${origin}" not allowed`))
+  },
   credentials: true,
   methods:     ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
@@ -92,14 +113,33 @@ app.use('/api/portfolio', portfolioRoutes)
 app.use('/api/support',   supportRoutes)
 app.use('/api/admin',     adminRoutes)
 
-// ── Error handler ───────────────────────────────────────────────────
+// ── Static frontend (production only) ───────────────────────────────
+// Must come BEFORE errorHandler so errors from static/sendFile are caught.
+// The SPA fallback is scoped to non-/api paths so unknown API routes
+// return JSON 404 from the error handler, not index.html.
+if (isProd) {
+  const distDir = path.resolve(__dirname, '../../frontend/dist')
+  if (fs.existsSync(distDir)) {
+    app.use(express.static(distDir))
+    // SPA fallback — only for non-API GET requests
+    app.get(/^(?!\/api).*$/, (_req, res) => {
+      res.sendFile(path.join(distDir, 'index.html'))
+    })
+    console.log(`[Static] Serving frontend from ${distDir}`)
+  } else {
+    console.warn('[Static] frontend/dist not found — run "npm run build" in frontend/')
+  }
+}
+
+// ── Error handler (must be last) ────────────────────────────────────
 app.use(errorHandler)
 
 // ── Blockchain listeners ────────────────────────────────────────────
 startBlockchainListener()
 startBtcMonitor()
 
-app.listen(Number(PORT), 'localhost', () => {
+// Listen on 0.0.0.0 so Replit deployment (and Docker) can reach the port
+app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`✅  ASTRO META-TRADE API running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`)
 })
 

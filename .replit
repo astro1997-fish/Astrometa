@@ -57,12 +57,11 @@ externalPort = 3001
 [[ports]]
 localPort = 8000
 externalPort = 8000
-exposeLocalhost = true
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["bash", "-c", "cd frontend && npm run preview -- --port 5000 --host 0.0.0.0"]
-build = ["bash", "-c", "cd frontend && npm run build"]
+run = ["bash", "-c", "cd backend && NODE_ENV=production node dist/index.js"]
+build = ["bash", "-c", "cd frontend && npm run build && cd ../backend && npm run build"]
 
 [userenv]
 
