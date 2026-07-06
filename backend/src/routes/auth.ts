@@ -180,13 +180,21 @@ adminRouter.get('/deposits', async (_req, res, next) => {
   try {
     const { data, error } = await supabase
       .from('transactions')
-      .select('id, user_id, amount_usd, tx_hash, created_at, method, status, failure_reason, users!inner(full_name, email)')
+      .select('id, user_id, amount_usd, tx_hash, created_at, method, status, failure_reason, metadata, users!inner(full_name, email)')
       .eq('type', 'deposit')
-      .in('status', ['pending', 'failed'])
+      .in('status', ['pending', 'failed', 'pending_price'])
       .not('tx_hash', 'is', null)
       .order('created_at', { ascending: false })
     if (error) throw error
     res.json(data ?? [])
+  } catch (err) { next(err) }
+})
+
+adminRouter.post('/deposits/retry-pending-price', async (_req, res, next) => {
+  try {
+    const { retryPendingPriceTransactions } = await import('../services/blockchainListener')
+    await retryPendingPriceTransactions()
+    res.json({ success: true })
   } catch (err) { next(err) }
 })
 
@@ -209,7 +217,7 @@ adminRouter.post('/deposits/:id/retry', async (req: AuthRequest, res, next) => {
       .single()
 
     if (fetchErr || !txRecord) return res.status(404).json({ error: 'Transaction not found' })
-    if (!['pending', 'failed'].includes(txRecord.status)) {
+    if (!['pending', 'failed', 'pending_price'].includes(txRecord.status)) {
       return res.status(409).json({ error: `Transaction is already ${txRecord.status} — cannot retry` })
     }
 
@@ -287,7 +295,7 @@ adminRouter.post('/deposits/:id/retry', async (req: AuthRequest, res, next) => {
     const { atomicCredit } = await import('../services/blockchainListener')
     const credited = await atomicCredit(
       txRecord.id, txRecord.user_id, usdValue, effectiveTxHash, eventKey,
-      ['pending', 'failed'],
+      ['pending', 'failed', 'pending_price'],
       {
         action:  'deposit_admin_retry',
         source:  'admin_retry',
