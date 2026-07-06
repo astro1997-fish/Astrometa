@@ -63,3 +63,11 @@ exposeLocalhost = true
 deploymentTarget = "autoscale"
 run = ["bash", "-c", "cd frontend && npm run preview -- --port 5000 --host 0.0.0.0"]
 build = ["bash", "-c", "cd frontend && npm run build"]
+
+[userenv]
+
+[userenv.shared]
+SUPABASE_URL = "https://szoowwutahefnjnsevkc.supabase.co"
+VITE_API_URL = "http://localhost:8000"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6b293d3V0YWhlZm5qbnNldmtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.iuje12qRArqK719V1JES32ACTGQR4fMadAR_lk_c4Ts"
+VITE_SUPABASE_URL = "https://szoowwutahefnjnsevkc.supabase.co"
