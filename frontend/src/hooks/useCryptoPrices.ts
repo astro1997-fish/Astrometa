@@ -83,5 +83,8 @@ export const fmt = {
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n),
   compact: (n: number) =>
     new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 2 }).format(n),
-  pct: (n: number) => `${n > 0 ? '+' : ''}${n.toFixed(2)}%`,
+  pct: (n: number | null | undefined) => {
+    if (n == null || isNaN(n)) return '—'
+    return `${n > 0 ? '+' : ''}${n.toFixed(2)}%`
+  },
 }

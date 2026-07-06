@@ -45,7 +45,7 @@ export default function Markets() {
     }
     list.sort((a, b) => sortBy === 'market_cap_rank'
       ? a.market_cap_rank - b.market_cap_rank
-      : b.price_change_percentage_24h - a.price_change_percentage_24h
+      : (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0)
     )
     return list
   }, [coins, search, sortBy])
@@ -86,9 +86,9 @@ export default function Markets() {
               <p className="text-lg font-bold text-gray-900 dark:text-white">{fmt.usd(coin.current_price)}</p>
               <p className={clsx(
                 'text-xs font-semibold mt-0.5 flex items-center gap-0.5',
-                coin.price_change_percentage_24h >= 0 ? 'text-emerald-500' : 'text-red-500'
+                (coin.price_change_percentage_24h ?? 0) >= 0 ? 'text-emerald-500' : 'text-red-500'
               )}>
-                {coin.price_change_percentage_24h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                {(coin.price_change_percentage_24h ?? 0) >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {fmt.pct(coin.price_change_percentage_24h)}
               </p>
             </motion.div>
@@ -148,7 +148,7 @@ export default function Markets() {
                 <tbody className="divide-y divide-gray-50 dark:divide-white/5">
                   {filtered.map(coin => {
                     const isInvestable = INVESTABLE.includes(coin.id)
-                    const isUp = coin.price_change_percentage_24h >= 0
+                    const isUp = (coin.price_change_percentage_24h ?? 0) >= 0
 
                     return (
                       <tr
