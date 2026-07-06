@@ -1,0 +1,1 @@
+function r(t,e){return e==="btc"?/^[0-9a-fA-F]{64}$/.test(t)?`https://mempool.space/tx/${t}`:/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}$/.test(t)?`https://mempool.space/address/${t}`:`https://mempool.space/tx/${t}`:`https://etherscan.io/tx/${t}`}function o(t){return`${t.slice(0,8)}…${t.slice(-6)}`}export{o as a,r as t};

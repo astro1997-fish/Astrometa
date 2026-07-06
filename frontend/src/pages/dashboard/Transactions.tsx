@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowDownLeft, ArrowUpRight, BarChart3, ExternalLink, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { txExplorerUrl, txShortLabel } from '@/lib/txLink'
 import { useAuth } from '@/contexts/AuthContext'
 import { Badge, SkeletonTable } from '@/components/ui/index'
 import { clsx } from 'clsx'
@@ -158,12 +159,12 @@ export default function Transactions() {
                       <td className="px-4 py-3">
                         {tx.tx_hash ? (
                           <a
-                            href={`https://etherscan.io/tx/${tx.tx_hash}`}
+                            href={txExplorerUrl(tx.tx_hash, tx.method)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-brand-400 text-xs hover:underline"
                           >
-                            {tx.tx_hash.slice(0, 8)}…{tx.tx_hash.slice(-6)}
+                            {txShortLabel(tx.tx_hash)}
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         ) : (

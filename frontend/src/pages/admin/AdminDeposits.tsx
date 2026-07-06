@@ -4,6 +4,7 @@ import { Badge, SkeletonTable } from '@/components/ui/index'
 import toast from 'react-hot-toast'
 import { clsx } from 'clsx'
 import { supabase } from '@/lib/supabase'
+import { txExplorerUrl } from '@/lib/txLink'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
@@ -171,10 +172,11 @@ export default function AdminDeposits() {
                             {d.tx_hash.slice(0, 10)}…{d.tx_hash.slice(-8)}
                           </code>
                           <a
-                            href={`https://etherscan.io/search?q=${d.tx_hash}`}
+                            href={txExplorerUrl(d.tx_hash, d.method)}
                             target="_blank"
                             rel="noreferrer"
                             className="text-gray-400 hover:text-brand-400 transition-colors"
+                            title={d.method === 'btc' ? 'View on mempool.space' : 'View on Etherscan'}
                           >
                             <ExternalLink className="w-3 h-3" />
                           </a>
