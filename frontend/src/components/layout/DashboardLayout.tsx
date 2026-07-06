@@ -56,7 +56,7 @@ export default function DashboardLayout() {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-              {profile?.full_name ?? 'Investor'}
+              {profile?.full_name ?? user?.user_metadata?.full_name ?? 'Investor'}
             </p>
             <p className="text-xs text-gray-400 truncate">{user?.email}</p>
           </div>
