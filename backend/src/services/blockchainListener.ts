@@ -334,7 +334,14 @@ export function startBlockchainListener() {
         // ── Wait for finality ──────────────────────────────────────────────
         const receipt = await provider.waitForTransaction(txHash, MIN_CONFIRMATIONS)
         if (!receipt || receipt.status !== 1) {
-          console.warn(`[Blockchain] Transaction ${txHash} failed or reverted — skipping`)
+          const reason = receipt ? 'Transaction reverted on chain' : 'Receipt not found — transaction may have been dropped'
+          console.warn(`[Blockchain] Transaction ${txHash} ${receipt ? 'reverted' : 'not found'} — skipping`)
+          // Best-effort: mark the deposit with a failure reason so admins know why it is stuck
+          await supabase
+            .from('transactions')
+            .update({ failure_reason: reason })
+            .eq('tx_hash', paymentId)
+            .in('status', ['pending'])
           return
         }
 
@@ -366,6 +373,11 @@ export function startBlockchainListener() {
           const tokenInfo = TOKEN_MAP[token.toLowerCase()]
           if (!tokenInfo) {
             console.warn(`[Blockchain] Unknown token ${token} — cannot determine USD value`)
+            await supabase
+              .from('transactions')
+              .update({ failure_reason: `Unknown token ${token} — not in supported token list` })
+              .eq('id', txRecord.id)
+              .in('status', ['pending'])
             return
           }
           usdValue = await getUsdValue(tokenInfo.symbol, rawAmount, tokenInfo.decimals)
@@ -378,7 +390,8 @@ export function startBlockchainListener() {
           const { error: deferErr } = await supabase
             .from('transactions')
             .update({
-              status:   'pending_price',
+              status:         'pending_price',
+              failure_reason: 'ETH price unavailable — no cache at confirmation time (retry loop will re-price)',
               metadata: JSON.stringify({
                 rawAmount:  rawAmount.toString(),
                 token:      isETH ? 'ETH' : token,
@@ -406,6 +419,11 @@ export function startBlockchainListener() {
 
         if (usdValue <= 0) {
           console.warn(`[Blockchain] USD value is 0 for paymentId ${paymentId} — skipping credit`)
+          await supabase
+            .from('transactions')
+            .update({ failure_reason: 'ETH price returned $0 at confirmation time — use manual USD override' })
+            .eq('id', txRecord.id)
+            .in('status', ['pending'])
           return
         }
 

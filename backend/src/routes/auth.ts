@@ -180,7 +180,7 @@ adminRouter.get('/deposits', async (_req, res, next) => {
   try {
     const { data, error } = await supabase
       .from('transactions')
-      .select('id, user_id, amount_usd, tx_hash, created_at, method, status, users!inner(full_name, email)')
+      .select('id, user_id, amount_usd, tx_hash, created_at, method, status, failure_reason, users!inner(full_name, email)')
       .eq('type', 'deposit')
       .in('status', ['pending', 'failed'])
       .not('tx_hash', 'is', null)

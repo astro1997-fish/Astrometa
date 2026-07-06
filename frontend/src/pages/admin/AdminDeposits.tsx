@@ -17,6 +17,7 @@ interface PendingDeposit {
   created_at: string
   method: string
   status: 'pending' | 'failed'
+  failure_reason: string | null
   users: { full_name: string; email: string }
 }
 
@@ -56,7 +57,12 @@ export default function AdminDeposits() {
   useEffect(() => { fetchDeposits() }, [])
 
   const openRetry = (deposit: PendingDeposit) => {
-    setModal({ deposit, txHash: '', amountUsd: '', mode: 'chain' })
+    // Pre-select retry mode based on the failure reason:
+    // price-related failures → manual USD override; everything else → on-chain lookup
+    const reason = deposit.failure_reason?.toLowerCase() ?? ''
+    const mode: 'chain' | 'manual' =
+      reason.includes('price') || reason.includes('$0') ? 'manual' : 'chain'
+    setModal({ deposit, txHash: '', amountUsd: '', mode })
   }
 
   const submitRetry = async () => {
@@ -148,7 +154,7 @@ export default function AdminDeposits() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-white/5">
-                  {['User', 'Expected Amount', 'Payment ID (tx_hash)', 'Method', 'Status', 'Created', 'Action'].map(h => (
+                  {['User', 'Expected Amount', 'Payment ID (tx_hash)', 'Method', 'Status', 'Reason', 'Created', 'Action'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
                       {h}
                     </th>
@@ -191,6 +197,20 @@ export default function AdminDeposits() {
                     <td className="px-4 py-3">
                       <Badge variant={d.status === 'failed' ? 'red' : 'gold'}>{d.status}</Badge>
                     </td>
+                    <td className="px-4 py-3 max-w-[220px]">
+                      {d.failure_reason ? (
+                        <span
+                          className="text-[11px] text-amber-600 dark:text-amber-400 leading-snug block"
+                          title={d.failure_reason}
+                        >
+                          {d.failure_reason.length > 60
+                            ? d.failure_reason.slice(0, 58) + '…'
+                            : d.failure_reason}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
                       {new Date(d.created_at).toLocaleString('en-US', {
                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -228,6 +248,16 @@ export default function AdminDeposits() {
             </div>
 
             <div className="p-6 space-y-4">
+              {/* Failure reason banner */}
+              {modal.deposit.failure_reason && (
+                <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700/30 px-3 py-2.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                    <span className="font-semibold">Stuck reason: </span>{modal.deposit.failure_reason}
+                  </p>
+                </div>
+              )}
+
               {/* Mode tabs */}
               <div className="flex rounded-lg bg-gray-100 dark:bg-white/5 p-1 gap-1">
                 {(['chain', 'manual'] as const).map(m => (

@@ -410,5 +410,15 @@ CREATE POLICY "admins_all_system_settings" ON public.system_settings
   );
 
 -- ============================================================
+-- Stuck-deposit failure reasons
+-- ============================================================
+
+-- Human-readable explanation for why the blockchain listener skipped
+-- crediting a deposit (e.g. "ETH price returned $0", "Unknown token",
+-- "Transaction reverted on chain").  Shown in the Stuck Deposits admin
+-- table so admins can choose the right retry path at a glance.
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS failure_reason TEXT;
+
+-- ============================================================
 -- DONE ✅
 -- ============================================================
