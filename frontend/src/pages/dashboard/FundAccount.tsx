@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   Copy, Check, AlertTriangle, ChevronRight, CreditCard, Bitcoin,
-  Clock, ExternalLink, Wallet,
+  Clock, ExternalLink, Wallet, Loader2,
 } from 'lucide-react'
 import QRCode from 'react-qr-code'
 import { useAuth } from '@/contexts/AuthContext'
@@ -18,6 +18,7 @@ import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 import { ethers } from 'ethers'
+import { supabase } from '@/lib/supabase'
 
 type FundMethod    = 'crypto' | 'fiat'
 type CryptoOption  = 'eth' | 'usdt' | 'usdc' | 'btc'
@@ -79,8 +80,8 @@ function useCountdown(expiresAt: string | null) {
 }
 
 export default function FundAccount() {
-  const { t }    = useTranslation()
-  const { user } = useAuth()
+  const { t }                      = useTranslation()
+  const { user, refreshProfile }   = useAuth()
   const location  = useLocation()
   const prefilled = (location.state as any)
 
@@ -108,10 +109,11 @@ export default function FundAccount() {
       .catch(() => {/* non-fatal — all coins stay disabled */})
   }, [])
 
-  const [depositInfo,   setDepositInfo]   = useState<DepositInfo | null>(null)
+  const [depositInfo,    setDepositInfo]    = useState<DepositInfo | null>(null)
   const [loadingDeposit, setLoadingDeposit] = useState(false)
-  const [txStep,        setTxStep]        = useState<'idle' | 'approving' | 'depositing' | 'done'>('idle')
-  const [onchainTxHash, setOnchainTxHash] = useState<string | null>(null)
+  const [txStep,         setTxStep]         = useState<'idle' | 'approving' | 'depositing' | 'done'>('idle')
+  const [onchainTxHash,  setOnchainTxHash]  = useState<string | null>(null)
+  const [depositStatus,  setDepositStatus]  = useState<'waiting' | 'confirmed'>('waiting')
 
   const { remaining, label: countdownLabel } = useCountdown(depositInfo?.expiresAt ?? null)
 
@@ -120,7 +122,38 @@ export default function FundAccount() {
     setDepositInfo(null)
     setTxStep('idle')
     setOnchainTxHash(null)
+    setDepositStatus('waiting')
   }, [coin, method])
+
+  // Real-time subscription: watch the transaction row for status → confirmed
+  useEffect(() => {
+    if (!depositInfo?.txId) return
+
+    const channel = supabase
+      .channel(`deposit-status-${depositInfo.txId}`)
+      .on(
+        'postgres_changes',
+        {
+          event:  'UPDATE',
+          schema: 'public',
+          table:  'transactions',
+          filter: `id=eq.${depositInfo.txId}`,
+        },
+        (payload) => {
+          const newStatus = (payload.new as any)?.status
+          if (newStatus === 'confirmed') {
+            setDepositStatus('confirmed')
+            refreshProfile()
+            toast.success('Deposit confirmed! Your balance has been updated.', { duration: 6000 })
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [depositInfo?.txId])
 
   const createDeposit = async () => {
     const usd = parseFloat(amountInput)
@@ -365,6 +398,29 @@ export default function FundAccount() {
                     <div className="text-xs text-red-500 font-semibold">Expired</div>
                   )}
                 </div>
+
+                {/* Live deposit status indicator */}
+                {depositStatus === 'confirmed' ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-3"
+                  >
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Deposit confirmed ✅</p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-500">Your balance has been updated.</p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/30 rounded-xl px-4 py-3">
+                    <Loader2 className="w-4 h-4 text-blue-500 animate-spin shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Waiting for confirmation…</p>
+                      <p className="text-xs text-blue-600/70 dark:text-blue-500/70">This page will update automatically once your payment is detected.</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* QR code + address */}
                 <div className="flex items-start gap-4">
