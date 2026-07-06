@@ -1,0 +1,256 @@
+"use strict";
+/**
+ * Bitcoin deposit monitor using Blockstream API.
+ *
+ * Flow:
+ *  1. On startup, load all pending BTC deposits from the DB.
+ *  2. Poll Blockstream every POLL_INTERVAL_MS for incoming txs on each address.
+ *  3. After MIN_CONFIRMATIONS, atomically credit the user balance (idempotent).
+ *
+ * Address derivation:
+ *  - Admin sets BTC_XPUB (account-level xpub, m/84'/0'/0' for native segwit).
+ *  - Each deposit derives at m/0/<index> (external chain).
+ *  - The deposit address is stored in the `btc_address` column (permanent).
+ *  - The on-chain txid is stored in `tx_hash` only after confirmation.
+ *
+ * Safety properties:
+ *  - Idempotent: status transition pending → confirmed is conditional, so
+ *    replay/concurrency never double-credits.
+ *  - Address uniqueness: enforced by DB partial index on btc_address, plus
+ *    a unique-constraint + retry loop in the route.
+ *  - A single bitcoin tx paying N deposit addresses credits N users correctly
+ *    because the uniqueness key is btc_address, not the on-chain txid.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.deriveBtcAddress = deriveBtcAddress;
+exports.startBtcMonitor = startBtcMonitor;
+const bitcoin = __importStar(require("bitcoinjs-lib"));
+const bip32_1 = __importDefault(require("bip32"));
+const ecc = __importStar(require("tiny-secp256k1"));
+const supabase_1 = require("../lib/supabase");
+const email_1 = require("./email");
+// Initialise BIP32 with the secp256k1 implementation
+const bip32 = (0, bip32_1.default)(ecc);
+const BLOCKSTREAM_API = 'https://blockstream.info/api';
+const POLL_INTERVAL_MS = 60000; // poll every 60 s
+const MIN_CONFIRMATIONS = parseInt(process.env.BTC_MIN_CONFIRMATIONS ?? '3', 10);
+// ── Address derivation ──────────────────────────────────────────────────────
+/**
+ * Derive a native-segwit (P2WPKH / bech32) BTC address from an xpub.
+ * Path convention: m/0/<index>  (external chain, one address per deposit).
+ */
+function deriveBtcAddress(xpub, index) {
+    const node = bip32.fromBase58(xpub);
+    const child = node.derive(0).derive(index);
+    const { address } = bitcoin.payments.p2wpkh({ pubkey: Buffer.from(child.publicKey) });
+    if (!address)
+        throw new Error(`Failed to derive BTC address at index ${index}`);
+    return address;
+}
+async function fetchAddressTxs(address) {
+    const { default: axios } = await Promise.resolve().then(() => __importStar(require('axios')));
+    const res = await axios.get(`${BLOCKSTREAM_API}/address/${address}/txs`, { timeout: 10000 });
+    return res.data;
+}
+async function fetchBlockchainHeight() {
+    const { default: axios } = await Promise.resolve().then(() => __importStar(require('axios')));
+    const res = await axios.get(`${BLOCKSTREAM_API}/blocks/tip/height`, { timeout: 10000 });
+    return res.data;
+}
+/** Satoshi → BTC */
+function satsToBtc(sats) {
+    return sats / 1e8;
+}
+/** Fetch BTC/USD price from CoinGecko */
+async function getBtcUsdPrice() {
+    const { default: axios } = await Promise.resolve().then(() => __importStar(require('axios')));
+    const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+        params: { ids: 'bitcoin', vs_currencies: 'usd' },
+        timeout: 10000,
+    });
+    return data['bitcoin']?.usd ?? 0;
+}
+// ── Atomic credit ────────────────────────────────────────────────────────────
+//
+// Sets status pending → confirmed (conditional — safe to replay).
+// Sets tx_hash to the on-chain Bitcoin txid.
+// btc_address is NOT modified — it remains the permanent deposit address.
+async function atomicCreditBtc(txId, userId, amountUsd, btcTxid) {
+    // Transition pending → confirmed. The .eq('status','pending') guard makes
+    // this a no-op if the row was already confirmed by a prior poll cycle.
+    const { data: updated, error: txErr } = await supabase_1.supabase
+        .from('transactions')
+        .update({ status: 'confirmed', amount_usd: amountUsd, tx_hash: btcTxid })
+        .eq('id', txId)
+        .eq('status', 'pending')
+        .select('id');
+    if (txErr) {
+        console.error('[BTC] Failed to confirm transaction:', txErr.message);
+        throw txErr;
+    }
+    if (!updated || updated.length === 0) {
+        // Already confirmed by a previous poll cycle — nothing to do.
+        console.log(`[BTC] Transaction ${txId} already confirmed — skipping`);
+        return false;
+    }
+    const { error: balErr } = await supabase_1.supabase.rpc('increment_balance', {
+        p_user_id: userId,
+        p_amount: amountUsd,
+    });
+    if (balErr) {
+        // Roll back so the next cycle can retry
+        await supabase_1.supabase.from('transactions').update({ status: 'pending' }).eq('id', txId);
+        console.error('[BTC] Balance increment failed — rolled back:', balErr.message);
+        throw balErr;
+    }
+    // Confirmation email (best-effort)
+    try {
+        const { data: user } = await supabase_1.supabase
+            .from('users').select('email, full_name').eq('id', userId).single();
+        if (user)
+            await email_1.emailService.sendDepositConfirmed(user.email, user.full_name, amountUsd);
+    }
+    catch (e) {
+        console.warn('[BTC] Confirmation email failed (non-fatal):', e);
+    }
+    // Audit log (best-effort)
+    try {
+        await supabase_1.supabase.from('audit_logs').insert({
+            user_id: userId,
+            action: 'deposit_confirmed',
+            metadata: JSON.stringify({ amountUsd, txId, btcTxid, method: 'btc' }),
+            ip_address: 'blockchain',
+        });
+    }
+    catch (e) {
+        console.warn('[BTC] Audit log failed (non-fatal):', e);
+    }
+    console.log(`[BTC] Credited $${amountUsd.toFixed(2)} to user ${userId} (tx: ${txId}, btcTxid: ${btcTxid})`);
+    return true;
+}
+async function loadPendingBtcDeposits() {
+    const { data, error } = await supabase_1.supabase
+        .from('transactions')
+        .select('id, user_id, btc_address, amount_usd')
+        .eq('method', 'btc')
+        .eq('status', 'pending')
+        .not('btc_address', 'is', null);
+    if (error) {
+        console.error('[BTC] Failed to load pending deposits:', error.message);
+        return [];
+    }
+    return (data ?? []).map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        btcAddress: row.btc_address,
+        amountUsd: row.amount_usd,
+    }));
+}
+async function pollDeposit(deposit, chainHeight, btcPrice) {
+    let txs;
+    try {
+        txs = await fetchAddressTxs(deposit.btcAddress);
+    }
+    catch (e) {
+        console.warn(`[BTC] Blockstream fetch failed for ${deposit.btcAddress}:`, e);
+        return;
+    }
+    for (const tx of txs) {
+        const confirmations = tx.status.block_height
+            ? chainHeight - tx.status.block_height + 1
+            : 0;
+        if (confirmations < MIN_CONFIRMATIONS) {
+            console.log(`[BTC] ${deposit.btcAddress}: tx ${tx.txid} has ${confirmations}/${MIN_CONFIRMATIONS} confirmations`);
+            continue;
+        }
+        // Sum sats sent to our address in this tx
+        const satsReceived = tx.vout
+            .filter(o => o.scriptpubkey_address === deposit.btcAddress)
+            .reduce((sum, o) => sum + o.value, 0);
+        if (satsReceived <= 0)
+            continue;
+        const btcAmount = satsToBtc(satsReceived);
+        const usdValue = btcAmount * btcPrice;
+        if (usdValue <= 0) {
+            console.warn(`[BTC] Cannot compute USD value (price=${btcPrice}) — skipping`);
+            continue;
+        }
+        console.log(`[BTC] Confirmed: ${btcAmount} BTC (≈$${usdValue.toFixed(2)}) → ${deposit.btcAddress} | txid: ${tx.txid}`);
+        // atomicCreditBtc is idempotent via the status=pending conditional update.
+        // If this deposit was already confirmed (e.g. a prior poll cycle), it
+        // returns false and skips the balance credit.
+        await atomicCreditBtc(deposit.id, deposit.userId, usdValue, tx.txid);
+        return; // this deposit is settled — stop scanning txs for it
+    }
+}
+async function runPollCycle() {
+    const [deposits, chainHeight, btcPrice] = await Promise.all([
+        loadPendingBtcDeposits(),
+        fetchBlockchainHeight().catch(() => 0),
+        getBtcUsdPrice().catch(() => 0),
+    ]);
+    if (deposits.length === 0)
+        return;
+    if (chainHeight === 0 || btcPrice === 0) {
+        console.warn('[BTC] Could not fetch chain height or BTC price — skipping poll cycle');
+        return;
+    }
+    console.log(`[BTC] Polling ${deposits.length} pending deposit(s) | height=${chainHeight} price=$${btcPrice}`);
+    await Promise.allSettled(deposits.map(d => pollDeposit(d, chainHeight, btcPrice)));
+}
+// ── Public entry point ──────────────────────────────────────────────────────
+function startBtcMonitor() {
+    const xpub = process.env.BTC_XPUB;
+    if (!xpub) {
+        console.warn('[BTC] BTC_XPUB not set — BTC deposit monitor not started');
+        return;
+    }
+    // Validate xpub on startup
+    try {
+        bip32.fromBase58(xpub);
+    }
+    catch {
+        console.error('[BTC] Invalid BTC_XPUB — BTC deposit monitor not started');
+        return;
+    }
+    console.log(`[BTC] Monitor started (min ${MIN_CONFIRMATIONS} confirmations, polling every ${POLL_INTERVAL_MS / 1000}s)`);
+    // Run immediately, then on interval
+    runPollCycle().catch(e => console.error('[BTC] Poll cycle error:', e));
+    setInterval(() => runPollCycle().catch(e => console.error('[BTC] Poll cycle error:', e)), POLL_INTERVAL_MS);
+}

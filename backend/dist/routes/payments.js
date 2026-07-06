@@ -10,6 +10,7 @@ const zod_1 = require("zod");
 const crypto_1 = require("crypto");
 const auth_1 = require("../middleware/auth");
 const supabase_1 = require("../lib/supabase");
+const btcMonitor_1 = require("../services/btcMonitor");
 const router = (0, express_1.Router)();
 const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2023-10-16',
@@ -110,7 +111,7 @@ router.get('/crypto-rate', async (req, res, next) => {
     }
 });
 const CryptoDepositSchema = zod_1.z.object({
-    coin: zod_1.z.enum(['eth', 'usdt', 'usdc']),
+    coin: zod_1.z.enum(['eth', 'usdt', 'usdc', 'btc']),
     amountUsd: zod_1.z.number().min(10),
 });
 // Token addresses on Ethereum mainnet
@@ -123,6 +124,102 @@ router.post('/create-crypto-deposit', auth_1.requireAuth, async (req, res, next)
     try {
         const { coin, amountUsd } = CryptoDepositSchema.parse(req.body);
         const userId = req.userId;
+        // ── BTC: HD-wallet address derivation ─────────────────────────────────
+        if (coin === 'btc') {
+            const xpub = process.env.BTC_XPUB;
+            if (!xpub) {
+                return res.status(503).json({ error: 'BTC deposits are not yet active. Please contact support.' });
+            }
+            // Fetch base index (total BTC txs ever — used as the starting point for derivation)
+            const { count: baseCount, error: countErr } = await supabase_1.supabase
+                .from('transactions')
+                .select('id', { count: 'exact', head: true })
+                .eq('method', 'btc');
+            if (countErr) {
+                console.error('[BTC] Failed to count existing BTC transactions:', countErr.message);
+                return res.status(500).json({ error: 'Failed to generate BTC address. Please try again.' });
+            }
+            // Fetch live BTC price (parallel, non-blocking)
+            let cryptoAmount = null;
+            try {
+                const { data } = await axios_1.default.get('https://api.coingecko.com/api/v3/simple/price', {
+                    params: { ids: 'bitcoin', vs_currencies: 'usd' },
+                });
+                const btcPrice = data['bitcoin']?.usd ?? 0;
+                if (btcPrice > 0)
+                    cryptoAmount = (amountUsd / btcPrice).toFixed(8);
+            }
+            catch {
+                // non-fatal — frontend shows USD amount as fallback
+            }
+            // ── Atomic address allocation via unique-constraint + retry ───────────
+            // The DB has a partial unique index on tx_hash WHERE method='btc' AND
+            // status IN ('pending','confirmed'). If two concurrent requests derive
+            // the same address (same baseCount), only one INSERT succeeds; the
+            // other gets a 23505 unique-violation and retries with the next index.
+            let btcAddress = null;
+            let txRecord = null;
+            const startIndex = baseCount ?? 0;
+            for (let attempt = 0; attempt < 10; attempt++) {
+                const derivationIndex = startIndex + attempt;
+                let candidateAddress;
+                try {
+                    candidateAddress = (0, btcMonitor_1.deriveBtcAddress)(xpub, derivationIndex);
+                }
+                catch (e) {
+                    console.error('[BTC] Address derivation failed:', e);
+                    return res.status(500).json({ error: 'Failed to generate BTC address. Please try again.' });
+                }
+                const { data, error: insertErr } = await supabase_1.supabase
+                    .from('transactions')
+                    .insert({
+                    user_id: userId,
+                    type: 'deposit',
+                    amount_usd: amountUsd,
+                    method: 'btc',
+                    status: 'pending',
+                    btc_address: candidateAddress,
+                    // tx_hash intentionally left null — set to the on-chain txid on confirmation
+                })
+                    .select('id')
+                    .single();
+                if (!insertErr) {
+                    btcAddress = candidateAddress;
+                    txRecord = data;
+                    break;
+                }
+                // Unique constraint violation — address already in use; try next index
+                if (insertErr.code === '23505') {
+                    console.warn(`[BTC] Address collision at index ${derivationIndex} — retrying (attempt ${attempt + 1})`);
+                    continue;
+                }
+                // Unexpected DB error
+                console.error('[BTC] Failed to insert BTC deposit:', insertErr.message);
+                return res.status(500).json({ error: 'Failed to create deposit. Please try again.' });
+            }
+            if (!btcAddress || !txRecord) {
+                console.error('[BTC] Exhausted retry attempts for unique address allocation');
+                return res.status(500).json({ error: 'Failed to allocate unique BTC address. Please try again.' });
+            }
+            await supabase_1.supabase.from('audit_logs').insert({
+                user_id: userId,
+                action: 'crypto_deposit_initiated',
+                metadata: JSON.stringify({ coin: 'btc', amountUsd, btcAddress }),
+                ip_address: req.ip,
+            });
+            return res.json({
+                txId: txRecord?.id,
+                paymentId: btcAddress, // reuse paymentId field for display
+                btcAddress,
+                coin: 'btc',
+                amountUsd,
+                cryptoAmount,
+                contractAddress: null,
+                tokenAddress: null,
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 h window for BTC
+            });
+        }
+        // ── ETH / ERC-20 ──────────────────────────────────────────────────────
         const contractAddress = process.env.CONTRACT_ADDRESS;
         if (!contractAddress) {
             return res.status(503).json({

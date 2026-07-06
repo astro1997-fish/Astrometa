@@ -318,5 +318,22 @@ $ LANGUAGE plpgsql SECURITY DEFINER;
 -- UPDATE public.users SET role = 'admin' WHERE email = 'admin@yourdomain.com';
 
 -- ============================================================
+-- BTC HD-wallet deposit support
+-- ============================================================
+
+-- Dedicated column for the BTC deposit address so tx_hash remains
+-- exclusively for the on-chain txid (set on confirmation).
+-- This prevents the dual-semantics problem where a single bitcoin tx
+-- paying multiple addresses would cause unique-constraint collisions.
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS btc_address TEXT;
+
+-- Unique partial index on btc_address: prevents two active deposits from
+-- sharing the same BTC deposit address. Combined with the route's
+-- unique-constraint + retry loop this is concurrency-safe without a sequence.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_btc_active_address
+  ON public.transactions (btc_address)
+  WHERE method = 'btc' AND btc_address IS NOT NULL AND status IN ('pending', 'confirmed');
+
+-- ============================================================
 -- DONE ✅
 -- ============================================================

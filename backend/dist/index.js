@@ -10,6 +10,7 @@ const cors_1 = __importDefault(require("cors"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const xss_clean_1 = __importDefault(require("xss-clean"));
 const blockchainListener_1 = require("./services/blockchainListener");
+const btcMonitor_1 = require("./services/btcMonitor");
 const auth_1 = __importDefault(require("./routes/auth"));
 const payments_1 = __importDefault(require("./routes/payments"));
 const webhooks_1 = __importDefault(require("./routes/webhooks"));
@@ -19,6 +20,8 @@ const admin_1 = __importDefault(require("./routes/admin"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT ?? 8000;
+// ── Trust proxy (required for rate-limit + HTTPS redirect behind Replit) ──
+app.set('trust proxy', 1);
 // ── Security headers ────────────────────────────────────────────────
 app.use((0, helmet_1.default)({
     contentSecurityPolicy: {
@@ -75,8 +78,9 @@ app.use('/api/support', support_1.default);
 app.use('/api/admin', admin_1.default);
 // ── Error handler ───────────────────────────────────────────────────
 app.use(errorHandler_1.errorHandler);
-// ── Blockchain listener ─────────────────────────────────────────────
+// ── Blockchain listeners ────────────────────────────────────────────
 (0, blockchainListener_1.startBlockchainListener)();
+(0, btcMonitor_1.startBtcMonitor)();
 app.listen(Number(PORT), 'localhost', () => {
     console.log(`✅  ASTRO META-TRADE API running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`);
 });
