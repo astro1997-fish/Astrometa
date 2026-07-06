@@ -7,6 +7,42 @@ import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 import { COUNTRIES } from '@/lib/countries'
 
+// ── Field must live outside Register so React sees a stable component
+// reference across renders. Defining it inside caused focus loss after
+// every keystroke (React unmounted + remounted the input each render).
+interface FieldProps {
+  name: string
+  label: string
+  type?: string
+  value: string
+  placeholder?: string
+  error?: string
+  onChange: (name: string, value: string) => void
+  children?: React.ReactNode
+}
+
+function Field({ name, label, type = 'text', value, placeholder, error, onChange, children }: FieldProps) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(name, e.target.value)}
+        placeholder={placeholder}
+        className={`input ${error ? 'border-red-400 focus:ring-red-400/40' : ''}`}
+        required
+      />
+      {children}
+      {error && (
+        <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
+          <AlertCircle className="w-3 h-3" />{error}
+        </p>
+      )}
+    </div>
+  )
+}
+
 export default function Register() {
   const { t } = useTranslation()
   const { signUp } = useAuth()
@@ -15,10 +51,10 @@ export default function Register() {
   const [form, setForm] = useState({
     fullName: '', email: '', password: '', confirmPassword: '', country: '', terms: false
   })
-  const [showPw, setShowPw]           = useState(false)
+  const [showPw, setShowPw]               = useState(false)
   const [showConfirmPw, setShowConfirmPw] = useState(false)
-  const [loading, setLoading]         = useState(false)
-  const [errors, setErrors]           = useState<Record<string, string>>({})
+  const [loading, setLoading]             = useState(false)
+  const [errors, setErrors]               = useState<Record<string, string>>({})
 
   const set = (key: string, value: string | boolean) =>
     setForm(f => ({ ...f, [key]: value }))
@@ -66,26 +102,6 @@ export default function Register() {
   const pwColors = ['', 'bg-red-400', 'bg-amber-400', 'bg-blue-400', 'bg-emerald-400']
   const pwLabels = ['', 'Weak', 'Fair', 'Good', 'Strong']
 
-  const Field = ({ name, label, type = 'text', value, placeholder, children }: any) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => set(name, e.target.value)}
-        placeholder={placeholder}
-        className={`input ${errors[name] ? 'border-red-400 focus:ring-red-400/40' : ''}`}
-        required
-      />
-      {children}
-      {errors[name] && (
-        <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-          <AlertCircle className="w-3 h-3" />{errors[name]}
-        </p>
-      )}
-    </div>
-  )
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#070D1F] flex items-center justify-center p-4 py-12">
       <div className="absolute inset-0 grid-bg opacity-40 dark:opacity-60" />
@@ -119,8 +135,23 @@ export default function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Field name="fullName" label={t('auth.fullName')} value={form.fullName} placeholder="John Doe" />
-            <Field name="email" label={t('auth.email')} type="email" value={form.email} placeholder="you@example.com" />
+            <Field
+              name="fullName"
+              label={t('auth.fullName')}
+              value={form.fullName}
+              placeholder="John Doe"
+              error={errors.fullName}
+              onChange={set}
+            />
+            <Field
+              name="email"
+              label={t('auth.email')}
+              type="email"
+              value={form.email}
+              placeholder="you@example.com"
+              error={errors.email}
+              onChange={set}
+            />
 
             {/* Password */}
             <div>
