@@ -59,15 +59,15 @@ localPort = 8000
 externalPort = 8000
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "vm"
 run = ["bash", "-c", "cd backend && NODE_ENV=production node dist/index.js"]
-build = ["bash", "-c", "cd frontend && npm run build && cd ../backend && npm run build"]
+build = ["bash", "-c", "VITE_API_URL='' cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build"]
 
 [userenv]
 
 [userenv.shared]
 SUPABASE_URL = "https://szoowwutahefnjnsevkc.supabase.co"
-VITE_API_URL = "http://localhost:8000"
+VITE_API_URL = ""
 VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6b293d3V0YWhlZm5qbnNldmtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTY1NzIsImV4cCI6MjA5ODAzMjU3Mn0.iuje12qRArqK719V1JES32ACTGQR4fMadAR_lk_c4Ts"
 VITE_SUPABASE_URL = "https://szoowwutahefnjnsevkc.supabase.co"
 CONTRACT_ADDRESS = ""
