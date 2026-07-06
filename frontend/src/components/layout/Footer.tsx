@@ -90,10 +90,10 @@ export default function Footer() {
 
         {/* Disclaimer */}
         <div className="border-t border-gray-200 dark:border-white/5 pt-8">
-          <p className="text-xs text-gray-400 dark:text-gray-600 leading-relaxed max-w-4xl mb-4">
+          <p className="text-xs text-gray-400 dark:text-gray-400 leading-relaxed max-w-4xl mb-4">
             ⚠️ {t('footer.disclaimer')}
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-600">{t('footer.copyright')}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-400">{t('footer.copyright')}</p>
         </div>
       </div>
     </footer>

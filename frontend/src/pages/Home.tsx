@@ -229,7 +229,7 @@ export default function Home() {
                 <div className="text-4xl mb-3">{pkg.icon}</div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{pkg.name}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">From {pkg.min}</p>
-                <p className="text-2xl font-bold text-gradient mb-4">{pkg.ret}<span className="text-sm font-normal text-gray-400"> /yr</span></p>
+                <p className="text-2xl font-bold text-gradient mb-4">{pkg.ret}<span className="text-sm font-normal text-gray-400 dark:text-gray-400"> /yr</span></p>
                 <Link to="/packages" className="btn-primary w-full justify-center text-sm">
                   {t('packages.investNow')}
                 </Link>
@@ -285,7 +285,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">{t.name}</p>
-                    <p className="text-xs text-gray-400">{t.location}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-400">{t.location}</p>
                   </div>
                 </div>
               </motion.div>

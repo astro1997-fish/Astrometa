@@ -93,7 +93,7 @@ export default function Settings() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
                 <input value={user?.email ?? ''} disabled className="input opacity-60 cursor-not-allowed" />
-                <p className="text-xs text-gray-400 mt-1">Email cannot be changed. Contact support if needed.</p>
+                <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">Email cannot be changed. Contact support if needed.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Country</label>
@@ -132,7 +132,7 @@ export default function Settings() {
                         placeholder="••••••••"
                         required
                       />
-                      <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:hover:text-gray-200">
                         {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
@@ -181,7 +181,7 @@ export default function Settings() {
               <label key={i} className="flex items-center justify-between cursor-pointer group">
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{n.label}</p>
-                  <p className="text-xs text-gray-400">{n.desc}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400">{n.desc}</p>
                 </div>
                 <div className="relative">
                   <input type="checkbox" defaultChecked={i < 4} className="sr-only peer" />

@@ -49,7 +49,7 @@ export default function AdminDashboard() {
                   <c.icon className="w-4 h-4" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{c.value}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{c.label}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{c.label}</p>
               </motion.div>
             ))
         }

@@ -200,7 +200,7 @@ export default function AdminPortfolio() {
                       >
                         <td className="px-4 py-3">
                           <p className="text-sm font-medium text-gray-900 dark:text-white">{inv.full_name}</p>
-                          <p className="text-xs text-gray-400">{inv.email}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-400">{inv.email}</p>
                         </td>
                         <td className="px-4 py-3"><span className={clsx('badge capitalize', pkgBadgeClass[inv.package_type])}>{inv.package_type}</span></td>
                         <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{fmt(inv.amount_usd)}</td>
@@ -229,7 +229,7 @@ export default function AdminPortfolio() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-bold text-gray-900 dark:text-white">{selected.full_name}</h3>
-                  <p className="text-xs text-gray-400">{selected.email}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400">{selected.email}</p>
                 </div>
                 <button onClick={() => setSelected(null)} className="btn-ghost w-7 h-7 p-0">
                   <X className="w-4 h-4" />
@@ -237,9 +237,9 @@ export default function AdminPortfolio() {
               </div>
 
               <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-3 text-sm space-y-1">
-                <div className="flex justify-between"><span className="text-gray-400">Package</span><span className="font-semibold capitalize">{selected.package_type}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Invested</span><span className="font-semibold">{fmt(selected.amount_usd)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Current Balance</span><span className="font-bold text-emerald-500">{fmt(selected.balance)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400 dark:text-gray-400">Package</span><span className="font-semibold capitalize">{selected.package_type}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400 dark:text-gray-400">Invested</span><span className="font-semibold">{fmt(selected.amount_usd)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400 dark:text-gray-400">Current Balance</span><span className="font-bold text-emerald-500">{fmt(selected.balance)}</span></div>
               </div>
 
               {/* Fields */}
@@ -251,7 +251,7 @@ export default function AdminPortfolio() {
                 <div key={i}>
                   <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{label}</label>
                   <div className="relative">
-                    {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{prefix}</span>}
+                    {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 text-sm">{prefix}</span>}
                     <input
                       type={type}
                       value={val}

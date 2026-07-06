@@ -303,7 +303,7 @@ export default function FundAccount() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('fund.amount')}</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 font-medium">$</span>
                 <input
                   type="number"
                   value={fiatAmount}
@@ -313,7 +313,7 @@ export default function FundAccount() {
                   className="input pl-7"
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">{t('fund.minAmount')}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">{t('fund.minAmount')}</p>
             </div>
 
             <button
@@ -325,7 +325,7 @@ export default function FundAccount() {
               <ChevronRight className="w-4 h-4" />
             </button>
 
-            <p className="text-xs text-center text-gray-400">
+            <p className="text-xs text-center text-gray-400 dark:text-gray-400">
               You'll be redirected to the payment provider. After completion, your balance will be credited automatically.
             </p>
           </motion.div>

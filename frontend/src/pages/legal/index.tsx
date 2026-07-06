@@ -11,7 +11,7 @@ function LegalLayout({ title, lastUpdated, children }: { title: string; lastUpda
         </Link>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{title}</h1>
-          <p className="text-sm text-gray-400">Last updated: {lastUpdated}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-400">Last updated: {lastUpdated}</p>
         </div>
         <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
           {children}
@@ -66,7 +66,7 @@ export function Terms() {
       <Section title="10. Modifications">
         <p>We reserve the right to modify these Terms at any time. We will notify users of significant changes via email or in-app notification. Continued use of the platform following notification constitutes acceptance of the revised terms.</p>
       </Section>
-      <p className="text-xs text-gray-400 pt-4 border-t border-gray-100 dark:border-white/5">
+      <p className="text-xs text-gray-400 dark:text-gray-400 pt-4 border-t border-gray-100 dark:border-white/5">
         For questions about these Terms, contact us at <a href="mailto:legal@astrometatrade.com" className="text-brand-400 hover:underline">legal@astrometatrade.com</a>
       </p>
     </LegalLayout>
@@ -143,7 +143,7 @@ export function Risk() {
       <Section title="9. Past Performance">
         <p>Past performance of any investment strategy or product does not guarantee future results. Historical data presented on our platform is for informational purposes only and should not be relied upon as a predictor of future performance.</p>
       </Section>
-      <p className="text-xs text-gray-400 pt-4 border-t border-gray-100 dark:border-white/5">
+      <p className="text-xs text-gray-400 dark:text-gray-400 pt-4 border-t border-gray-100 dark:border-white/5">
         By continuing to use ASTRO META-TRADE's services, you confirm that you have read, understood, and accepted the risks described in this disclosure.
       </p>
     </LegalLayout>

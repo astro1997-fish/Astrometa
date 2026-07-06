@@ -136,7 +136,7 @@ export default function Register() {
                   placeholder="Min. 8 characters"
                 />
                 <button type="button" onClick={() => setShowPw(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -147,7 +147,7 @@ export default function Register() {
                       <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= pwStrength ? pwColors[pwStrength] : 'bg-gray-200 dark:bg-white/10'}`} />
                     ))}
                   </div>
-                  <span className="text-xs text-gray-400">{pwLabels[pwStrength]}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-400">{pwLabels[pwStrength]}</span>
                 </div>
               )}
               {errors.password && <p className="flex items-center gap-1 text-red-500 text-xs mt-1"><AlertCircle className="w-3 h-3" />{errors.password}</p>}
@@ -167,7 +167,7 @@ export default function Register() {
                   placeholder="Repeat password"
                 />
                 <button type="button" onClick={() => setShowConfirmPw(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:hover:text-gray-200">
                   {showConfirmPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
                 {form.confirmPassword && form.password === form.confirmPassword && (

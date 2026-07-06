@@ -148,7 +148,7 @@ function InvestModal({
             <span className="text-3xl">{pkg.icon}</span>
             <div>
               <h3 className="font-bold text-gray-900 dark:text-white">{t(pkg.nameKey)} Package</h3>
-              <p className="text-xs text-gray-400">{t('packages.return')}: {pkg.returnRange} {t('packages.annually')}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400">{t('packages.return')}: {pkg.returnRange} {t('packages.annually')}</p>
             </div>
           </div>
           <button onClick={onClose} className="btn-ghost w-8 h-8 p-0">
@@ -174,7 +174,7 @@ function InvestModal({
             Investment Amount (USD)
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 font-medium">$</span>
             <input
               type="number"
               value={amount}
@@ -198,7 +198,7 @@ function InvestModal({
         </button>
 
         {!user && (
-          <p className="text-center text-xs text-gray-400 mt-3">
+          <p className="text-center text-xs text-gray-400 dark:text-gray-400 mt-3">
             Already have an account?{' '}
             <button onClick={() => navigate('/login', { state: { package: pkg.id } })} className="text-brand-400 hover:underline">
               Sign in
@@ -266,26 +266,26 @@ export default function Packages() {
                   {pkg.returnRange}
                 </span>
                 {pkg.id !== 'platinum' && (
-                  <span className="text-gray-400 text-sm mb-1">{t('packages.annually')}</span>
+                  <span className="text-gray-400 dark:text-gray-400 text-sm mb-1">{t('packages.annually')}</span>
                 )}
               </div>
 
               {/* Risk */}
               <div className="flex items-center gap-2 mb-6">
-                <span className="text-xs text-gray-400">{t('packages.risk')}:</span>
+                <span className="text-xs text-gray-400 dark:text-gray-400">{t('packages.risk')}:</span>
                 <StarRating value={pkg.risk} />
               </div>
 
               {/* Min / Max */}
               <div className="flex gap-4 mb-6 text-sm">
                 <div>
-                  <p className="text-gray-400 text-xs">{t('packages.min')}</p>
+                  <p className="text-gray-400 dark:text-gray-400 text-xs">{t('packages.min')}</p>
                   <p className="font-bold text-gray-900 dark:text-white">
                     ${pkg.min.toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-xs">{t('packages.max')}</p>
+                  <p className="text-gray-400 dark:text-gray-400 text-xs">{t('packages.max')}</p>
                   <p className="font-bold text-gray-900 dark:text-white">
                     {pkg.max ? `$${pkg.max.toLocaleString()}` : t('packages.unlimited')}
                   </p>
@@ -325,7 +325,7 @@ export default function Packages() {
         </div>
 
         {/* Disclaimer */}
-        <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-10 max-w-2xl mx-auto">
+        <p className="text-center text-xs text-gray-400 dark:text-gray-400 mt-10 max-w-2xl mx-auto">
           Projected returns are estimates based on historical performance and are not guaranteed. 
           Past performance does not guarantee future results. Please read our Risk Disclosure.
         </p>

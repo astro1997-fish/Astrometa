@@ -60,7 +60,7 @@ export default function Markets() {
           <p className="text-gray-500 dark:text-gray-400 text-sm">
             Prices refresh every 30 seconds.{' '}
             {lastUpdated && (
-              <span className="text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</span>
+              <span className="text-gray-400 dark:text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</span>
             )}
           </p>
         </div>
@@ -80,7 +80,7 @@ export default function Markets() {
                 <img src={coin.image} alt={coin.name} className="w-7 h-7 rounded-full" />
                 <div>
                   <p className="text-xs font-bold text-gray-900 dark:text-white">{coin.symbol.toUpperCase()}</p>
-                  <p className="text-[10px] text-gray-400">{coin.name}</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-400">{coin.name}</p>
                 </div>
               </div>
               <p className="text-lg font-bold text-gray-900 dark:text-white">{fmt.usd(coin.current_price)}</p>
@@ -158,7 +158,7 @@ export default function Markets() {
                           isInvestable && 'bg-brand-50/30 dark:bg-brand-400/5'
                         )}
                       >
-                        <td className="px-4 py-3 text-sm text-gray-400 w-10">{coin.market_cap_rank}</td>
+                        <td className="px-4 py-3 text-sm text-gray-400 dark:text-gray-400 w-10">{coin.market_cap_rank}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <img src={coin.image} alt={coin.name} className="w-7 h-7 rounded-full" />
@@ -167,7 +167,7 @@ export default function Markets() {
                                 <span className="text-sm font-semibold text-gray-900 dark:text-white">{coin.name}</span>
                                 {isInvestable && <Star className="w-3 h-3 fill-brand-400 text-brand-400" />}
                               </div>
-                              <span className="text-xs text-gray-400 uppercase">{coin.symbol}</span>
+                              <span className="text-xs text-gray-400 dark:text-gray-400 uppercase">{coin.symbol}</span>
                             </div>
                           </div>
                         </td>

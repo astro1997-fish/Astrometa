@@ -84,7 +84,7 @@ export default function Portfolio() {
             <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="card">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">{c.label}</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{c.value}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{c.sub}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">{c.sub}</p>
             </motion.div>
           ))}
         </div>
@@ -99,7 +99,7 @@ export default function Portfolio() {
             <div className="card flex flex-col items-center justify-center py-16 text-center">
               <TrendingUp className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
               <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-1">No investments yet</h3>
-              <p className="text-sm text-gray-400 mb-5">Choose a package and start growing your portfolio.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-400 mb-5">Choose a package and start growing your portfolio.</p>
               <Link to="/packages" className="btn-primary">Explore Packages</Link>
             </div>
           ) : (
@@ -131,7 +131,7 @@ export default function Portfolio() {
 
                 <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100 dark:border-white/5">
                   <div>
-                    <div className="flex items-center gap-1 text-gray-400 text-xs mb-1">
+                    <div className="flex items-center gap-1 text-gray-400 dark:text-gray-400 text-xs mb-1">
                       <Calendar className="w-3 h-3" /> Started
                     </div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -139,13 +139,13 @@ export default function Portfolio() {
                     </p>
                   </div>
                   <div>
-                    <div className="flex items-center gap-1 text-gray-400 text-xs mb-1">
+                    <div className="flex items-center gap-1 text-gray-400 dark:text-gray-400 text-xs mb-1">
                       <TrendingUp className="w-3 h-3" /> Projected Return
                     </div>
                     <p className="text-sm font-bold text-emerald-500">+{inv.projected_return_pct}% /yr</p>
                   </div>
                   <div>
-                    <div className="flex items-center gap-1 text-gray-400 text-xs mb-1">
+                    <div className="flex items-center gap-1 text-gray-400 dark:text-gray-400 text-xs mb-1">
                       <User className="w-3 h-3" /> Manager
                     </div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">{inv.manager_name || 'Assigned Soon'}</p>
@@ -171,7 +171,7 @@ export default function Portfolio() {
                   formatter={(v: number) => [fmt(v), 'Invested']}
                   contentStyle={{ background: '#0D1627', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 12 }}
                 />
-                <Legend formatter={(value) => <span className="text-xs text-gray-400">{value}</span>} />
+                <Legend formatter={(value) => <span className="text-xs text-gray-400 dark:text-gray-400">{value}</span>} />
               </PieChart>
             </ResponsiveContainer>
             <div className="mt-2 space-y-2">

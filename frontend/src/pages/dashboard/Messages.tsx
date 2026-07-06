@@ -69,7 +69,7 @@ export default function Messages() {
         <div className="card flex flex-col items-center justify-center py-16 text-center">
           <Inbox className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
           <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-1">No messages yet</h3>
-          <p className="text-sm text-gray-400">Your account manager will send updates here.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-400">Your account manager will send updates here.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
@@ -106,7 +106,7 @@ export default function Messages() {
                     </p>
                     {!msg.read && <span className="w-2 h-2 rounded-full bg-brand-400 shrink-0" />}
                   </div>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">
                     {new Date(msg.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </p>
                 </div>
@@ -124,7 +124,7 @@ export default function Messages() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">ASTRO META-TRADE Team</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-gray-400">
                       {new Date(selected.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
                     </p>
                   </div>
@@ -133,7 +133,7 @@ export default function Messages() {
                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{selected.body}</p>
               </motion.div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full py-12 text-center text-gray-400">
+              <div className="flex flex-col items-center justify-center h-full py-12 text-center text-gray-400 dark:text-gray-400">
                 <Mail className="w-10 h-10 mb-3 opacity-30" />
                 <p className="text-sm">Select a message to read</p>
               </div>

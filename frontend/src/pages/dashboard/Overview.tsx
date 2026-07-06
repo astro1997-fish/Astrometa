@@ -135,11 +135,11 @@ export default function Overview() {
                     {investment.package_type}
                   </span>
                   <p className="text-lg font-bold text-gray-900 dark:text-white">{fmt(investment.amount_usd)}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Managed by {investment.manager_name || 'Expert Team'}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">Managed by {investment.manager_name || 'Expert Team'}</p>
                 </>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <p className="text-sm text-gray-400">No active investment</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-400">No active investment</p>
                   <Link to="/packages" className="btn-primary text-xs py-1.5 justify-center">Start Investing</Link>
                 </div>
               )}
@@ -162,7 +162,7 @@ export default function Overview() {
                   }
                 </span>
               </div>
-              <p className="text-xs text-gray-400">Projected annual return</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400">Projected annual return</p>
               {unreadMsgs > 0 && (
                 <Link
                   to="/dashboard/messages"
@@ -189,7 +189,7 @@ export default function Overview() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">Portfolio Performance</p>
-              <p className="text-xs text-gray-400">Balance over time</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400">Balance over time</p>
             </div>
             <span className="badge-green text-xs">Live</span>
           </div>
@@ -220,7 +220,7 @@ export default function Overview() {
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
+            <div className="h-48 flex items-center justify-center text-gray-400 dark:text-gray-400 text-sm">
               Performance data will appear after your first deposit.
             </div>
           )}
@@ -273,13 +273,13 @@ export default function Overview() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-gray-900 dark:text-white capitalize">{tx.type}</p>
-                    <p className="text-[10px] text-gray-400 uppercase">{tx.method}</p>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-400 uppercase">{tx.method}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className={clsx('text-xs font-bold', txColor(tx.type))}>
                       {tx.type === 'withdrawal' ? '-' : '+'}{fmt(tx.amount_usd)}
                     </p>
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-400">
                       {new Date(tx.created_at).toLocaleDateString()}
                     </p>
                   </div>

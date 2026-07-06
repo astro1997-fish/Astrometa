@@ -108,7 +108,7 @@ export default function Transactions() {
         {loading ? (
           <div className="p-4"><SkeletonTable rows={8} cols={5} /></div>
         ) : txns.length === 0 ? (
-          <div className="py-16 text-center text-gray-400 text-sm">No transactions found.</div>
+          <div className="py-16 text-center text-gray-400 dark:text-gray-400 text-sm">No transactions found.</div>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -179,7 +179,7 @@ export default function Transactions() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-white/5">
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 dark:text-gray-400">
                   Showing {page * PAGE + 1}–{Math.min(page * PAGE + PAGE, total)} of {total}
                 </p>
                 <div className="flex gap-1">
