@@ -16,7 +16,7 @@ import QRCode from 'react-qr-code'
 import { useAuth } from '@/contexts/AuthContext'
 import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import api from '@/lib/api'
 import { ethers } from 'ethers'
 
 type FundMethod    = 'crypto' | 'fiat'
@@ -112,7 +112,7 @@ export default function FundAccount() {
     }
     setLoadingDeposit(true)
     try {
-      const { data } = await axios.post('/api/payments/create-crypto-deposit', {
+      const { data } = await api.post('/api/payments/create-crypto-deposit', {
         coin,
         amountUsd: usd,
       })
@@ -200,7 +200,7 @@ export default function FundAccount() {
     }
     setFiatLoading(true)
     try {
-      const { data } = await axios.post('/api/payments/create-session', {
+      const { data } = await api.post('/api/payments/create-session', {
         provider: fiatProvider,
         amount:   parseFloat(fiatAmount),
         userId:   user?.id,
