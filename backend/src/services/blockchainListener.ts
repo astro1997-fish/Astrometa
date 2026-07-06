@@ -17,12 +17,12 @@ import { supabase } from '../lib/supabase'
 import { emailService } from './email'
 
 // Minimal ABI — only the event we need
-const CONTRACT_ABI = [
+export const CONTRACT_ABI = [
   'event PaymentReceived(bytes32 indexed paymentId, address indexed sender, address token, uint256 amount)',
 ]
 
 // Known ERC-20 token addresses on Ethereum mainnet
-const TOKEN_MAP: Record<string, { symbol: string; decimals: number }> = {
+export const TOKEN_MAP: Record<string, { symbol: string; decimals: number }> = {
   '0xdac17f958d2ee523a2206206994597c13d831ec7': { symbol: 'USDT', decimals: 6 },
   '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': { symbol: 'USDC', decimals: 6 },
 }
@@ -38,20 +38,21 @@ const MIN_CONFIRMATIONS = parseInt(process.env.MIN_CONFIRMATIONS ?? '12', 10)
  * Returns true if credit was applied, false if the transaction was already
  * confirmed (idempotent — safe to call multiple times).
  */
-async function atomicCredit(
-  txId:      string,
-  userId:    string,
-  amountUsd: number,
-  txHash:    string,
-  eventKey:  string,   // `${txHash}:${logIndex}` — uniqueness guard
+export async function atomicCredit(
+  txId:         string,
+  userId:       string,
+  amountUsd:    number,
+  txHash:       string,
+  eventKey:     string,         // `${txHash}:${logIndex}` — uniqueness guard
+  fromStatuses: string[] = ['pending'],  // statuses eligible for transition
 ): Promise<boolean> {
-  // 1. Transition status pending → confirmed.
-  //    The .eq('status', 'pending') guard makes this a no-op on replay.
+  // 1. Transition status → confirmed.
+  //    The .in('status', fromStatuses) guard makes this a no-op on replay.
   const { data: updated, error: txErr } = await supabase
     .from('transactions')
     .update({ status: 'confirmed', amount_usd: amountUsd, tx_hash: txHash })
     .eq('id', txId)
-    .eq('status', 'pending')  // ← conditional: only update once
+    .in('status', fromStatuses)  // ← conditional: only update once
     .select('id')
 
   if (txErr) {
@@ -112,7 +113,7 @@ async function atomicCredit(
   return true
 }
 
-async function getUsdValue(
+export async function getUsdValue(
   token:     string,
   rawAmount: bigint,
   decimals:  number,

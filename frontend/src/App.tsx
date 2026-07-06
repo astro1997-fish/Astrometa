@@ -38,6 +38,7 @@ const AdminPortfolio  = lazy(() => import('@/pages/admin/AdminPortfolio'))
 const AdminWithdrawals = lazy(() => import('@/pages/admin/AdminWithdrawals'))
 const AdminAddresses  = lazy(() => import('@/pages/admin/AdminAddresses'))
 const AdminAuditLogs  = lazy(() => import('@/pages/admin/AdminAuditLogs'))
+const AdminDeposits   = lazy(() => import('@/pages/admin/AdminDeposits'))
 
 // Legal pages
 const Terms   = lazy(() => import('@/pages/legal/Terms'))
@@ -112,6 +113,7 @@ export default function App() {
                 <Route path="withdrawals"   element={<AdminWithdrawals />} />
                 <Route path="addresses"     element={<AdminAddresses />} />
                 <Route path="audit"         element={<AdminAuditLogs />} />
+                <Route path="deposits"      element={<AdminDeposits />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

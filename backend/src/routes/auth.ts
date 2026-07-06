@@ -176,6 +176,123 @@ adminRouter.post('/portfolio-update', async (req: AuthRequest, res, next) => {
   } catch (err) { next(err) }
 })
 
+adminRouter.get('/deposits', async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('id, user_id, amount_usd, tx_hash, created_at, method, status, users!inner(full_name, email)')
+      .eq('type', 'deposit')
+      .in('status', ['pending', 'failed'])
+      .not('tx_hash', 'is', null)
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    res.json(data ?? [])
+  } catch (err) { next(err) }
+})
+
+adminRouter.post('/deposits/:id/retry', async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const schema = z.object({
+      txHash:    z.string().optional(),   // actual on-chain hash (for chain-based retry)
+      amountUsd: z.number().positive().optional(), // manual USD override
+    }).refine(d => d.txHash || d.amountUsd, {
+      message: 'Provide either txHash (for on-chain retry) or amountUsd (for manual credit)',
+    })
+    const { txHash, amountUsd: manualAmount } = schema.parse(req.body)
+
+    // Fetch the pending transaction
+    const { data: txRecord, error: fetchErr } = await supabase
+      .from('transactions')
+      .select('id, user_id, amount_usd, tx_hash, status')
+      .eq('id', id)
+      .single()
+
+    if (fetchErr || !txRecord) return res.status(404).json({ error: 'Transaction not found' })
+    if (!['pending', 'failed'].includes(txRecord.status)) {
+      return res.status(409).json({ error: `Transaction is already ${txRecord.status} — cannot retry` })
+    }
+
+    let usdValue: number
+    let effectiveTxHash: string
+    let eventKey: string
+
+    if (txHash) {
+      // ── On-chain retry ────────────────────────────────────────────
+      const rpcUrl       = process.env.ETH_RPC_URL
+      const contractAddr = process.env.CONTRACT_ADDRESS
+      if (!rpcUrl)       return res.status(503).json({ error: 'ETH_RPC_URL not configured — use manual amountUsd override instead' })
+      if (!contractAddr) return res.status(503).json({ error: 'CONTRACT_ADDRESS not configured — use manual amountUsd override instead' })
+
+      const ethersLib = await import('ethers') as typeof import('ethers')
+      const { CONTRACT_ABI, TOKEN_MAP, getUsdValue } = await import('../services/blockchainListener')
+      const provider    = new ethersLib.ethers.JsonRpcProvider(rpcUrl)
+
+      // Wait for MIN_CONFIRMATIONS — same finality policy as the listener
+      const MIN_CONFIRMATIONS = parseInt(process.env.MIN_CONFIRMATIONS ?? '12', 10)
+      const receipt = await provider.waitForTransaction(txHash, MIN_CONFIRMATIONS, 60_000)
+      if (!receipt)             return res.status(404).json({ error: 'Transaction not found on chain — check the hash' })
+      if (receipt.status !== 1) return res.status(400).json({ error: 'Transaction reverted on chain — cannot credit' })
+
+      // Parse the PaymentReceived event, validating both contract address and paymentId
+      const iface = new ethersLib.ethers.Interface(CONTRACT_ABI)
+      let parsed: import('ethers').LogDescription | null = null
+      let logIndex = 0
+      for (const log of receipt.logs) {
+        // Guard 1: log must come from our contract, not any other contract
+        if (log.address.toLowerCase() !== contractAddr.toLowerCase()) continue
+        try {
+          const desc = iface.parseLog({ topics: [...log.topics], data: log.data })
+          if (desc && desc.name === 'PaymentReceived') {
+            parsed   = desc
+            logIndex = log.index
+            break
+          }
+        } catch { /* not our event signature */ }
+      }
+
+      if (!parsed) return res.status(400).json({ error: 'No PaymentReceived event found in this transaction from the configured contract' })
+
+      // Guard 2: paymentId in the event must match the stored tx_hash on this record
+      const eventPaymentId: string = parsed.args[0]
+      if (eventPaymentId.toLowerCase() !== (txRecord.tx_hash ?? '').toLowerCase()) {
+        return res.status(400).json({
+          error: `paymentId mismatch — event has ${eventPaymentId}, record has ${txRecord.tx_hash}. Wrong transaction hash?`,
+        })
+      }
+
+      const [, , token, rawAmount] = parsed.args
+      const isETH = token === ethersLib.ethers.ZeroAddress
+      if (isETH) {
+        usdValue = await getUsdValue('ETH', rawAmount, 18)
+      } else {
+        const tokenInfo = TOKEN_MAP[token.toLowerCase()]
+        if (!tokenInfo) return res.status(400).json({ error: `Unknown token ${token}` })
+        usdValue = await getUsdValue(tokenInfo.symbol, rawAmount, tokenInfo.decimals)
+      }
+
+      if (usdValue <= 0) return res.status(400).json({ error: 'ETH price returned $0 — use manual amountUsd override instead' })
+
+      effectiveTxHash = txHash
+      eventKey        = `${txHash}:${logIndex}`
+    } else {
+      // ── Manual override ───────────────────────────────────────────
+      usdValue        = manualAmount!
+      effectiveTxHash = txRecord.tx_hash ?? `manual:${id}`
+      eventKey        = `manual:${id}`
+    }
+
+    // Pass both eligible from-statuses so failed deposits can also be credited
+    const { atomicCredit } = await import('../services/blockchainListener')
+    const credited = await atomicCredit(
+      txRecord.id, txRecord.user_id, usdValue, effectiveTxHash, eventKey,
+      ['pending', 'failed'],
+    )
+
+    res.json({ success: true, credited, amountUsd: usdValue })
+  } catch (err) { next(err) }
+})
+
 adminRouter.post('/send-message', async (req, res, next) => {
   try {
     const schema = z.object({

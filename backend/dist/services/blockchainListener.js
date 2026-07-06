@@ -46,16 +46,19 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.TOKEN_MAP = exports.CONTRACT_ABI = void 0;
+exports.atomicCredit = atomicCredit;
+exports.getUsdValue = getUsdValue;
 exports.startBlockchainListener = startBlockchainListener;
 const ethers_1 = require("ethers");
 const supabase_1 = require("../lib/supabase");
 const email_1 = require("./email");
 // Minimal ABI — only the event we need
-const CONTRACT_ABI = [
+exports.CONTRACT_ABI = [
     'event PaymentReceived(bytes32 indexed paymentId, address indexed sender, address token, uint256 amount)',
 ];
 // Known ERC-20 token addresses on Ethereum mainnet
-const TOKEN_MAP = {
+exports.TOKEN_MAP = {
     '0xdac17f958d2ee523a2206206994597c13d831ec7': { symbol: 'USDT', decimals: 6 },
     '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': { symbol: 'USDC', decimals: 6 },
 };
@@ -69,14 +72,15 @@ const MIN_CONFIRMATIONS = parseInt(process.env.MIN_CONFIRMATIONS ?? '12', 10);
  * Returns true if credit was applied, false if the transaction was already
  * confirmed (idempotent — safe to call multiple times).
  */
-async function atomicCredit(txId, userId, amountUsd, txHash, eventKey) {
-    // 1. Transition status pending → confirmed.
-    //    The .eq('status', 'pending') guard makes this a no-op on replay.
+async function atomicCredit(txId, userId, amountUsd, txHash, eventKey, // `${txHash}:${logIndex}` — uniqueness guard
+fromStatuses = ['pending']) {
+    // 1. Transition status → confirmed.
+    //    The .in('status', fromStatuses) guard makes this a no-op on replay.
     const { data: updated, error: txErr } = await supabase_1.supabase
         .from('transactions')
         .update({ status: 'confirmed', amount_usd: amountUsd, tx_hash: txHash })
         .eq('id', txId)
-        .eq('status', 'pending') // ← conditional: only update once
+        .in('status', fromStatuses) // ← conditional: only update once
         .select('id');
     if (txErr) {
         console.error('[Blockchain] Failed to confirm transaction:', txErr.message);
@@ -161,7 +165,7 @@ function startBlockchainListener() {
         return;
     }
     const provider = new ethers_1.ethers.JsonRpcProvider(rpcUrl);
-    const contract = new ethers_1.ethers.Contract(contractAddr, CONTRACT_ABI, provider);
+    const contract = new ethers_1.ethers.Contract(contractAddr, exports.CONTRACT_ABI, provider);
     console.log(`[Blockchain] Listening for PaymentReceived on ${contractAddr} (min ${MIN_CONFIRMATIONS} confirmations)`);
     contract.on('PaymentReceived', async (paymentId, _sender, token, rawAmount, event) => {
         const txHash = event.transactionHash;
@@ -197,7 +201,7 @@ function startBlockchainListener() {
                 usdValue = await getUsdValue('ETH', rawAmount, 18);
             }
             else {
-                const tokenInfo = TOKEN_MAP[token.toLowerCase()];
+                const tokenInfo = exports.TOKEN_MAP[token.toLowerCase()];
                 if (!tokenInfo) {
                     console.warn(`[Blockchain] Unknown token ${token} — cannot determine USD value`);
                     return;
