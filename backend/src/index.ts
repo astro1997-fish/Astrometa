@@ -52,11 +52,15 @@ const allowedOrigins = new Set<string>([
   ...(process.env.PRODUCTION_URL ? [process.env.PRODUCTION_URL] : []),
 ])
 
+// Replit dev preview URLs are dynamic UUIDs — allow all *.replit.dev subdomains in dev
+const REPLIT_DEV_RE = /^https:\/\/.+\.replit\.dev$/
+
 app.use(cors({
   origin: (origin, cb) => {
     // Allow requests with no Origin header (server-to-server, curl, Stripe webhooks)
     if (!origin) return cb(null, true)
     if (allowedOrigins.has(origin)) return cb(null, true)
+    if (!isProd && REPLIT_DEV_RE.test(origin)) return cb(null, true)
     cb(new Error(`CORS: origin "${origin}" not allowed`))
   },
   credentials: true,
