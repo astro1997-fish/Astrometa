@@ -116,6 +116,16 @@ router.post('/create-session', requireAuth, async (req: AuthRequest, res, next) 
   }
 })
 
+// GET /api/payments/capabilities — which coins are currently active
+router.get('/capabilities', (_req, res) => {
+  res.json({
+    btc:  !!process.env.BTC_XPUB,
+    eth:  !!process.env.CONTRACT_ADDRESS,
+    usdt: !!process.env.CONTRACT_ADDRESS,
+    usdc: !!process.env.CONTRACT_ADDRESS,
+  })
+})
+
 // GET /api/payments/crypto-rate?coin=ethereum
 router.get('/crypto-rate', async (req, res, next) => {
   try {

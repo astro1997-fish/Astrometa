@@ -92,6 +92,22 @@ export default function FundAccount() {
   const [fiatLoading,  setFiatLoading]  = useState(false)
   const [copied,       setCopied]       = useState<string | null>(null)
 
+  // Which coins the backend currently supports (driven by env vars)
+  const [capabilities, setCapabilities] = useState<Record<CryptoOption, boolean>>({
+    eth: false, usdt: false, usdc: false, btc: false,
+  })
+
+  useEffect(() => {
+    api.get('/api/payments/capabilities')
+      .then(({ data }) => {
+        setCapabilities(data)
+        // Auto-select the first available coin
+        const first = COINS.find(c => data[c.id])
+        if (first) setCoin(first.id)
+      })
+      .catch(() => {/* non-fatal — all coins stay disabled */})
+  }, [])
+
   const [depositInfo,   setDepositInfo]   = useState<DepositInfo | null>(null)
   const [loadingDeposit, setLoadingDeposit] = useState(false)
   const [txStep,        setTxStep]        = useState<'idle' | 'approving' | 'depositing' | 'done'>('idle')
@@ -261,21 +277,33 @@ export default function FundAccount() {
                 Select asset
               </label>
               <div className="grid grid-cols-4 gap-2">
-                {COINS.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => setCoin(c.id)}
-                    className={clsx(
-                      'flex flex-col items-center gap-1 py-3 rounded-xl border text-xs font-semibold transition-all',
-                      coin === c.id
-                        ? 'border-brand-400 bg-brand-50 dark:bg-brand-400/10 text-brand-600 dark:text-brand-400'
-                        : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-brand-200'
-                    )}
-                  >
-                    <span className="text-xl">{c.icon}</span>
-                    {c.label}
-                  </button>
-                ))}
+                {COINS.map(c => {
+                  const active = capabilities[c.id]
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => active && setCoin(c.id)}
+                      disabled={!active}
+                      title={active ? undefined : `${c.label} deposits coming soon`}
+                      className={clsx(
+                        'relative flex flex-col items-center gap-1 py-3 rounded-xl border text-xs font-semibold transition-all',
+                        active && coin === c.id
+                          ? 'border-brand-400 bg-brand-50 dark:bg-brand-400/10 text-brand-600 dark:text-brand-400'
+                          : active
+                          ? 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-brand-200'
+                          : 'border-gray-100 dark:border-white/5 text-gray-300 dark:text-gray-600 cursor-not-allowed opacity-60'
+                      )}
+                    >
+                      <span className="text-xl">{c.icon}</span>
+                      {c.label}
+                      {!active && (
+                        <span className="absolute -top-1.5 -right-1.5 text-[9px] font-bold bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-gray-400 rounded-full px-1.5 py-0.5 leading-none">
+                          Soon
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
