@@ -289,23 +289,32 @@ export async function getUsdValue(
 // Exported so the /health endpoint can surface real-time status.
 
 export interface ListenerStatus {
-  active:        boolean        // true while the listener is configured and running
-  lastEventAt:   string | null  // ISO timestamp of last PaymentReceived event
-  lastCheckedAt: string | null  // ISO timestamp of last health probe
-  healthy:       boolean        // false only on confirmed provider/contract failure
-  silenceSec:    number | null  // seconds since last event — informational, not a failure signal
-  silenceWarning: boolean       // true when silence exceeds threshold but provider is still healthy
-  message:       string         // human-readable status description
+  active:            boolean        // true while the listener is configured and running
+  lastEventAt:       string | null  // ISO timestamp of last PaymentReceived event
+  lastCheckedAt:     string | null  // ISO timestamp of last health probe
+  healthy:           boolean        // false only on confirmed provider/contract failure
+  silenceSec:        number | null  // seconds since last event — informational, not a failure signal
+  silenceWarning:    boolean        // true when silence exceeds threshold but provider is still healthy
+  reconnecting:      boolean        // true while a reconnect attempt is in progress
+  reconnectAttempts: number         // how many reconnect attempts have been made since last success
+  message:           string         // human-readable status description
 }
 
 const listenerState = {
-  active:        false,
-  lastEventAt:   null as number | null,  // Date.now() of last event
-  startedAt:     null as number | null,
-  lastCheckedAt: null as number | null,
-  healthy:       true,
-  lastAlertAt:   null as number | null,  // Date.now() of last admin alert sent
+  active:            false,
+  lastEventAt:       null as number | null,  // Date.now() of last event
+  startedAt:         null as number | null,
+  lastCheckedAt:     null as number | null,
+  healthy:           true,
+  lastAlertAt:       null as number | null,  // Date.now() of last admin alert sent
+  reconnecting:      false,
+  reconnectAttempts: 0,
+  lastReconnectAt:   null as number | null,
 }
+
+// Tracks the currently active contract instance so listeners can be removed
+// before a new provider/contract pair is attached on reconnect.
+let activeContract: ethers.Contract | null = null
 
 // How long with no events before we consider the listener stalled.
 // Mainnet blocks arrive every ~12 s, so 10 min with zero events is suspicious.
@@ -330,13 +339,15 @@ const ALERT_COOLDOWN_MS = 60 * 60 * 1000  // 1 hour
 export function getListenerStatus(): ListenerStatus {
   if (!listenerState.active) {
     return {
-      active:         false,
-      lastEventAt:    null,
-      lastCheckedAt:  null,
-      healthy:        true,   // "not configured" is not an error state
-      silenceSec:     null,
-      silenceWarning: false,
-      message:        'Listener not configured (ETH_RPC_URL or CONTRACT_ADDRESS missing)',
+      active:            false,
+      lastEventAt:       null,
+      lastCheckedAt:     null,
+      healthy:           true,   // "not configured" is not an error state
+      silenceSec:        null,
+      silenceWarning:    false,
+      reconnecting:      false,
+      reconnectAttempts: 0,
+      message:           'Listener not configured (ETH_RPC_URL or CONTRACT_ADDRESS missing)',
     }
   }
 
@@ -358,7 +369,9 @@ export function getListenerStatus(): ListenerStatus {
     silenceSec * 1000 > LISTENER_SILENCE_THRESHOLD_MS
 
   let message: string
-  if (!listenerState.healthy) {
+  if (listenerState.reconnecting) {
+    message = `Reconnecting to provider (attempt ${listenerState.reconnectAttempts} with exponential backoff)…`
+  } else if (!listenerState.healthy) {
     message = 'Provider unreachable or contract not found — check RPC connection'
   } else if (silenceWarning) {
     const silenceMin = Math.round(silenceSec! / 60)
@@ -368,46 +381,48 @@ export function getListenerStatus(): ListenerStatus {
   }
 
   return {
-    active:         true,
-    lastEventAt:    listenerState.lastEventAt
+    active:            true,
+    lastEventAt:       listenerState.lastEventAt
       ? new Date(listenerState.lastEventAt).toISOString()
       : null,
-    lastCheckedAt:  listenerState.lastCheckedAt
+    lastCheckedAt:     listenerState.lastCheckedAt
       ? new Date(listenerState.lastCheckedAt).toISOString()
       : null,
-    healthy:        listenerState.healthy,
+    healthy:           listenerState.healthy,
     silenceSec,
     silenceWarning,
+    reconnecting:      listenerState.reconnecting,
+    reconnectAttempts: listenerState.reconnectAttempts,
     message,
   }
 }
 
-export async function startBlockchainListener() {
-  const rpcUrl       = process.env.ETH_RPC_URL
-  const contractAddr = process.env.CONTRACT_ADDRESS
+// ── Reconnect configuration ────────────────────────────────────────────────
+// Exponential backoff delays for reconnect attempts (ms).
+// After MAX_RECONNECT_ATTEMPTS the listener gives up and sends an alert.
+const RECONNECT_BACKOFF_MS    = [5_000, 10_000, 30_000, 60_000, 60_000]
+const MAX_RECONNECT_ATTEMPTS  = RECONNECT_BACKOFF_MS.length
 
-  if (!rpcUrl) {
-    console.warn('[Blockchain] ETH_RPC_URL not set — listener not started')
-    return
+/**
+ * Attach the PaymentReceived event handler to a contract instance.
+ * Extracted so it can be called on initial start and on every reconnect.
+ *
+ * Removes all listeners from the previous contract instance first so old
+ * handlers do not accumulate and process events twice after a reconnect.
+ */
+function attachPaymentReceivedHandler(
+  provider:     ethers.JsonRpcProvider,
+  contract:     ethers.Contract,
+): void {
+  // Detach handlers from the previously active contract (if any)
+  if (activeContract && activeContract !== contract) {
+    try {
+      activeContract.removeAllListeners()
+    } catch {
+      // Ignore — old provider may already be dead
+    }
   }
-  if (!contractAddr) {
-    console.warn('[Blockchain] CONTRACT_ADDRESS not set — listener not started (deploy the contract first)')
-    return
-  }
-
-  // Seed the in-memory price cache from the database before the listener
-  // starts so the pending_price retry loop can run on a cold restart without
-  // waiting for the next CoinGecko poll interval.
-  await loadEthPriceCacheFromDb()
-
-  const provider = new ethers.JsonRpcProvider(rpcUrl)
-  const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider)
-
-  listenerState.active    = true
-  listenerState.startedAt = Date.now()
-  listenerState.healthy   = true
-
-  console.log(`[Blockchain] Listening for PaymentReceived on ${contractAddr} (min ${MIN_CONFIRMATIONS} confirmations)`)
+  activeContract = contract
 
   contract.on(
     'PaymentReceived',
@@ -418,9 +433,11 @@ export async function startBlockchainListener() {
       rawAmount: bigint,
       event:     ethers.EventLog,
     ) => {
-      // Record that we are alive
-      listenerState.lastEventAt = Date.now()
-      listenerState.healthy     = true
+      // A successful event means the provider is healthy
+      listenerState.lastEventAt        = Date.now()
+      listenerState.healthy            = true
+      listenerState.reconnecting       = false
+      listenerState.reconnectAttempts  = 0
 
       const txHash   = event.transactionHash
       const logIndex = event.index
@@ -434,7 +451,6 @@ export async function startBlockchainListener() {
         if (!receipt || receipt.status !== 1) {
           const reason = receipt ? 'Transaction reverted on chain' : 'Receipt not found — transaction may have been dropped'
           console.warn(`[Blockchain] Transaction ${txHash} ${receipt ? 'reverted' : 'not found'} — skipping`)
-          // Best-effort: mark the deposit with a failure reason so admins know why it is stuck
           await supabase
             .from('transactions')
             .update({ failure_reason: reason })
@@ -483,7 +499,6 @@ export async function startBlockchainListener() {
 
         if (usdValue === null) {
           // ETH price unavailable and no cache — defer rather than drop.
-          // Store raw amount in metadata so the retry loop can re-price it.
           console.warn(`[Blockchain] ETH price unavailable for paymentId ${paymentId} — marking pending_price for retry`)
           const { error: deferErr } = await supabase
             .from('transactions')
@@ -501,10 +516,6 @@ export async function startBlockchainListener() {
             .in('status', ['pending'])
 
           if (deferErr) {
-            // Deferral itself failed (constraint violation, RLS, network) —
-            // log as an error so ops can be alerted; the tx stays 'pending'
-            // and the event-based listener will not retry it automatically,
-            // but an admin can manually credit via the retry endpoint.
             console.error(
               `[Blockchain] CRITICAL: could not defer tx ${txRecord.id} to pending_price — ` +
               `deposit may require manual admin credit. Error: ${deferErr.message}`,
@@ -532,33 +543,158 @@ export async function startBlockchainListener() {
       }
     },
   )
+}
 
-  // Mark unhealthy on provider errors
-  provider.on('error', (err) => {
+/**
+ * Attempt to rebuild the provider and re-attach the contract event listener
+ * using exponential backoff.  Called when a provider error is detected or the
+ * periodic health check confirms the connection is broken.
+ *
+ * Uses `listenerState.reconnecting` as a mutex so concurrent triggers (e.g. a
+ * provider error fired while a health check is also running) only start one
+ * reconnect sequence.
+ */
+async function reconnectWithBackoff(rpcUrl: string, contractAddr: string): Promise<void> {
+  if (listenerState.reconnecting) {
+    // A reconnect sequence is already running — don't start another
+    return
+  }
+
+  // Reset the per-outage budget so exhausted state from a previous cycle
+  // never blocks future reconnection attempts.
+  listenerState.reconnecting      = true
+  listenerState.reconnectAttempts = 0
+
+  while (listenerState.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+    const attempt  = listenerState.reconnectAttempts + 1
+    const delayMs  = RECONNECT_BACKOFF_MS[listenerState.reconnectAttempts]
+    listenerState.reconnectAttempts = attempt
+    listenerState.lastReconnectAt   = Date.now()
+
+    console.log(`[Blockchain] Reconnect attempt ${attempt}/${MAX_RECONNECT_ATTEMPTS} in ${delayMs / 1000}s…`)
+
+    await new Promise<void>(resolve => setTimeout(resolve, delayMs))
+
+    try {
+      const provider = new ethers.JsonRpcProvider(rpcUrl)
+
+      // Quick connectivity check before attaching a full listener
+      await provider.getBlockNumber()
+
+      const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider)
+      attachPaymentReceivedHandler(provider, contract)
+
+      // Re-arm the provider error handler for this new provider instance
+      provider.on('error', (err: Error) => {
+        console.error('[Blockchain] Provider error (post-reconnect):', err.message)
+        listenerState.healthy = false
+        reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
+      })
+
+      listenerState.healthy            = true
+      listenerState.reconnecting       = false
+      listenerState.reconnectAttempts  = 0   // reset per-outage budget for the next drop
+      console.log(`[Blockchain] Reconnected successfully on attempt ${attempt}`)
+      return
+    } catch (err) {
+      console.error(
+        `[Blockchain] Reconnect attempt ${attempt} failed:`,
+        (err as Error).message,
+      )
+    }
+  }
+
+  // All attempts exhausted
+  listenerState.reconnecting = false
+  listenerState.healthy      = false
+
+  console.error(
+    `[Blockchain] All ${MAX_RECONNECT_ATTEMPTS} reconnect attempts failed — listener is degraded. Manual intervention required.`,
+  )
+
+  // Send admin alert (rate-limited by ALERT_COOLDOWN_MS)
+  const now       = Date.now()
+  const cooldownOk =
+    listenerState.lastAlertAt === null ||
+    now - listenerState.lastAlertAt > ALERT_COOLDOWN_MS
+
+  if (cooldownOk) {
+    listenerState.lastAlertAt = now
+    try {
+      await emailService.sendListenerAlert(
+        `Automatic reconnection failed after ${MAX_RECONNECT_ATTEMPTS} attempts`,
+        `Contract: ${contractAddr}\nLast attempt: ${new Date(now).toISOString()}\nManual server restart may be required.`,
+      )
+      console.warn('[Blockchain] Admin alert email sent (reconnect exhausted)')
+    } catch (alertErr) {
+      console.error('[Blockchain] Failed to send admin alert email:', (alertErr as Error).message)
+    }
+  }
+}
+
+export async function startBlockchainListener() {
+  const rpcUrl       = process.env.ETH_RPC_URL
+  const contractAddr = process.env.CONTRACT_ADDRESS
+
+  if (!rpcUrl) {
+    console.warn('[Blockchain] ETH_RPC_URL not set — listener not started')
+    return
+  }
+  if (!contractAddr) {
+    console.warn('[Blockchain] CONTRACT_ADDRESS not set — listener not started (deploy the contract first)')
+    return
+  }
+
+  // Seed the in-memory price cache from the database before the listener
+  // starts so the pending_price retry loop can run on a cold restart without
+  // waiting for the next CoinGecko poll interval.
+  await loadEthPriceCacheFromDb()
+
+  const provider = new ethers.JsonRpcProvider(rpcUrl)
+  const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider)
+
+  listenerState.active             = true
+  listenerState.startedAt          = Date.now()
+  listenerState.healthy            = true
+  listenerState.reconnecting       = false
+  listenerState.reconnectAttempts  = 0
+  activeContract                   = contract
+
+  console.log(`[Blockchain] Listening for PaymentReceived on ${contractAddr} (min ${MIN_CONFIRMATIONS} confirmations)`)
+
+  attachPaymentReceivedHandler(provider, contract)
+
+  // Trigger reconnect on provider errors
+  provider.on('error', (err: Error) => {
     console.error('[Blockchain] Provider error:', err.message)
     listenerState.healthy = false
+    reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
   })
 
   // Retry any transactions that were deferred due to missing ETH price
   startPendingPriceRetryLoop()
 
   // Periodic health checks
-  startListenerHealthCheck(provider, contractAddr)
+  startListenerHealthCheck(rpcUrl, contractAddr)
 }
 
 // ── Listener health check ──────────────────────────────────────────────────
 
 async function runListenerHealthCheck(
-  provider:     ethers.JsonRpcProvider,
+  rpcUrl:       string,
   contractAddr: string,
 ): Promise<void> {
-  listenerState.lastCheckedAt = Date.now()
   const now = Date.now()
+  listenerState.lastCheckedAt = now
+
+  // Use a fresh provider for the health probe so a broken cached provider
+  // does not give a false-positive result.
+  const probeProvider = new ethers.JsonRpcProvider(rpcUrl)
 
   // 1. Verify provider connectivity by fetching the latest block number.
   let providerOk = false
   try {
-    await provider.getBlockNumber()
+    await probeProvider.getBlockNumber()
     providerOk = true
   } catch (err) {
     console.error('[Blockchain] Health check: provider unreachable —', (err as Error).message)
@@ -568,7 +704,7 @@ async function runListenerHealthCheck(
   let contractOk = false
   if (providerOk) {
     try {
-      const code = await provider.getCode(contractAddr)
+      const code = await probeProvider.getCode(contractAddr)
       contractOk = code !== '0x' && code !== ''  // non-empty = contract deployed
     } catch (err) {
       console.error('[Blockchain] Health check: contract unreachable —', (err as Error).message)
@@ -579,9 +715,9 @@ async function runListenerHealthCheck(
   //    Event silence is NOT a failure criterion — no deposits during a quiet period
   //    is normal and does not indicate the listener is broken.
   const isHealthy = providerOk && contractOk
-  listenerState.healthy = isHealthy
 
   if (isHealthy) {
+    listenerState.healthy = true
     console.log('[Blockchain] Health check: OK (provider reachable, contract found)')
     return
   }
@@ -594,40 +730,22 @@ async function runListenerHealthCheck(
   const reason = reasons.join('; ')
   console.warn(`[Blockchain] Health check FAILED: ${reason}`)
 
-  // 4. Send admin alert — rate-limited to ALERT_COOLDOWN_MS
-  const cooldownOk =
-    listenerState.lastAlertAt === null ||
-    now - listenerState.lastAlertAt > ALERT_COOLDOWN_MS
-
-  if (!cooldownOk) {
-    console.log('[Blockchain] Alert suppressed (within cooldown window)')
-    return
-  }
-
-  listenerState.lastAlertAt = now
-
-  try {
-    await emailService.sendListenerAlert(
-      reason,
-      `Contract: ${contractAddr}\nChecked at: ${new Date(now).toISOString()}`,
-    )
-    console.warn('[Blockchain] Admin alert email sent')
-  } catch (alertErr) {
-    console.error('[Blockchain] Failed to send admin alert email:', (alertErr as Error).message)
-  }
+  // 4. Mark unhealthy and trigger automatic reconnect (non-blocking).
+  listenerState.healthy = false
+  reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
 }
 
 function startListenerHealthCheck(
-  provider:     ethers.JsonRpcProvider,
+  rpcUrl:       string,
   contractAddr: string,
 ): void {
   // Run once shortly after startup, then on the regular interval
   setTimeout(
-    () => runListenerHealthCheck(provider, contractAddr),
+    () => runListenerHealthCheck(rpcUrl, contractAddr),
     30_000,  // 30 s after startup — let things settle first
   )
   setInterval(
-    () => runListenerHealthCheck(provider, contractAddr),
+    () => runListenerHealthCheck(rpcUrl, contractAddr),
     LISTENER_HEALTH_CHECK_INTERVAL_MS,
   )
   console.log('[Blockchain] Health check scheduled (interval: 5 min, silence threshold: ' +
