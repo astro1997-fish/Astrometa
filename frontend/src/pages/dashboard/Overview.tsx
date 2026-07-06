@@ -86,7 +86,7 @@ export default function Overview() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'},{' '}
-          {profile?.full_name?.split(' ')[0] ?? 'Investor'} 👋
+          {(profile?.full_name ?? user?.user_metadata?.full_name)?.split(' ')[0] ?? 'Investor'} 👋
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
           Here's your portfolio summary for {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.
