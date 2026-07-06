@@ -216,7 +216,7 @@ export default function Register() {
               <select
                 value={form.country}
                 onChange={e => set('country', e.target.value)}
-                className={`input ${errors.country ? 'border-red-400' : ''}`}
+                className={`input bg-white dark:bg-[#0D1627] text-gray-900 dark:text-white ${errors.country ? 'border-red-400' : ''}`}
                 required
               >
                 <option value="">Select country...</option>
