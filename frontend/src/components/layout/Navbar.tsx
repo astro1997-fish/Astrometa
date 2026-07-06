@@ -36,10 +36,10 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Close mobile menu whenever the route changes
+  // Close mobile menu on every navigation (pathname, hash, or same-page)
   useEffect(() => {
     setMobileOpen(false)
-  }, [location.pathname])
+  }, [location.key])
 
   const handleSignOut = async () => {
     await signOut()
