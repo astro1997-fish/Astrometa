@@ -47,21 +47,21 @@ args = "cd backend && npm run dev"
 waitForPort = 8000
 
 [[ports]]
-localPort = 8000
-externalPort = 80
-
-[[ports]]
 localPort = 5000
-externalPort = 3000
+externalPort = 80
 
 [[ports]]
 localPort = 5001
 externalPort = 3001
 
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
 [deployment]
 deploymentTarget = "vm"
-run = ["bash", "-c", "cd backend && NODE_ENV=production node dist/index.js"]
-build = ["bash", "-c", "VITE_API_URL='' cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build"]
+run = ["bash", "-c", "cd backend && PORT=5000 NODE_ENV=production node dist/index.js"]
+build = ["bash", "-c", "cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build"]
 
 [userenv]
 
