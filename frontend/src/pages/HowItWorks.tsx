@@ -50,7 +50,7 @@ const FEATURES = [
     icon: Repeat2,
     title: 'The Propagation Strategy',
     span: true,
-    desc: 'Our proprietary propagation method continuously cycles your invested capital across a curated set of high-conviction crypto positions. Once a position matures and hits its target yield, profits are harvested and immediately re-deployed into the next opportunity — compounding your returns without downtime. Each propagation cycle typically runs 7–21 days, and your dashboard shows every cycle in real time: entry price, target, current gain, and estimated close date. This active turnover of funds is what separates ASTRO META-TRADE from passive holding strategies and is the engine behind our consistently above-market returns.',
+    desc: 'Our proprietary propagation method cycles your capital across high-conviction positions. When a position hits its target yield, profits are harvested and immediately re-deployed — compounding your returns without downtime. Each cycle runs 7–21 days, fully visible on your dashboard.',
   },
 ]
 
