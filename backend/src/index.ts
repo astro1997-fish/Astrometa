@@ -29,9 +29,15 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc:  ["'self'"],
-      styleSrc:   ["'self'", "'unsafe-inline'"],
+      styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc:    ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc:     ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'", 'https://api.coingecko.com'],
+      connectSrc: [
+        "'self'",
+        'https://api.coingecko.com',
+        'https://*.supabase.co',
+        'wss://*.supabase.co',
+      ],
     },
   },
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
@@ -48,6 +54,7 @@ const isProd = process.env.NODE_ENV === 'production'
 const allowedOrigins = new Set<string>([
   'http://localhost:5000',
   'http://localhost:8000',
+  'https://astrometa.replit.app',         // production same-origin
   ...(process.env.FRONTEND_URL   ? [process.env.FRONTEND_URL]   : []),
   ...(process.env.PRODUCTION_URL ? [process.env.PRODUCTION_URL] : []),
 ])
