@@ -114,7 +114,7 @@ export function Risk() {
   return (
     <LegalLayout title="Risk Disclosure" lastUpdated="January 1, 2025">
       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-amber-800 dark:text-amber-300 text-sm font-medium">
-        ⚠️ IMPORTANT: Please read this Risk Disclosure carefully before investing. Cryptocurrency investment carries significant risk, including the possible loss of your entire invested capital.
+        IMPORTANT: Please read this Risk Disclosure carefully before investing. Cryptocurrency investment carries significant risk, including the possible loss of your entire invested capital.
       </div>
       <Section title="1. Market Risk">
         <p>Cryptocurrency markets are highly volatile and can experience rapid, significant price movements. The value of digital assets can increase or decrease by large percentages within short periods. ASTRO META-TRADE's management strategies aim to mitigate but cannot eliminate market risk.</p>
