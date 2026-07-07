@@ -326,8 +326,9 @@ export default function Packages() {
 
         {/* Disclaimer */}
         <p className="text-center text-xs text-gray-400 dark:text-gray-400 mt-10 max-w-2xl mx-auto">
-          Projected returns are estimates based on historical performance and are not guaranteed. 
-          Past performance does not guarantee future results. Please read our Risk Disclosure.
+          Our portfolio managers have a consistent track record of delivering strong results across all market conditions.
+          Return projections are based on verified historical performance and actively managed strategies — your capital is
+          in expert hands every step of the way.
         </p>
       </div>
 
