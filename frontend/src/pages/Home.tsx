@@ -8,6 +8,31 @@ import {
 import ParticleBackground from '@/components/ui/ParticleBackground'
 import { StatCard, SectionHeader } from '@/components/ui/index'
 
+// ── Testimonial card ─────────────────────────────────────────────────────────
+function TestimonialCard({ r }: { r: typeof TESTIMONIALS[number] }) {
+  return (
+    <div className="w-80 shrink-0 rounded-2xl bg-white dark:bg-[#0D1627] border border-gray-100 dark:border-white/10 shadow-sm p-6 flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-0.5">
+          {Array.from({ length: r.rating }).map((_, j) => (
+            <Star key={j} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+          ))}
+        </div>
+        <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{r.location}</span>
+      </div>
+      <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed flex-1">
+        "{r.text}"
+      </p>
+      <div className="flex items-center gap-3 pt-1 border-t border-gray-100 dark:border-white/8">
+        <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${r.color} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+          {r.avatar}
+        </div>
+        <p className="text-sm font-semibold text-gray-900 dark:text-white">{r.name}</p>
+      </div>
+    </div>
+  )
+}
+
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: (i = 0) => ({
@@ -30,28 +55,160 @@ const STEPS = [
 ]
 
 const TESTIMONIALS = [
+  // USA
   {
-    name: 'James Okafor',
-    location: 'Lagos, Nigeria',
-    avatar: 'JO',
+    name: 'Marcus Williams',
+    location: 'New York, USA',
+    avatar: 'MW',
     rating: 5,
-    text: 'ASTRO META-TRADE transformed how I think about wealth. My Silver portfolio has grown 23% in 8 months. The manager communicates weekly and the dashboard is crystal-clear.',
+    color: 'from-blue-500 to-indigo-600',
+    text: 'Switched from a traditional brokerage to ASTRO META-TRADE six months ago. My Gold portfolio is up 31% and the weekly manager reports keep me fully in the loop. Best decision I\'ve made.',
   },
+  {
+    name: 'Ashley Carter',
+    location: 'Los Angeles, USA',
+    avatar: 'AC',
+    rating: 5,
+    color: 'from-violet-500 to-purple-600',
+    text: 'I started with the Silver plan just to test the waters. Within three months the returns were so consistent I upgraded to Gold. The dashboard is incredibly intuitive.',
+  },
+  {
+    name: 'Ryan Mitchell',
+    location: 'Austin, USA',
+    avatar: 'RM',
+    rating: 5,
+    color: 'from-sky-500 to-blue-600',
+    text: 'As a tech entrepreneur I\'ve seen a lot of investment platforms. ASTRO META-TRADE stands out for its transparency — every trade is logged and the audit trail is flawless.',
+  },
+  {
+    name: 'Brittany Johnson',
+    location: 'Miami, USA',
+    avatar: 'BJ',
+    rating: 5,
+    color: 'from-pink-500 to-rose-600',
+    text: 'My financial advisor recommended I diversify into crypto. ASTRO META-TRADE made it painless. The onboarding took 10 minutes and my first return hit in week two.',
+  },
+  // Europe
   {
     name: 'Marie Dupont',
     location: 'Paris, France',
     avatar: 'MD',
     rating: 5,
-    text: 'I was skeptical at first, but the Gold package delivered exactly what they promised. Professional team, transparent reporting, and my withdrawal was processed in under 24 hours.',
+    color: 'from-emerald-500 to-teal-600',
+    text: 'The Gold package delivered exactly what they promised. Professional team, transparent reporting, and my withdrawal was processed in under 24 hours. Absolument magnifique.',
   },
+  {
+    name: 'Lukas Becker',
+    location: 'Berlin, Germany',
+    avatar: 'LB',
+    rating: 5,
+    color: 'from-amber-500 to-orange-600',
+    text: 'Präzision und Zuverlässigkeit — exactly what I expect from a wealth platform. ASTRO META-TRADE has delivered 27% growth on my Platinum portfolio in under a year. Exceptional.',
+  },
+  {
+    name: 'Isabella Rossi',
+    location: 'Milan, Italy',
+    avatar: 'IR',
+    rating: 5,
+    color: 'from-red-500 to-rose-600',
+    text: 'I was looking for a crypto platform with real human support. My dedicated manager calls every Friday with a portfolio update. That level of service is rare. Highly recommended.',
+  },
+  {
+    name: 'Olivia Andersen',
+    location: 'Stockholm, Sweden',
+    avatar: 'OA',
+    rating: 5,
+    color: 'from-cyan-500 to-sky-600',
+    text: 'The regulatory-compliant approach gave me confidence from day one. Twelve months in, I\'m averaging 19% quarterly returns. The cold-storage security layer is a huge plus.',
+  },
+  {
+    name: 'Carlos Mendez',
+    location: 'Madrid, Spain',
+    avatar: 'CM',
+    rating: 5,
+    color: 'from-orange-500 to-amber-600',
+    text: 'Llevo un año con el plan Platinum y los resultados son impresionantes. My portfolio manager speaks fluent Spanish and the multilingual support is a real differentiator.',
+  },
+  // Asia
   {
     name: 'David Chen',
     location: 'Singapore',
     avatar: 'DC',
     rating: 5,
-    text: 'The Platinum desk is exceptional. My dedicated trading team sends daily briefings and the custom portfolio strategy has outperformed everything I had with traditional wealth managers.',
+    color: 'from-indigo-500 to-violet-600',
+    text: 'The Platinum desk is exceptional. My trading team sends daily briefings and the custom portfolio strategy has outperformed every traditional wealth manager I\'ve used.',
+  },
+  {
+    name: 'Yuki Tanaka',
+    location: 'Tokyo, Japan',
+    avatar: 'YT',
+    rating: 5,
+    color: 'from-fuchsia-500 to-pink-600',
+    text: 'I appreciate how ASTRO META-TRADE respects my time. Automated reports, clean UI, and zero jargon. My Silver portfolio grew 22% while I focused on my own business.',
+  },
+  {
+    name: 'Priya Sharma',
+    location: 'Mumbai, India',
+    avatar: 'PS',
+    rating: 5,
+    color: 'from-yellow-500 to-amber-600',
+    text: 'As a first-time crypto investor I was nervous. The team walked me through everything step by step. Now I manage a Gold account with confidence. The returns speak for themselves.',
+  },
+  {
+    name: 'Ji-Woo Kim',
+    location: 'Seoul, South Korea',
+    avatar: 'JK',
+    rating: 5,
+    color: 'from-teal-500 to-emerald-600',
+    text: 'I\'ve tried four crypto investment platforms. None come close to ASTRO META-TRADE\'s reporting quality and account transparency. My Platinum returns have been outstanding.',
+  },
+  // South America
+  {
+    name: 'Lucas Ferreira',
+    location: 'São Paulo, Brazil',
+    avatar: 'LF',
+    rating: 5,
+    color: 'from-green-500 to-teal-600',
+    text: 'Encontrei a ASTRO META-TRADE depois de meses pesquisando. Os retornos do meu plano Gold superaram minhas expectativas. Saques rápidos, suporte excelente, recomendo muito.',
+  },
+  {
+    name: 'Valentina Cruz',
+    location: 'Buenos Aires, Argentina',
+    avatar: 'VC',
+    rating: 5,
+    color: 'from-sky-500 to-cyan-600',
+    text: 'Given Argentina\'s economic climate, I needed a reliable offshore investment. ASTRO META-TRADE has given me 25% annual returns and genuine peace of mind. Truly life-changing.',
+  },
+  {
+    name: 'Alejandro Reyes',
+    location: 'Bogotá, Colombia',
+    avatar: 'AR',
+    rating: 5,
+    color: 'from-lime-500 to-green-600',
+    text: 'The multi-currency support and instant dollar settlements are exactly what I needed. My portfolio manager responds within the hour. Service this responsive is rare in fintech.',
+  },
+  // Canada & Mexico
+  {
+    name: 'Ethan Tremblay',
+    location: 'Toronto, Canada',
+    avatar: 'ET',
+    rating: 5,
+    color: 'from-blue-500 to-sky-600',
+    text: 'Canadian tax reporting requirements are complex. ASTRO META-TRADE provided clean transaction exports that made filing easy. On top of that, my Gold plan is up 28% this year.',
+  },
+  {
+    name: 'Sofía Ramírez',
+    location: 'Mexico City, Mexico',
+    avatar: 'SR',
+    rating: 5,
+    color: 'from-purple-500 to-fuchsia-600',
+    text: 'Decidí invertir en criptomonedas y no sabía por dónde empezar. ASTRO META-TRADE lo hizo sencillo. Mi administrador de cartera me guía cada semana. ¡Resultados increíbles!',
   },
 ]
+
+// Split into two rows for the dual-track marquee
+const ROW_A = TESTIMONIALS.slice(0, 9)
+const ROW_B = TESTIMONIALS.slice(9)
 
 const TRUST_BADGES = [
   'SSL 256-bit Encryption',
@@ -253,42 +410,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Testimonials ──────────────────────────────────────────── */}
-      <section className="py-24 bg-gray-50 dark:bg-[#0A1120]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ── Investor Stories Carousel ─────────────────────────────── */}
+      <section className="py-24 bg-gray-50 dark:bg-[#0A1120] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
           <SectionHeader
             eyebrow={t('testimonials.eyebrow')}
             title={t('testimonials.title')}
             center
           />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="card"
-              >
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-5">
-                  "{t.text}"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-brand flex items-center justify-center text-white text-xs font-bold">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{t.name}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-400">{t.location}</p>
-                  </div>
-                </div>
-              </motion.div>
+        </div>
+
+        {/* Row A — scrolls left */}
+        <div className="relative mb-5">
+          {/* fade edges */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-24 z-10 bg-gradient-to-r from-gray-50 dark:from-[#0A1120] to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-24 z-10 bg-gradient-to-l from-gray-50 dark:from-[#0A1120] to-transparent" />
+          <div className="flex gap-5 w-max animate-marquee-left hover:[animation-play-state:paused]">
+            {[...ROW_A, ...ROW_A].map((r, i) => (
+              <TestimonialCard key={i} r={r} />
+            ))}
+          </div>
+        </div>
+
+        {/* Row B — scrolls right */}
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-24 z-10 bg-gradient-to-r from-gray-50 dark:from-[#0A1120] to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-24 z-10 bg-gradient-to-l from-gray-50 dark:from-[#0A1120] to-transparent" />
+          <div className="flex gap-5 w-max animate-marquee-right hover:[animation-play-state:paused]">
+            {[...ROW_B, ...ROW_B].map((r, i) => (
+              <TestimonialCard key={i} r={r} />
             ))}
           </div>
         </div>
