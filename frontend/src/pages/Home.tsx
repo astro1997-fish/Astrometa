@@ -206,9 +206,6 @@ const TESTIMONIALS = [
   },
 ]
 
-// Split into two rows for the dual-track marquee
-const ROW_A = TESTIMONIALS.slice(0, 9)
-const ROW_B = TESTIMONIALS.slice(9)
 
 const TRUST_BADGES = [
   'SSL 256-bit Encryption',
@@ -420,24 +417,11 @@ export default function Home() {
           />
         </div>
 
-        {/* Row A — scrolls left */}
-        <div className="relative mb-5">
-          {/* fade edges */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-24 z-10 bg-gradient-to-r from-gray-50 dark:from-[#0A1120] to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-24 z-10 bg-gradient-to-l from-gray-50 dark:from-[#0A1120] to-transparent" />
-          <div className="flex gap-5 w-max animate-marquee-left hover:[animation-play-state:paused]">
-            {[...ROW_A, ...ROW_A].map((r, i) => (
-              <TestimonialCard key={i} r={r} />
-            ))}
-          </div>
-        </div>
-
-        {/* Row B — scrolls right */}
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 w-24 z-10 bg-gradient-to-r from-gray-50 dark:from-[#0A1120] to-transparent" />
           <div className="pointer-events-none absolute inset-y-0 right-0 w-24 z-10 bg-gradient-to-l from-gray-50 dark:from-[#0A1120] to-transparent" />
-          <div className="flex gap-5 w-max animate-marquee-right hover:[animation-play-state:paused]">
-            {[...ROW_B, ...ROW_B].map((r, i) => (
+          <div className="flex gap-5 w-max animate-marquee-left hover:[animation-play-state:paused]">
+            {[...TESTIMONIALS, ...TESTIMONIALS].map((r, i) => (
               <TestimonialCard key={i} r={r} />
             ))}
           </div>
