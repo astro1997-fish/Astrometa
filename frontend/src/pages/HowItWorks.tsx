@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { UserPlus, Wallet, TrendingUp, Shield, BarChart3, Lock, RefreshCw, Globe } from 'lucide-react'
+import { UserPlus, Wallet, TrendingUp, Shield, BarChart3, Lock, RefreshCw, Globe, Repeat2 } from 'lucide-react'
 import { SectionHeader } from '@/components/ui/index'
 import { Link } from 'react-router-dom'
 
@@ -42,10 +42,16 @@ const STEPS = [
 ]
 
 const FEATURES = [
-  { icon: Lock,       title: 'Non-Custodial Options',   desc: 'Advanced investors can choose non-custodial paths with direct wallet integrations.' },
-  { icon: RefreshCw,  title: 'Auto-Rebalancing',         desc: 'Your portfolio is rebalanced automatically based on market conditions and your risk profile.' },
-  { icon: BarChart3,  title: 'Transparent Reporting',    desc: 'Full transaction history, performance charts, and weekly manager reports available at any time.' },
-  { icon: Globe,      title: 'Global Accessibility',     desc: 'Available in 120+ countries with support for 6 languages and multiple fiat currencies.' },
+  { icon: Lock,       title: 'Non-Custodial Options',      desc: 'Advanced investors can choose non-custodial paths with direct wallet integrations.', span: false },
+  { icon: RefreshCw,  title: 'Auto-Rebalancing',            desc: 'Your portfolio is rebalanced automatically based on market conditions and your risk profile.', span: false },
+  { icon: BarChart3,  title: 'Transparent Reporting',       desc: 'Full transaction history, performance charts, and weekly manager reports available at any time.', span: false },
+  { icon: Globe,      title: 'Global Accessibility',        desc: 'Available in 120+ countries with support for 6 languages and multiple fiat currencies.', span: false },
+  {
+    icon: Repeat2,
+    title: 'The Propagation Strategy',
+    span: true,
+    desc: 'Our proprietary propagation method continuously cycles your invested capital across a curated set of high-conviction crypto positions. Once a position matures and hits its target yield, profits are harvested and immediately re-deployed into the next opportunity — compounding your returns without downtime. Each propagation cycle typically runs 7–21 days, and your dashboard shows every cycle in real time: entry price, target, current gain, and estimated close date. This active turnover of funds is what separates ASTRO META-TRADE from passive holding strategies and is the engine behind our consistently above-market returns.',
+  },
 ]
 
 export default function HowItWorks() {
@@ -92,12 +98,14 @@ export default function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.07 }}
-              className="card"
+              className={`card ${f.span ? 'col-span-2' : ''}`}
             >
-              <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-400/10 flex items-center justify-center mb-3">
-                <f.icon className="w-4.5 h-4.5 text-brand-400" />
+              <div className={`flex items-center gap-3 mb-3 ${f.span ? '' : 'flex-col items-start'}`}>
+                <div className={`shrink-0 rounded-xl bg-brand-50 dark:bg-brand-400/10 flex items-center justify-center ${f.span ? 'w-10 h-10' : 'w-9 h-9'}`}>
+                  <f.icon className={`text-brand-400 ${f.span ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                </div>
+                <h3 className={`font-semibold text-gray-900 dark:text-white ${f.span ? 'text-base' : 'text-sm'}`}>{f.title}</h3>
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm">{f.title}</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}
