@@ -20,18 +20,32 @@ authRouter.post('/register', authLimiter, async (req, res, next) => {
 
     const { data, error } = await supabase.auth.admin.createUser({
       email, password,
-      email_confirm: false,
+      email_confirm: true,   // mark confirmed — no email is sent via admin API
       user_metadata: { full_name: fullName, country },
     })
     if (error) throw error
 
-    await supabase.from('users').insert({
-      id: data.user!.id, email, full_name: fullName, country, role: 'user',
-    })
-    await supabase.from('balances').insert({ user_id: data.user!.id, unified_usd_balance: 0 })
-    await emailService.sendWelcome(email, fullName)
+    const userId = data.user!.id
 
-    res.status(201).json({ message: 'Account created. Please verify your email.' })
+    // Upsert so a retry after a partial failure doesn't duplicate rows
+    const { error: userErr } = await supabase.from('users').upsert(
+      { id: userId, email, full_name: fullName, country, role: 'user' },
+      { onConflict: 'id' },
+    )
+    if (userErr) throw userErr
+
+    const { error: balErr } = await supabase.from('balances').upsert(
+      { user_id: userId, unified_usd_balance: 0 },
+      { onConflict: 'user_id' },
+    )
+    if (balErr) throw balErr
+
+    // Welcome email is best-effort — don't fail the signup if it errors
+    emailService.sendWelcome(email, fullName).catch(
+      (e: unknown) => console.error('[register] welcome email failed:', e),
+    )
+
+    res.status(201).json({ message: 'Account created successfully.' })
   } catch (err) { next(err) }
 })
 

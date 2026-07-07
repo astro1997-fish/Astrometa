@@ -70,27 +70,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, fullName: string, country: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, country } },
+    // Use the backend admin API so no confirmation email is sent (avoids Supabase rate limits)
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, fullName, country }),
     })
-    if (error) throw error
-
-    // Insert profile row
-    if (data.user) {
-      await supabase.from('users').insert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-        country,
-        role: 'user',
-      })
-      await supabase.from('balances').insert({
-        user_id: data.user.id,
-        unified_usd_balance: 0,
-      })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(body?.error ?? body?.message ?? 'Registration failed')
     }
+
+    // Sign in immediately so the user gets a session (admin.createUser doesn't issue one)
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+    if (signInErr) throw signInErr
   }
 
   const signOut = async () => {
