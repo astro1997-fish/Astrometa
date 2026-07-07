@@ -54,20 +54,19 @@ const isProd = process.env.NODE_ENV === 'production'
 const allowedOrigins = new Set<string>([
   'http://localhost:5000',
   'http://localhost:8000',
-  'https://astrometa.replit.app',         // production same-origin
   ...(process.env.FRONTEND_URL   ? [process.env.FRONTEND_URL]   : []),
   ...(process.env.PRODUCTION_URL ? [process.env.PRODUCTION_URL] : []),
 ])
 
-// Replit dev preview URLs are dynamic UUIDs — allow all *.replit.dev subdomains in dev
-const REPLIT_DEV_RE = /^https:\/\/.+\.replit\.dev$/
+// Replit URLs are dynamic — allow all *.replit.dev (dev previews) and *.replit.app (production)
+const REPLIT_URL_RE = /^https:\/\/.+\.replit\.(dev|app)$/
 
 app.use(cors({
   origin: (origin, cb) => {
     // Allow requests with no Origin header (server-to-server, curl, Stripe webhooks)
     if (!origin) return cb(null, true)
     if (allowedOrigins.has(origin)) return cb(null, true)
-    if (!isProd && REPLIT_DEV_RE.test(origin)) return cb(null, true)
+    if (REPLIT_URL_RE.test(origin)) return cb(null, true)
     cb(new Error(`CORS: origin "${origin}" not allowed`))
   },
   credentials: true,
