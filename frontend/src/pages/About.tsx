@@ -14,7 +14,7 @@ export default function About() {
             Democratising access to <span className="text-gradient">professional crypto investment</span>
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-lg leading-relaxed">
-            Founded in 2018 by a team of quantitative traders, blockchain engineers, and wealth management veterans, 
+            Founded in 2014 by a team of quantitative traders, blockchain engineers, and wealth management veterans, 
             ASTRO META-TRADE was built on a simple premise: the sophisticated strategies used by hedge funds and 
             institutional desks should be available to every serious investor, not just the ultra-wealthy.
           </p>
