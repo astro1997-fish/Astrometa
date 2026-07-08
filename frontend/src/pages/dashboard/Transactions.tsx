@@ -14,6 +14,7 @@ interface Tx {
   method: string
   status: 'pending' | 'confirmed' | 'failed'
   tx_hash: string | null
+  btc_address: string | null
   created_at: string
 }
 
@@ -165,6 +166,17 @@ export default function Transactions() {
                             className="flex items-center gap-1 text-brand-400 text-xs hover:underline"
                           >
                             {txShortLabel(tx.tx_hash)}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : tx.method === 'btc' && tx.btc_address ? (
+                          <a
+                            href={txExplorerUrl(tx.btc_address, tx.method)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-brand-400 text-xs hover:underline"
+                            title="Deposit address — awaiting on-chain confirmation"
+                          >
+                            {txShortLabel(tx.btc_address)}
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         ) : (
