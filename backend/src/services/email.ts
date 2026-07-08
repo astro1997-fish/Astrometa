@@ -162,6 +162,52 @@ export const emailService = {
   },
 
   /**
+   * Notifies admins whenever a deposit is manually overridden/credited by an
+   * admin (rather than the automatic blockchain listener), so the whole team
+   * stays aware of overrides in real time for fraud detection and compliance.
+   */
+  async sendAdminOverrideAlert(details: {
+    amountUsd:   number
+    adminName:   string
+    mode:        'manual' | 'chain'
+    txId:        string
+  }) {
+    const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(details.amountUsd)
+    const modeLabel = details.mode === 'manual' ? 'Manual amount entry' : 'On-chain (retried by admin)'
+    await transporter.sendMail({
+      from:    FROM,
+      to:      process.env.ADMIN_EMAIL ?? process.env.SMTP_USER!,
+      subject: `⚠️ [ASTRO META-TRADE] Deposit manually overridden by ${details.adminName}`,
+      html: baseTemplate('Deposit Manually Overridden', `
+        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:20px;margin:0 0 24px;">
+          <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#92400E;">⚠️ Manual Deposit Override</p>
+          <p style="margin:0;font-size:13px;color:#B45309;">An admin manually credited a deposit outside the normal automatic confirmation flow.</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse;">
+          ${[
+            ['Amount',      fmt],
+            ['Admin',       details.adminName],
+            ['Mode',        modeLabel],
+            ['Transaction', details.txId],
+          ].map(([k, v]) => `
+            <tr>
+              <td style="padding:8px 12px;font-size:13px;font-weight:600;color:#6B7280;width:110px;">${k}</td>
+              <td style="padding:8px 12px;font-size:13px;color:#111827;">${v}</td>
+            </tr>
+          `).join('')}
+        </table>
+        <p style="margin:24px 0 0;font-size:13px;color:#6B7280;line-height:1.7;">
+          If you did not perform this action, review the audit log immediately.
+        </p>
+        <a href="${process.env.FRONTEND_URL}/admin"
+           style="display:inline-block;background:${BRAND_COLOR};color:#fff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;margin-top:16px;">
+          Open Admin Panel →
+        </a>
+      `),
+    })
+  },
+
+  /**
    * Sends an alert to the admin when the Ethereum blockchain listener appears
    * to have stalled or lost its provider connection.
    */

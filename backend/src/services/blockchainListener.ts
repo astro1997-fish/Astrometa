@@ -255,7 +255,27 @@ export async function atomicCredit(
     console.warn('[Blockchain] Audit log failed (non-fatal):', e)
   }
 
-  console.log(`[Blockchain] Credited $${amountUsd} to user ${userId} (tx: ${txId}, event: ${eventKey})`)
+  // 4. Admin override notification (best-effort — don't roll back on failure)
+  if (auditOverride) {
+    try {
+      const { data: admin } = await supabase
+        .from('users')
+        .select('full_name, email')
+        .eq('id', auditOverride.adminId)
+        .single()
+
+      await emailService.sendAdminOverrideAlert({
+        amountUsd,
+        adminName: admin?.full_name ?? admin?.email ?? auditOverride.adminId,
+        mode:      auditOverride.mode,
+        txId,
+      })
+    } catch (e) {
+      console.warn('[Blockchain] Admin override alert email failed (non-fatal):', e)
+    }
+  }
+
+  console.log(`[Blockchain] Credited ${amountUsd} to user ${userId} (tx: ${txId}, event: ${eventKey})`)
   return true
 }
 
