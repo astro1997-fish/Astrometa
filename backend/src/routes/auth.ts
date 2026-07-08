@@ -329,10 +329,12 @@ adminRouter.get('/btc-wallet', async (_req, res, next) => {
   try {
     Promise.resolve().then(async () => {
       const { deriveBtcAddress } = await import('../services/btcMonitor')
+      const { decryptSetting, isEncryptedSetting } = await import('../lib/encryption')
 
       const envXpub = process.env.BTC_XPUB
       let source: 'env' | 'db' | 'none' = 'none'
       let xpub: string | null = null
+      let encrypted = true // env-sourced keys are never "legacy plain-text in DB"
 
       if (envXpub) {
         source = 'env'
@@ -341,7 +343,16 @@ adminRouter.get('/btc-wallet', async (_req, res, next) => {
         const { data } = await import('../lib/supabase').then(m =>
           m.supabase.from('system_settings').select('value').eq('key', 'btc_xpub').maybeSingle()
         )
-        if (data?.value) { source = 'db'; xpub = data.value }
+        if (data?.value) {
+          source    = 'db'
+          encrypted = isEncryptedSetting(data.value)
+          try {
+            xpub = decryptSetting(data.value)
+          } catch (e) {
+            console.error('[BTC] Failed to decrypt stored xpub:', e)
+            return res.status(500).json({ error: 'Stored xpub could not be decrypted — check SETTINGS_ENCRYPTION_KEY' })
+          }
+        }
       }
 
       if (!xpub) return res.json({ configured: false, source: 'none' })
@@ -356,7 +367,7 @@ adminRouter.get('/btc-wallet', async (_req, res, next) => {
 
       const isTestnet = xpub.startsWith('tpub') || xpub.startsWith('upub') || xpub.startsWith('vpub')
 
-      res.json({ configured: true, source, valid, firstAddress, isTestnet })
+      res.json({ configured: true, source, valid, firstAddress, isTestnet, encrypted })
     }).catch(next)
   } catch (err) { next(err) }
 })
@@ -394,11 +405,20 @@ adminRouter.post('/btc-wallet', async (req, res, next) => {
 
     const isTestnet = xpub.startsWith('tpub') || xpub.startsWith('upub') || xpub.startsWith('vpub')
 
+    // Encrypt before storing — the DB should never hold the xpub in plain text.
+    const { encryptSetting } = await import('../lib/encryption')
+    let encryptedXpub: string
+    try {
+      encryptedXpub = encryptSetting(xpub)
+    } catch (e: any) {
+      return res.status(503).json({ error: e?.message ?? 'SETTINGS_ENCRYPTION_KEY is not configured — cannot save the xpub securely' })
+    }
+
     // Store in system_settings (upsert)
     const { supabase } = await import('../lib/supabase')
     const { error } = await supabase
       .from('system_settings')
-      .upsert({ key: 'btc_xpub', value: xpub, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+      .upsert({ key: 'btc_xpub', value: encryptedXpub, updated_at: new Date().toISOString() }, { onConflict: 'key' })
     if (error) throw error
 
     // Clear in-memory xpub cache so the monitor + payments route pick up the new value,

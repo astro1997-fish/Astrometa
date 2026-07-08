@@ -2,3 +2,4 @@
 - [Crypto deposit on-chain design](crypto-deposit-design.md) — uses AstroPaymentReceiver contract + blockchain listener; CONTRACT_ADDRESS env var activates it.
 - [Supabase admin RLS recursion](supabase-admin-rls-recursion.md) — a policy on `users` that queries `users` to check role causes Postgres "infinite recursion"; breaks ALL authenticated REST calls, not just admin ones.
 - [Framer-motion AnimatePresence stuck-open drawers](framer-motion-animatepresence-hang.md) — spring exit animations can fail to signal completion, leaving AnimatePresence mounted forever; use CSS-transform toggled elements for critical show/hide UI instead.
+- [Settings encryption at rest](settings-encryption.md) — admin secrets in system_settings (e.g. btc_xpub) use AES-256-GCM via SETTINGS_ENCRYPTION_KEY; legacy plain-text rows auto-detected, not auto-migrated.

@@ -26,6 +26,7 @@ import BIP32Factory   from 'bip32'
 import * as ecc       from 'tiny-secp256k1'
 import { supabase }   from '../lib/supabase'
 import { emailService } from './email'
+import { decryptSetting } from '../lib/encryption'
 
 // Initialise BIP32 with the secp256k1 implementation
 const bip32 = BIP32Factory(ecc)
@@ -55,8 +56,9 @@ export async function getXpub(): Promise<string | null> {
       .select('value')
       .eq('key', 'btc_xpub')
       .maybeSingle()
-    cachedXpub = data?.value ?? null
-  } catch {
+    cachedXpub = data?.value ? decryptSetting(data.value) : null
+  } catch (e) {
+    console.error('[BTC] Failed to load/decrypt xpub from system_settings:', e)
     cachedXpub = null
   }
   return cachedXpub as string | null

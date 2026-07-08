@@ -431,5 +431,21 @@ ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS failure_reason TEXT;
 -- The backend upserts JSON: { "price": <number>, "fetchedAt": <ms epoch> }.
 
 -- ============================================================
+-- BTC xpub encryption at rest
+-- ============================================================
+-- The btc_xpub row in system_settings is now stored AES-256-GCM encrypted
+-- (value format: "enc:<iv_hex>:<authTag_hex>:<ciphertext_hex>"), using the
+-- SETTINGS_ENCRYPTION_KEY server secret. No schema change is needed — the
+-- system_settings.value column already stores an opaque TEXT blob.
+--
+-- IMPORTANT: any btc_xpub row saved BEFORE this change is still plain text
+-- (no "enc:" prefix). The backend detects this ("encrypted": false in the
+-- GET /api/admin/btc-wallet response) and still reads it correctly, but it
+-- will NOT be re-encrypted automatically. To migrate an existing plain-text
+-- xpub, an admin must re-save it once via the Bitcoin Wallet admin page
+-- after SETTINGS_ENCRYPTION_KEY is configured — the save path always writes
+-- the encrypted form.
+
+-- ============================================================
 -- DONE ✅
 -- ============================================================

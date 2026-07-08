@@ -13,6 +13,7 @@ interface WalletStatus {
   valid?:     boolean
   firstAddress?: string
   isTestnet?: boolean
+  encrypted?: boolean
 }
 
 // Lightweight format check before hitting the backend
@@ -177,6 +178,16 @@ export default function AdminBitcoinWallet() {
                 </p>
               </div>
             </div>
+
+            {status.source === 'db' && status.encrypted === false && (
+              <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/40 rounded-xl px-3 py-2.5 text-sm text-red-700 dark:text-red-400">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  <strong>Unencrypted (legacy).</strong> This xpub is stored in plain text from before
+                  encryption-at-rest was added. Re-paste it below and save to encrypt it.
+                </span>
+              </div>
+            )}
 
             {status.isTestnet && (
               <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-xl px-3 py-2.5 text-sm text-amber-700 dark:text-amber-400">
