@@ -9,6 +9,20 @@ import { txExplorerUrl } from '@/lib/txLink'
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
 
+function fmtRawAmount(metadata: string | null): { amount: string; token: string } | null {
+  if (!metadata) return null
+  try {
+    const meta = JSON.parse(metadata) as { rawAmount?: string; token?: string }
+    if (!meta.rawAmount || !meta.token) return null
+    // Only ETH (18 decimals) is deferred to pending_price today — see blockchainListener.ts
+    const decimals = meta.token === 'ETH' ? 18 : 18
+    const amount = Number(BigInt(meta.rawAmount)) / 10 ** decimals
+    return { amount: amount.toFixed(6).replace(/\.?0+$/, ''), token: meta.token }
+  } catch {
+    return null
+  }
+}
+
 function fmtDuration(sec: number): string {
   if (sec < 60) return `${sec}s`
   if (sec < 3600) return `${Math.round(sec / 60)}m`
@@ -512,6 +526,17 @@ export default function AdminDeposits() {
                   <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                     USD amount to credit
                   </label>
+                  {modal.deposit.status === 'pending_price' && (() => {
+                    const raw = fmtRawAmount(modal.deposit.metadata)
+                    return raw ? (
+                      <div className="rounded-lg bg-gray-50 dark:bg-white/5 px-3 py-2">
+                        <p className="text-[11px] text-gray-400">Received</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {raw.amount} {raw.token}
+                        </p>
+                      </div>
+                    ) : null
+                  })()}
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
                     <input
