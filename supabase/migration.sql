@@ -459,5 +459,15 @@ ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS failure_reason TEXT;
 -- the encrypted form.
 
 -- ============================================================
+-- Deposit expiry persistence
+-- ============================================================
+-- Previously the 20-minute (ETH/USDT/USDC) / 1-hour (BTC) deposit window was
+-- only returned in the create-crypto-deposit response and re-derived on the
+-- frontend from created_at. Persisting expires_at makes the expiry contract
+-- explicit server-side and lets it survive a page refresh without relying on
+-- the client re-deriving it (and getting out of sync if the TTL ever changes).
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+
+-- ============================================================
 -- DONE ✅
 -- ============================================================

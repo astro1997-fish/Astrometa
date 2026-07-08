@@ -197,6 +197,7 @@ router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res,
       let btcAddress: string | null = null
       let txRecord: { id: string } | null = null
       const startIndex = baseCount ?? 0
+      const btcExpiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 h window for BTC
 
       for (let attempt = 0; attempt < 10; attempt++) {
         const derivationIndex = startIndex + attempt
@@ -217,6 +218,7 @@ router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res,
             method:      'btc',
             status:      'pending',
             btc_address: candidateAddress,
+            expires_at:  btcExpiresAt,
             // tx_hash intentionally left null — set to the on-chain txid on confirmation
           })
           .select('id')
@@ -260,7 +262,7 @@ router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res,
         cryptoAmount,
         contractAddress: null,
         tokenAddress:    null,
-        expiresAt:       new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 h window for BTC
+        expiresAt:       btcExpiresAt,
       })
     }
 
@@ -294,6 +296,8 @@ router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res,
       cryptoAmount = amountUsd.toFixed(2)
     }
 
+    const ethExpiresAt = new Date(Date.now() + 20 * 60 * 1000).toISOString()
+
     // Insert pending transaction — store paymentId in tx_hash so the listener can match it
     const { data: txRecord } = await supabase
       .from('transactions')
@@ -304,6 +308,7 @@ router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res,
         method:     coin,
         status:     'pending',
         tx_hash:    paymentIdHex,
+        expires_at: ethExpiresAt,
       })
       .select('id')
       .single()
@@ -324,7 +329,7 @@ router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res,
       amountUsd,
       cryptoAmount,
       tokenAddress:    TOKEN_ADDRESSES[coin] ?? null, // null for ETH
-      expiresAt:       new Date(Date.now() + 20 * 60 * 1000).toISOString(),
+      expiresAt:       ethExpiresAt,
     })
   } catch (err) {
     next(err)
@@ -337,7 +342,7 @@ router.get('/deposits', requireAuth, async (req: AuthRequest, res, next) => {
     const userId = req.userId!
     const { data, error } = await supabase
       .from('transactions')
-      .select('id, method, amount_usd, status, tx_hash, btc_address, created_at, metadata')
+      .select('id, method, amount_usd, status, tx_hash, btc_address, created_at, expires_at, metadata')
       .eq('user_id', userId)
       .eq('type', 'deposit')
       .in('method', ['eth', 'usdt', 'usdc', 'btc'])

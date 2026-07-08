@@ -130,6 +130,7 @@ export default function FundAccount() {
     tx_hash: string | null
     btc_address: string | null
     created_at: string
+    expires_at: string | null
     metadata: string | null
   }
   const [recentDeposits,        setRecentDeposits]        = useState<RecentDeposit[]>([])
@@ -713,17 +714,20 @@ export default function FundAccount() {
   )
 }
 
-// ─── Deposit expiry: 20 min from created_at ───────────────────────────────
-const DEPOSIT_TTL_MS = 20 * 60 * 1000
+// ─── Deposit expiry ────────────────────────────────────────────────────────
+// The server persists expires_at on each deposit (20 min for ETH/USDT/USDC,
+// 1 h for BTC). Fall back to the old created_at + 20min derivation only for
+// legacy rows created before expires_at existed.
+const LEGACY_DEPOSIT_TTL_MS = 20 * 60 * 1000
 
-function getDepositExpiresAt(createdAt: string) {
-  return new Date(new Date(createdAt).getTime() + DEPOSIT_TTL_MS).toISOString()
+function getDepositExpiresAt(d: { created_at: string; expires_at: string | null }) {
+  return d.expires_at ?? new Date(new Date(d.created_at).getTime() + LEGACY_DEPOSIT_TTL_MS).toISOString()
 }
 
-function depositRowStatus(d: { status: string; created_at: string }) {
+function depositRowStatus(d: { status: string; created_at: string; expires_at: string | null }) {
   if (d.status === 'confirmed') return 'confirmed'
   if (d.status === 'failed')    return 'failed'
-  const expired = Date.now() > new Date(d.created_at).getTime() + DEPOSIT_TTL_MS
+  const expired = Date.now() > new Date(getDepositExpiresAt(d)).getTime()
   if (d.status === 'pending' && expired) return 'expired'
   return d.status as 'pending' | 'pending_price'
 }
@@ -760,6 +764,7 @@ type RecentDepositItem = {
   tx_hash: string | null
   btc_address: string | null
   created_at: string
+  expires_at: string | null
   metadata: string | null
 }
 
@@ -780,7 +785,7 @@ function DepositRow({
   deposit: RecentDepositItem
   onUpdated: (id: string, status: string, metadata?: string | null) => void
 }) {
-  const expiresAt     = getDepositExpiresAt(deposit.created_at)
+  const expiresAt     = getDepositExpiresAt(deposit)
   const { remaining, label: countdownLabel } = useCountdown(
     deposit.status === 'pending' ? expiresAt : null
   )

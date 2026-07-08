@@ -5,3 +5,4 @@
 - [Settings encryption at rest](settings-encryption.md) — admin secrets in system_settings (e.g. btc_xpub) use AES-256-GCM via SETTINGS_ENCRYPTION_KEY; legacy plain-text rows auto-detected, not auto-migrated.
 - [pending_price deposit status pattern](pending-price-status-pattern.md) — shared transactions.status value for "confirmed on-chain, price feed down"; reuse it for any coin, don't invent per-coin statuses.
 - [Supabase migration.sql grant ordering pitfall](supabase-migration-grant-order.md) — tables created after the blanket service_role GRANT block silently lack table-level grants even with correct RLS; add an explicit GRANT next to the table.
+- [No direct Supabase DDL access](supabase-no-direct-ddl.md) — this project's Supabase has no exposed DB connection string or exec_sql RPC; agent can edit migration.sql but user must run it manually in the Supabase SQL editor.
