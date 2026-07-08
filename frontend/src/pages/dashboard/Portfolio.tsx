@@ -58,7 +58,7 @@ export default function Portfolio() {
     setLoadError(false)
     Promise.all([
       supabase.from('investments').select('*').eq('user_id', user.id).order('start_date', { ascending: false }),
-      supabase.from('balances').select('unified_usd_balance').eq('user_id', user.id).single(),
+      supabase.from('balances').select('unified_usd_balance').eq('user_id', user.id).maybeSingle(),
       supabase.from('portfolio_updates').select('created_at, new_balance').eq('user_id', user.id).order('created_at').limit(365),
     ])
       .then(([inv, bal, pu]) => {

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
@@ -29,9 +29,16 @@ export default function DashboardLayout() {
   const { theme, toggleTheme } = useTheme()
   const { notifications, unreadCount, markAllRead, clearAll } = useNotifications()
   const navigate = useNavigate()
+  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
+
+  // Safety net: always close the mobile sidebar whenever the route changes,
+  // regardless of which element triggered the navigation.
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location.pathname])
 
   // Close dropdown when clicking outside
   useEffect(() => {

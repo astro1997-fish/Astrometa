@@ -192,6 +192,27 @@ ALTER TABLE public.portfolio_updates  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_messages     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.deposit_addresses  ENABLE ROW LEVEL SECURITY;
 
+-- ── is_admin(): SECURITY DEFINER helper to avoid RLS self-recursion ─
+-- Any policy on public.users that queries public.users to check the
+-- caller's role re-triggers that same table's RLS, causing Postgres to
+-- error with "infinite recursion detected in policy for relation users".
+-- A SECURITY DEFINER function runs with the privileges of its owner and
+-- therefore bypasses RLS for its internal query, breaking the recursion.
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $func$
+  SELECT EXISTS (
+    SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'
+  );
+$func$;
+
+REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, service_role;
+
 -- ── users: users see only their own row; admins see all ─────
 CREATE POLICY "users_select_own" ON public.users
   FOR SELECT USING (auth.uid() = id);
@@ -200,27 +221,21 @@ CREATE POLICY "users_update_own" ON public.users
   FOR UPDATE USING (auth.uid() = id);
 
 CREATE POLICY "admins_select_all_users" ON public.users
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR SELECT USING (public.is_admin());
 
 -- ── balances ─────────────────────────────────────────────────
 CREATE POLICY "balances_select_own" ON public.balances
   FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "admins_select_all_balances" ON public.balances
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR SELECT USING (public.is_admin());
 
 -- ── investments ───────────────────────────────────────────────
 CREATE POLICY "investments_select_own" ON public.investments
   FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "admins_all_investments" ON public.investments
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR ALL USING (public.is_admin());
 
 -- ── transactions ──────────────────────────────────────────────
 CREATE POLICY "transactions_select_own" ON public.transactions
@@ -230,18 +245,14 @@ CREATE POLICY "transactions_insert_own" ON public.transactions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "admins_all_transactions" ON public.transactions
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR ALL USING (public.is_admin());
 
 -- ── deposit_addresses: all authenticated users can read active ─
 CREATE POLICY "deposit_addresses_select_active" ON public.deposit_addresses
   FOR SELECT USING (is_active = TRUE AND auth.role() = 'authenticated');
 
 CREATE POLICY "admins_all_deposit_addresses" ON public.deposit_addresses
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR ALL USING (public.is_admin());
 
 -- ── withdrawals ───────────────────────────────────────────────
 CREATE POLICY "withdrawals_select_own" ON public.withdrawals
@@ -251,36 +262,28 @@ CREATE POLICY "withdrawals_insert_own" ON public.withdrawals
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "admins_all_withdrawals" ON public.withdrawals
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR ALL USING (public.is_admin());
 
 -- ── audit_logs ────────────────────────────────────────────────
 CREATE POLICY "audit_logs_insert_own" ON public.audit_logs
   FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
 CREATE POLICY "admins_select_all_audit" ON public.audit_logs
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR SELECT USING (public.is_admin());
 
 -- ── support_messages ─────────────────────────────────────────
 CREATE POLICY "support_insert" ON public.support_messages
   FOR INSERT WITH CHECK (TRUE);
 
 CREATE POLICY "admins_all_support" ON public.support_messages
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR ALL USING (public.is_admin());
 
 -- ── portfolio_updates ─────────────────────────────────────────
 CREATE POLICY "portfolio_updates_select_own" ON public.portfolio_updates
   FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "admins_all_portfolio_updates" ON public.portfolio_updates
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR ALL USING (public.is_admin());
 
 -- ── admin_messages ────────────────────────────────────────────
 CREATE POLICY "admin_messages_select_own" ON public.admin_messages
@@ -290,9 +293,7 @@ CREATE POLICY "admin_messages_update_own" ON public.admin_messages
   FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "admins_all_admin_messages" ON public.admin_messages
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR ALL USING (public.is_admin());
 
 -- ============================================================
 -- increment_balance RPC
@@ -405,9 +406,7 @@ CREATE TABLE IF NOT EXISTS public.system_settings (
 ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "admins_all_system_settings" ON public.system_settings
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
-  );
+  FOR ALL USING (public.is_admin());
 
 -- ============================================================
 -- Stuck-deposit failure reasons
