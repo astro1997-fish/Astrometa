@@ -13,6 +13,20 @@ const transporter = nodemailer.createTransport({
 const FROM = `"ASTRO META-TRADE" <${process.env.SMTP_USER}>`
 const BRAND_COLOR = '#1A56DB'
 
+/**
+ * Returns the configured admin notification address(es). ADMIN_EMAIL may be
+ * a single address or a comma-separated list, so alerts can reach the whole
+ * ops team rather than a single inbox. Falls back to SMTP_USER if unset.
+ */
+function getAdminEmails(): string {
+  const raw = process.env.ADMIN_EMAIL ?? process.env.SMTP_USER!
+  return raw
+    .split(',')
+    .map(addr => addr.trim())
+    .filter(Boolean)
+    .join(', ')
+}
+
 function baseTemplate(title: string, body: string): string {
   return `
 <!DOCTYPE html>
@@ -138,7 +152,7 @@ export const emailService = {
   async sendSupportNotification(ticket: { name: string; email: string; subject: string; message: string }) {
     await transporter.sendMail({
       from:    FROM,
-      to:      process.env.ADMIN_EMAIL ?? process.env.SMTP_USER!,
+      to:      getAdminEmails(),
       subject: `[Support] ${ticket.subject}`,
       html: baseTemplate('New Support Request', `
         <h2 style="color:#111827;font-size:18px;margin:0 0 16px;">New Support Ticket</h2>
@@ -176,7 +190,7 @@ export const emailService = {
     const modeLabel = details.mode === 'manual' ? 'Manual amount entry' : 'On-chain (retried by admin)'
     await transporter.sendMail({
       from:    FROM,
-      to:      process.env.ADMIN_EMAIL ?? process.env.SMTP_USER!,
+      to:      getAdminEmails(),
       subject: `⚠️ [ASTRO META-TRADE] Deposit manually overridden by ${details.adminName}`,
       html: baseTemplate('Deposit Manually Overridden', `
         <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:20px;margin:0 0 24px;">
@@ -215,7 +229,7 @@ export const emailService = {
     const checkedAt = new Date().toISOString()
     await transporter.sendMail({
       from:    FROM,
-      to:      process.env.ADMIN_EMAIL ?? process.env.SMTP_USER!,
+      to:      getAdminEmails(),
       subject: '🚨 [ASTRO META-TRADE] Blockchain Listener Alert — Action Required',
       html: baseTemplate('Blockchain Listener Alert', `
         <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:20px;margin:0 0 24px;">

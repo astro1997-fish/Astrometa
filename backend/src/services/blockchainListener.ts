@@ -391,6 +391,38 @@ const LISTENER_HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000  // 5 minutes
 const ALERT_COOLDOWN_MS = 60 * 60 * 1000  // 1 hour
 
 /**
+ * Sends an admin alert email when the listener has transitioned to
+ * healthy: false, rate-limited by ALERT_COOLDOWN_MS so a flapping provider
+ * or a health check that keeps re-confirming the failure every 5 minutes
+ * cannot flood admin inboxes.
+ */
+async function maybeSendUnhealthyAlert(reason: string): Promise<void> {
+  const now       = Date.now()
+  const cooldownOk =
+    listenerState.lastAlertAt === null ||
+    now - listenerState.lastAlertAt > ALERT_COOLDOWN_MS
+
+  if (!cooldownOk) return
+
+  listenerState.lastAlertAt = now
+
+  const status  = getListenerStatus()
+  const details =
+    `Current status: ${status.message}\n` +
+    `Last event at: ${status.lastEventAt ?? 'never'}\n` +
+    `Last checked at: ${status.lastCheckedAt ?? 'n/a'}\n` +
+    `Reconnect attempts: ${status.reconnectAttempts}\n` +
+    `Admin dashboard: ${process.env.FRONTEND_URL}/admin`
+
+  try {
+    await emailService.sendListenerAlert(reason, details)
+    console.warn('[Blockchain] Admin alert email sent:', reason)
+  } catch (alertErr) {
+    console.error('[Blockchain] Failed to send admin alert email:', (alertErr as Error).message)
+  }
+}
+
+/**
  * Returns a snapshot of the blockchain listener's health for external monitors.
  *
  * `healthy` is false only when the RPC provider or contract is unreachable —
@@ -650,6 +682,7 @@ async function reconnectWithBackoff(rpcUrl: string, contractAddr: string): Promi
       provider.on('error', (err: Error) => {
         console.error('[Blockchain] Provider error (post-reconnect):', err.message)
         listenerState.healthy = false
+        maybeSendUnhealthyAlert(`Provider error: ${err.message}`).catch(console.error)
         reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
       })
 
@@ -674,24 +707,10 @@ async function reconnectWithBackoff(rpcUrl: string, contractAddr: string): Promi
     `[Blockchain] All ${MAX_RECONNECT_ATTEMPTS} reconnect attempts failed — listener is degraded. Manual intervention required.`,
   )
 
-  // Send admin alert (rate-limited by ALERT_COOLDOWN_MS)
-  const now       = Date.now()
-  const cooldownOk =
-    listenerState.lastAlertAt === null ||
-    now - listenerState.lastAlertAt > ALERT_COOLDOWN_MS
-
-  if (cooldownOk) {
-    listenerState.lastAlertAt = now
-    try {
-      await emailService.sendListenerAlert(
-        `Automatic reconnection failed after ${MAX_RECONNECT_ATTEMPTS} attempts`,
-        `Contract: ${contractAddr}\nLast attempt: ${new Date(now).toISOString()}\nManual server restart may be required.`,
-      )
-      console.warn('[Blockchain] Admin alert email sent (reconnect exhausted)')
-    } catch (alertErr) {
-      console.error('[Blockchain] Failed to send admin alert email:', (alertErr as Error).message)
-    }
-  }
+  // Send admin alert (rate-limited by ALERT_COOLDOWN_MS — see maybeSendUnhealthyAlert)
+  await maybeSendUnhealthyAlert(
+    `Automatic reconnection failed after ${MAX_RECONNECT_ATTEMPTS} attempts — contract ${contractAddr}`,
+  )
 }
 
 export async function startBlockchainListener() {
@@ -730,6 +749,7 @@ export async function startBlockchainListener() {
   provider.on('error', (err: Error) => {
     console.error('[Blockchain] Provider error:', err.message)
     listenerState.healthy = false
+    maybeSendUnhealthyAlert(`Provider error: ${err.message}`).catch(console.error)
     reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
   })
 
@@ -792,8 +812,10 @@ async function runListenerHealthCheck(
   const reason = reasons.join('; ')
   console.warn(`[Blockchain] Health check FAILED: ${reason}`)
 
-  // 4. Mark unhealthy and trigger automatic reconnect (non-blocking).
+  // 4. Mark unhealthy, alert admins (rate-limited), and trigger automatic
+  //    reconnect — all non-blocking.
   listenerState.healthy = false
+  maybeSendUnhealthyAlert(reason).catch(console.error)
   reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
 }
 
