@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Rocket, Twitter, Linkedin, Github, Youtube } from 'lucide-react'
+import { Rocket } from 'lucide-react'
 import { LANGUAGES } from '@/i18n'
 import i18n from '@/i18n'
 
@@ -24,17 +24,6 @@ export default function Footer() {
             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed mb-5">
               {t('footer.tagline')}
             </p>
-            <div className="flex items-center gap-3">
-              {[Twitter, Linkedin, Youtube, Github].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-8 h-8 rounded-lg bg-gray-200 dark:bg-white/5 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-brand-400/10 hover:text-brand-400 transition-all duration-200"
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Company */}

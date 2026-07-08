@@ -5,6 +5,14 @@ import { SectionHeader } from '@/components/ui/index'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 
+function TelegramIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M21.05 3.64 2.53 10.85c-1.27.5-1.26 1.2-.23 1.52l4.76 1.48 1.84 5.6c.22.62.37.86.76.86.3 0 .43-.14.6-.3l2.6-2.5 4.9 3.6c.9.5 1.55.24 1.78-.83l3.22-15.1c.32-1.32-.5-1.9-1.71-1.54Zm-12.1 11 8.98-8.14c.4-.35-.09-.53-.62-.2L7.4 13.1l-4.6-1.43 16.5-6.36-1.44 13.5-5.05-3.73-3.86 3.56Z"/>
+    </svg>
+  )
+}
+
 const FAQ = [
   { q: 'What is ASTRO META-TRADE?',                  a: 'ASTRO META-TRADE is a professional crypto investment platform where experienced traders actively manage your digital asset portfolio. You deposit funds, choose a package, and our team handles the rest.' },
   { q: 'How do I deposit funds?',                    a: 'You can deposit via cryptocurrency (BTC, ETH, USDC, USDT) or by card using Stripe, Paystack, or PayPal. All deposits are converted to a unified USD balance.' },
@@ -155,6 +163,20 @@ export default function Support() {
               >
                 Open Live Chat
               </button>
+            </div>
+
+            {/* Telegram chat support */}
+            <div className="mt-4 p-4 rounded-xl border border-dashed border-gray-200 dark:border-white/10 text-center">
+              <p className="text-sm text-gray-400 mb-2">Prefer Telegram?</p>
+              <a
+                href="https://t.me/astrometatrade_support"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary text-sm inline-flex items-center gap-2"
+              >
+                <TelegramIcon className="w-4 h-4 text-[#2AABEE]" />
+                Chat on Telegram
+              </a>
             </div>
           </div>
         </div>
