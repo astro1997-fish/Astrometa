@@ -27,6 +27,47 @@ function getAdminEmails(): string {
     .join(', ')
 }
 
+/**
+ * Derives a plain-text alternative from an email's HTML body. Sending only
+ * an HTML part is a strong spam signal for providers like Gmail — a
+ * multipart message with a real text/plain part reads as more legitimate.
+ */
+function toPlainText(html: string): string {
+  // Preformatted diagnostic blocks (e.g. the listener alert's <pre>) must keep
+  // their internal whitespace/indentation and literal angle-bracket content —
+  // pull them out before the generic tag-stripping pass mangles them, then
+  // splice the preserved text back in afterwards.
+  const preBlocks: string[] = []
+  const withPrePlaceholders = html.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_m, inner) => {
+    const decoded = inner
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+    preBlocks.push(decoded)
+    return `\n%%PRE_BLOCK_${preBlocks.length - 1}%%\n`
+  })
+
+  let text = withPrePlaceholders
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<a[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/gis, '$2 ($1)')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|tr|h\d|li)>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '- ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&rarr;/g, '->')
+    .split('\n')
+    .map(line => line.trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+  text = text.replace(/%%PRE_BLOCK_(\d+)%%/g, (_m, i) => preBlocks[Number(i)])
+  return text
+}
+
 function baseTemplate(title: string, body: string): string {
   return `
 <!DOCTYPE html>
@@ -74,11 +115,7 @@ function baseTemplate(title: string, body: string): string {
 
 export const emailService = {
   async sendWelcome(email: string, name: string) {
-    await transporter.sendMail({
-      from: FROM,
-      to:   email,
-      subject: '🚀 Welcome to ASTRO META-TRADE — Your Investment Journey Begins',
-      html: baseTemplate('Welcome', `
+    const body = `
         <h1 style="color:#111827;font-size:24px;font-weight:800;margin:0 0 8px;">Welcome aboard, ${name}!</h1>
         <p style="color:#6B7280;font-size:15px;line-height:1.7;margin:0 0 24px;">
           Your ASTRO META-TRADE account has been created. You're now one step away from accessing 
@@ -94,17 +131,20 @@ export const emailService = {
            style="display:inline-block;background:${BRAND_COLOR};color:#fff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;">
           Access Your Dashboard →
         </a>
-      `),
+      `
+    await transporter.sendMail({
+      from: FROM,
+      to:   email,
+      replyTo: getAdminEmails(),
+      subject: 'Welcome to ASTRO META-TRADE — your investment journey begins',
+      text: toPlainText(body),
+      html: baseTemplate('Welcome', body),
     })
   },
 
   async sendDepositConfirmed(email: string, name: string, amount: number) {
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
-    await transporter.sendMail({
-      from: FROM,
-      to:   email,
-      subject: `✅ Deposit Confirmed — ${fmt} added to your portfolio`,
-      html: baseTemplate('Deposit Confirmed', `
+    const body = `
         <h1 style="color:#111827;font-size:24px;font-weight:800;margin:0 0 8px;">Deposit Confirmed</h1>
         <p style="color:#6B7280;font-size:15px;margin:0 0 24px;">Hi ${name}, your deposit has been confirmed and credited to your account.</p>
         <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:20px;margin:0 0 24px;">
@@ -118,18 +158,21 @@ export const emailService = {
            style="display:inline-block;background:${BRAND_COLOR};color:#fff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;margin-top:16px;">
           View Dashboard →
         </a>
-      `),
+      `
+    await transporter.sendMail({
+      from: FROM,
+      to:   email,
+      replyTo: getAdminEmails(),
+      subject: `Deposit confirmed — ${fmt} added to your portfolio`,
+      text: toPlainText(body),
+      html: baseTemplate('Deposit Confirmed', body),
     })
   },
 
   async sendInvestmentActivated(email: string, name: string, packageType: string, amount: number) {
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
     const icons: Record<string, string> = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' }
-    await transporter.sendMail({
-      from: FROM,
-      to:   email,
-      subject: `${icons[packageType] ?? '📈'} Your ${packageType} investment is now live`,
-      html: baseTemplate('Investment Activated', `
+    const body = `
         <h1 style="color:#111827;font-size:24px;font-weight:800;margin:0 0 8px;">
           ${icons[packageType] ?? '📈'} Investment Activated
         </h1>
@@ -145,16 +188,19 @@ export const emailService = {
            style="display:inline-block;background:${BRAND_COLOR};color:#fff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;">
           View My Portfolio →
         </a>
-      `),
+      `
+    await transporter.sendMail({
+      from: FROM,
+      to:   email,
+      replyTo: getAdminEmails(),
+      subject: `Your ${packageType} investment is now live`,
+      text: toPlainText(body),
+      html: baseTemplate('Investment Activated', body),
     })
   },
 
   async sendSupportNotification(ticket: { name: string; email: string; subject: string; message: string }) {
-    await transporter.sendMail({
-      from:    FROM,
-      to:      getAdminEmails(),
-      subject: `[Support] ${ticket.subject}`,
-      html: baseTemplate('New Support Request', `
+    const body = `
         <h2 style="color:#111827;font-size:18px;margin:0 0 16px;">New Support Ticket</h2>
         <table style="width:100%;border-collapse:collapse;">
           ${[
@@ -171,7 +217,14 @@ export const emailService = {
         <div style="margin-top:16px;padding:16px;background:#F9FAFB;border-radius:10px;border-left:3px solid ${BRAND_COLOR};">
           <p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">${ticket.message}</p>
         </div>
-      `),
+      `
+    await transporter.sendMail({
+      from:    FROM,
+      to:      getAdminEmails(),
+      replyTo: ticket.email,
+      subject: `[Support] ${ticket.subject}`,
+      text: toPlainText(body),
+      html: baseTemplate('New Support Request', body),
     })
   },
 
@@ -188,11 +241,7 @@ export const emailService = {
   }) {
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(details.amountUsd)
     const modeLabel = details.mode === 'manual' ? 'Manual amount entry' : 'On-chain (retried by admin)'
-    await transporter.sendMail({
-      from:    FROM,
-      to:      getAdminEmails(),
-      subject: `⚠️ [ASTRO META-TRADE] Deposit manually overridden by ${details.adminName}`,
-      html: baseTemplate('Deposit Manually Overridden', `
+    const body = `
         <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:20px;margin:0 0 24px;">
           <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#92400E;">⚠️ Manual Deposit Override</p>
           <p style="margin:0;font-size:13px;color:#B45309;">An admin manually credited a deposit outside the normal automatic confirmation flow.</p>
@@ -217,7 +266,14 @@ export const emailService = {
            style="display:inline-block;background:${BRAND_COLOR};color:#fff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;margin-top:16px;">
           Open Admin Panel →
         </a>
-      `),
+      `
+    await transporter.sendMail({
+      from:    FROM,
+      to:      getAdminEmails(),
+      replyTo: getAdminEmails(),
+      subject: `[ASTRO META-TRADE] Deposit manually overridden by ${details.adminName}`,
+      text: toPlainText(body),
+      html: baseTemplate('Deposit Manually Overridden', body),
     })
   },
 
@@ -227,11 +283,7 @@ export const emailService = {
    */
   async sendListenerAlert(reason: string, details: string) {
     const checkedAt = new Date().toISOString()
-    await transporter.sendMail({
-      from:    FROM,
-      to:      getAdminEmails(),
-      subject: '🚨 [ASTRO META-TRADE] Blockchain Listener Alert — Action Required',
-      html: baseTemplate('Blockchain Listener Alert', `
+    const body = `
         <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:20px;margin:0 0 24px;">
           <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#991B1B;">⚠️ Blockchain Listener Issue Detected</p>
           <p style="margin:0;font-size:13px;color:#B91C1C;">Crypto deposits may stop being credited until this is resolved.</p>
@@ -257,7 +309,14 @@ Checked at: ${checkedAt}</pre>
         <p style="margin:24px 0 0;font-size:12px;color:#9CA3AF;">
           Alerts are rate-limited to one per hour. Check <code>/health</code> on the API for real-time listener status.
         </p>
-      `),
+      `
+    await transporter.sendMail({
+      from:    FROM,
+      to:      getAdminEmails(),
+      replyTo: getAdminEmails(),
+      subject: '[ASTRO META-TRADE] Blockchain Listener Alert — action required',
+      text: toPlainText(body),
+      html: baseTemplate('Blockchain Listener Alert', body),
     })
   },
 }
