@@ -7,7 +7,7 @@ import xssClean from 'xss-clean'
 import path from 'path'
 import fs from 'fs'
 
-import { startBlockchainListener, getListenerStatus } from './services/blockchainListener'
+import { startBlockchainListener, getListenerStatus, getEthPriceStatus } from './services/blockchainListener'
 import { startBtcMonitor }         from './services/btcMonitor'
 import authRoutes     from './routes/auth'
 import paymentRoutes  from './routes/payments'
@@ -96,12 +96,14 @@ app.use(globalLimiter)
 
 // ── Health check ────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
-  const listener = getListenerStatus()
-  const status   = listener.active && !listener.healthy ? 'degraded' : 'ok'
+  const listener  = getListenerStatus()
+  const ethPrice  = getEthPriceStatus()
+  const status    = listener.active && !listener.healthy ? 'degraded' : 'ok'
   res.status(status === 'ok' ? 200 : 503).json({
     status,
     ts:       new Date().toISOString(),
     listener,
+    ethPrice,
   })
 })
 

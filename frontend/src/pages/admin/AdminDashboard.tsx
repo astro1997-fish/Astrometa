@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Users, DollarSign, TrendingUp, Clock, Radio, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react'
+import { Users, DollarSign, TrendingUp, Clock, Radio, AlertTriangle, CheckCircle2, XCircle, Activity } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { SkeletonCard } from '@/components/ui/index'
 
 const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
+const fmtPrice = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n)
 
 function fmtRelative(iso: string | null): string {
   if (!iso) return 'Never'
@@ -12,6 +13,12 @@ function fmtRelative(iso: string | null): string {
   if (diffSec < 60)  return `${diffSec}s ago`
   if (diffSec < 3600) return `${Math.round(diffSec / 60)}m ago`
   return `${Math.round(diffSec / 3600)}h ago`
+}
+
+function fmtDuration(sec: number): string {
+  if (sec < 60) return `${sec}s`
+  if (sec < 3600) return `${Math.round(sec / 60)}m`
+  return `${Math.round(sec / 3600)}h`
 }
 
 interface ListenerHealth {
@@ -24,31 +31,73 @@ interface ListenerHealth {
   message:        string
 }
 
-function BlockchainListenerCard() {
-  const [health, setHealth]     = useState<ListenerHealth | null>(null)
-  const [fetchedAt, setFetchedAt] = useState<Date | null>(null)
-  const [error, setError]        = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+export interface EthPriceStatus {
+  price:             number | null
+  fetchedAt:         string | null
+  ageSec:            number | null
+  stale:             boolean
+  staleThresholdSec: number
+}
 
-  async function poll() {
-    try {
-      const res = await fetch('/health')
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const json = await res.json()
-      setHealth(json.listener as ListenerHealth)
-      setFetchedAt(new Date())
-      setError(false)
-    } catch {
-      setError(true)
-    }
-  }
+function EthPriceCard({ ethPrice, error }: { ethPrice: EthPriceStatus | null; error: boolean }) {
+  const isStale = error || ethPrice?.stale === true
+  const hasPrice = ethPrice?.price !== null && ethPrice?.price !== undefined
 
-  useEffect(() => {
-    poll()
-    intervalRef.current = setInterval(poll, 60_000)
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [])
+  const StatusIcon = isStale ? AlertTriangle : Activity
+  const iconColor   = isStale ? 'text-amber-400' : 'text-emerald-400'
+  const badgeClass  = isStale
+    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+  const badgeLabel  = isStale ? 'Stale' : 'Live'
 
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.24 }}
+      className="card col-span-2 lg:col-span-4"
+    >
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center ${iconColor}`}>
+            <StatusIcon className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
+              ETH Price Feed{hasPrice ? ` · ${fmtPrice(ethPrice!.price!)}` : ''}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {error
+                ? 'Could not reach /health endpoint'
+                : !ethPrice
+                  ? 'Loading…'
+                  : ethPrice.fetchedAt
+                    ? `fetched ${fmtRelative(ethPrice.fetchedAt)} from CoinGecko`
+                    : 'No price ever fetched — CoinGecko unreachable since startup'}
+            </p>
+          </div>
+        </div>
+
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>
+          {badgeLabel}
+        </span>
+      </div>
+
+      {isStale && (
+        <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 p-3">
+          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-700 dark:text-amber-300">
+            {ethPrice?.ageSec != null
+              ? `The last live ETH price is ${fmtDuration(ethPrice.ageSec)} old (warning threshold: ${fmtDuration(ethPrice.staleThresholdSec)}). New ETH deposits may be mis-priced or stuck as "pending price" until CoinGecko recovers.`
+              : 'CoinGecko has never returned a price successfully. ETH deposits cannot be priced until the feed recovers.'}
+          </p>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+function BlockchainListenerCard({ health, fetchedAt, error }: { health: ListenerHealth | null; fetchedAt: Date | null; error: boolean }) {
   // Derived display state
   const isUnhealthy = error || (health !== null && health.active && !health.healthy)
   const isWarning   = !isUnhealthy && health?.silenceWarning
@@ -143,6 +192,31 @@ export default function AdminDashboard() {
   const [stats, setStats]   = useState({ users: 0, deposits: 0, invested: 0, pendingWithdrawals: 0 })
   const [loading, setLoading] = useState(true)
 
+  const [health, setHealth]       = useState<ListenerHealth | null>(null)
+  const [ethPrice, setEthPrice]   = useState<EthPriceStatus | null>(null)
+  const [healthFetchedAt, setHealthFetchedAt] = useState<Date | null>(null)
+  const [healthError, setHealthError]         = useState(false)
+  const healthIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    async function pollHealth() {
+      try {
+        const res = await fetch('/health')
+        if (!res.ok && res.status !== 503) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        setHealth(json.listener as ListenerHealth)
+        setEthPrice(json.ethPrice as EthPriceStatus)
+        setHealthFetchedAt(new Date())
+        setHealthError(false)
+      } catch {
+        setHealthError(true)
+      }
+    }
+    pollHealth()
+    healthIntervalRef.current = setInterval(pollHealth, 60_000)
+    return () => { if (healthIntervalRef.current) clearInterval(healthIntervalRef.current) }
+  }, [])
+
   useEffect(() => {
     Promise.all([
       supabase.from('users').select('id', { count: 'exact' }),
@@ -187,7 +261,8 @@ export default function AdminDashboard() {
             ))
         }
       </div>
-      <BlockchainListenerCard />
+      <EthPriceCard ethPrice={ethPrice} error={healthError} />
+      <BlockchainListenerCard health={health} fetchedAt={healthFetchedAt} error={healthError} />
     </div>
   )
 }

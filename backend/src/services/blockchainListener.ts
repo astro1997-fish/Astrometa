@@ -151,6 +151,48 @@ export async function fetchEthUsdPrice(): Promise<number | null> {
   return null
 }
 
+// How old the cached ETH price can be before admins should be warned that the
+// live feed may be down. Independent from ETH_PRICE_CACHE_TTL_MS (which only
+// controls when we re-fetch) so ops can tune the warning threshold separately.
+const ETH_PRICE_STALE_THRESHOLD_MS =
+  parseInt(process.env.ETH_PRICE_STALE_THRESHOLD_MS ?? String(15 * 60 * 1000), 10)
+
+export interface EthPriceStatus {
+  price:         number | null  // last known ETH/USD price, or null if never fetched
+  fetchedAt:     string | null  // ISO timestamp of the last successful live fetch
+  ageSec:        number | null  // seconds since that fetch
+  stale:         boolean        // true once age exceeds ETH_PRICE_STALE_THRESHOLD_MS
+  staleThresholdSec: number     // threshold used, for display purposes
+}
+
+/**
+ * Returns a snapshot of the ETH/USD price cache for the admin dashboard —
+ * the price, when it was last fetched live from CoinGecko, and whether it
+ * has gone stale. Does not trigger a new fetch.
+ */
+export function getEthPriceStatus(): EthPriceStatus {
+  const staleThresholdSec = Math.round(ETH_PRICE_STALE_THRESHOLD_MS / 1000)
+
+  if (!ethPriceCache) {
+    return {
+      price: null,
+      fetchedAt: null,
+      ageSec: null,
+      stale: true,
+      staleThresholdSec,
+    }
+  }
+
+  const ageMs = Date.now() - ethPriceCache.fetchedAt
+  return {
+    price:     ethPriceCache.price,
+    fetchedAt: new Date(ethPriceCache.fetchedAt).toISOString(),
+    ageSec:    Math.round(ageMs / 1000),
+    stale:     ageMs > ETH_PRICE_STALE_THRESHOLD_MS,
+    staleThresholdSec,
+  }
+}
+
 /**
  * Atomically transitions a transaction from pending → confirmed and credits
  * the user's balance in a single conditional update.

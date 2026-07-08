@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { RefreshCw, AlertCircle, ExternalLink, X, Clock } from 'lucide-react'
+import { RefreshCw, AlertCircle, ExternalLink, X, Clock, AlertTriangle } from 'lucide-react'
 import { Badge, SkeletonTable } from '@/components/ui/index'
 import toast from 'react-hot-toast'
 import { clsx } from 'clsx'
@@ -8,6 +8,20 @@ import { txExplorerUrl } from '@/lib/txLink'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+
+function fmtDuration(sec: number): string {
+  if (sec < 60) return `${sec}s`
+  if (sec < 3600) return `${Math.round(sec / 60)}m`
+  return `${Math.round(sec / 3600)}h`
+}
+
+interface EthPriceStatus {
+  price:             number | null
+  fetchedAt:         string | null
+  ageSec:            number | null
+  stale:             boolean
+  staleThresholdSec: number
+}
 
 interface PendingDeposit {
   id: string
@@ -41,6 +55,14 @@ export default function AdminDeposits() {
   const [modal, setModal]                   = useState<RetryModal | null>(null)
   const [retrying, setRetrying]             = useState(false)
   const [batchRetrying, setBatchRetrying]   = useState(false)
+  const [ethPrice, setEthPrice]             = useState<EthPriceStatus | null>(null)
+
+  useEffect(() => {
+    fetch('/health')
+      .then(r => r.json())
+      .then(json => setEthPrice(json.ethPrice as EthPriceStatus))
+      .catch(() => {/* non-critical — badge just won't show */})
+  }, [])
 
   const fetchDeposits = async () => {
     setLoading(true)
@@ -173,6 +195,19 @@ export default function AdminDeposits() {
                 {pendingPriceDeposits.length}
               </span>
             )}
+            {pendingPriceDeposits.length > 0 && ethPrice?.stale && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                title={
+                  ethPrice.ageSec != null
+                    ? `ETH price feed has not updated in ${fmtDuration(ethPrice.ageSec)} — these deposits can't be auto-priced right now`
+                    : "ETH price feed has never returned a price — these deposits can't be auto-priced right now"
+                }
+              >
+                <AlertTriangle className="w-3 h-3" />
+                Price feed stale
+              </span>
+            )}
           </div>
           {pendingPriceDeposits.length > 0 && (
             <button
@@ -208,7 +243,7 @@ export default function AdminDeposits() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-white/5">
-                    {['User', 'Payment ID', 'Method', 'Created', 'Action'].map(h => (
+                    {['User', 'Payment ID', 'Method', 'Price feed', 'Created', 'Action'].map(h => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
                         {h}
                       </th>
@@ -244,6 +279,23 @@ export default function AdminDeposits() {
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant="blue">{d.method ?? 'crypto'}</Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        {ethPrice?.stale ? (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                            title={
+                              ethPrice.ageSec != null
+                                ? `Last live price was ${fmtDuration(ethPrice.ageSec)} ago`
+                                : 'No live price has ever been fetched'
+                            }
+                          >
+                            <AlertTriangle className="w-3 h-3" />
+                            Stale
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
                         {new Date(d.created_at).toLocaleString('en-US', {
