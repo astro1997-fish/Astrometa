@@ -12,7 +12,7 @@ interface Tx {
   type: 'deposit' | 'withdrawal' | 'investment'
   amount_usd: number
   method: string
-  status: 'pending' | 'confirmed' | 'failed'
+  status: 'pending' | 'confirmed' | 'failed' | 'pending_price'
   tx_hash: string | null
   btc_address: string | null
   created_at: string
@@ -52,8 +52,13 @@ export default function Transactions() {
   const totalPages = Math.ceil(total / PAGE)
 
   const statusBadge = (s: string) => {
-    if (s === 'confirmed') return <Badge variant="green">Confirmed</Badge>
-    if (s === 'failed')    return <Badge variant="red">Failed</Badge>
+    if (s === 'confirmed')     return <Badge variant="green">Confirmed</Badge>
+    if (s === 'failed')        return <Badge variant="red">Failed</Badge>
+    if (s === 'pending_price') return (
+      <span title="Your payment arrived on-chain — we're waiting on a price feed to finish crediting it. No action needed.">
+        <Badge variant="gold">Confirmed — pricing delayed</Badge>
+      </span>
+    )
     return <Badge variant="gold">Pending</Badge>
   }
 

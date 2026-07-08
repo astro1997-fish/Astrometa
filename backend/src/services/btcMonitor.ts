@@ -179,14 +179,16 @@ async function atomicCreditBtc(
   userId:    string,
   amountUsd: number,
   btcTxid:   string,
+  fromStatuses: string[] = ['pending'],
 ): Promise<boolean> {
-  // Transition pending → confirmed. The .eq('status','pending') guard makes
-  // this a no-op if the row was already confirmed by a prior poll cycle.
+  // Transition pending[/pending_price] → confirmed. The .in('status', …)
+  // guard makes this a no-op if the row was already confirmed by a prior
+  // poll cycle (or already moved on by a concurrent cycle).
   const { data: updated, error: txErr } = await supabase
     .from('transactions')
-    .update({ status: 'confirmed', amount_usd: amountUsd, tx_hash: btcTxid })
+    .update({ status: 'confirmed', amount_usd: amountUsd, tx_hash: btcTxid, failure_reason: null })
     .eq('id', txId)
-    .eq('status', 'pending')
+    .in('status', fromStatuses)
     .select('id')
 
   if (txErr) {
@@ -244,14 +246,15 @@ interface PendingBtcDeposit {
   userId:     string
   btcAddress: string   // from the dedicated btc_address column
   amountUsd:  number
+  status:     string
 }
 
 async function loadPendingBtcDeposits(): Promise<PendingBtcDeposit[]> {
   const { data, error } = await supabase
     .from('transactions')
-    .select('id, user_id, btc_address, amount_usd')
+    .select('id, user_id, btc_address, amount_usd, status')
     .eq('method', 'btc')
-    .eq('status', 'pending')
+    .in('status', ['pending', 'pending_price'])
     .not('btc_address', 'is', null)
 
   if (error) {
@@ -264,6 +267,7 @@ async function loadPendingBtcDeposits(): Promise<PendingBtcDeposit[]> {
     userId:     row.user_id,
     btcAddress: row.btc_address as string,
     amountUsd:  row.amount_usd,
+    status:     row.status,
   }))
 }
 
@@ -296,13 +300,27 @@ async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcP
     const btcAmount = satsToBtc(satsReceived)
 
     if (btcPrice === null) {
-      // Transaction is confirmed on-chain but we can't convert to USD yet.
-      // Log and leave the deposit pending — it will be credited on the next
-      // cycle once a price is available.
+      // Transaction is confirmed on-chain but we can't convert to USD yet
+      // (CoinGecko is down and the price cache is exhausted). Surface this
+      // to the user as a distinct status rather than leaving them staring
+      // at a plain "pending" deposit — it will auto-resolve once a price
+      // is available on a future poll cycle.
       console.warn(
-        `[BTC] ${deposit.btcAddress}: tx ${tx.txid} confirmed (${btcAmount} BTC) but BTC/USD price unavailable — will retry next cycle`,
+        `[BTC] ${deposit.btcAddress}: tx ${tx.txid} confirmed (${btcAmount} BTC) but BTC/USD price unavailable — marking pending_price for retry`,
       )
-      continue
+      const { error: deferErr } = await supabase
+        .from('transactions')
+        .update({
+          status:         'pending_price',
+          failure_reason: 'BTC price unavailable — no cache at confirmation time (will retry automatically)',
+          metadata:       JSON.stringify({ btcAmount, btcTxid: tx.txid }),
+        })
+        .eq('id', deposit.id)
+        .eq('status', 'pending') // no-op if already pending_price from a prior cycle
+      if (deferErr) {
+        console.error(`[BTC] Failed to mark tx ${deposit.id} as pending_price:`, deferErr.message)
+      }
+      return // this deposit is settled for this cycle — stop scanning txs for it
     }
 
     const usdValue = btcAmount * btcPrice
@@ -314,10 +332,11 @@ async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcP
 
     console.log(`[BTC] Confirmed: ${btcAmount} BTC (≈${usdValue.toFixed(2)}) → ${deposit.btcAddress} | txid: ${tx.txid}`)
 
-    // atomicCreditBtc is idempotent via the status=pending conditional update.
-    // If this deposit was already confirmed (e.g. a prior poll cycle), it
-    // returns false and skips the balance credit.
-    await atomicCreditBtc(deposit.id, deposit.userId, usdValue, tx.txid)
+    // atomicCreditBtc is idempotent via the status guard below. If this
+    // deposit was already confirmed (e.g. a prior poll cycle), it returns
+    // false and skips the balance credit. Deposits previously deferred to
+    // pending_price (outage recovered) are credited here too.
+    await atomicCreditBtc(deposit.id, deposit.userId, usdValue, tx.txid, ['pending', 'pending_price'])
     return // this deposit is settled — stop scanning txs for it
   }
 }

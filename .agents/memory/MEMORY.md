@@ -3,3 +3,4 @@
 - [Supabase admin RLS recursion](supabase-admin-rls-recursion.md) — a policy on `users` that queries `users` to check role causes Postgres "infinite recursion"; breaks ALL authenticated REST calls, not just admin ones.
 - [Framer-motion AnimatePresence stuck-open drawers](framer-motion-animatepresence-hang.md) — spring exit animations can fail to signal completion, leaving AnimatePresence mounted forever; use CSS-transform toggled elements for critical show/hide UI instead.
 - [Settings encryption at rest](settings-encryption.md) — admin secrets in system_settings (e.g. btc_xpub) use AES-256-GCM via SETTINGS_ENCRYPTION_KEY; legacy plain-text rows auto-detected, not auto-migrated.
+- [pending_price deposit status pattern](pending-price-status-pattern.md) — shared transactions.status value for "confirmed on-chain, price feed down"; reuse it for any coin, don't invent per-coin statuses.
