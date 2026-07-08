@@ -179,7 +179,7 @@ export async function atomicCredit(
   //    The .in('status', fromStatuses) guard makes this a no-op on replay.
   const { data: updated, error: txErr } = await supabase
     .from('transactions')
-    .update({ status: 'confirmed', amount_usd: amountUsd, tx_hash: txHash })
+    .update({ status: 'confirmed', amount_usd: amountUsd, tx_hash: txHash, failure_reason: null })
     .eq('id', txId)
     .in('status', fromStatuses)  // ← conditional: only update once
     .select('id')
