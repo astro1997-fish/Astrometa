@@ -360,6 +360,7 @@ export interface ListenerStatus {
   reconnecting:      boolean        // true while a reconnect attempt is in progress
   reconnectAttempts: number         // how many reconnect attempts have been made since last success
   message:           string         // human-readable status description
+  lastRetryRunAt:    string | null  // ISO timestamp of the last pending-price retry loop run
 }
 
 const listenerState = {
@@ -372,6 +373,7 @@ const listenerState = {
   reconnecting:      false,
   reconnectAttempts: 0,
   lastReconnectAt:   null as number | null,
+  lastRetryRunAt:    null as number | null,  // Date.now() of the last retryPendingPriceTransactions run
 }
 
 // Tracks the currently active contract instance so listeners can be removed
@@ -442,6 +444,9 @@ export function getListenerStatus(): ListenerStatus {
       reconnecting:      false,
       reconnectAttempts: 0,
       message:           'Listener not configured (ETH_RPC_URL or CONTRACT_ADDRESS missing)',
+      lastRetryRunAt:    listenerState.lastRetryRunAt
+        ? new Date(listenerState.lastRetryRunAt).toISOString()
+        : null,
     }
   }
 
@@ -488,6 +493,9 @@ export function getListenerStatus(): ListenerStatus {
     reconnecting:      listenerState.reconnecting,
     reconnectAttempts: listenerState.reconnectAttempts,
     message,
+    lastRetryRunAt:    listenerState.lastRetryRunAt
+      ? new Date(listenerState.lastRetryRunAt).toISOString()
+      : null,
   }
 }
 
@@ -755,6 +763,7 @@ export async function startBlockchainListener() {
 
   // Retry any transactions that were deferred due to missing ETH price
   startPendingPriceRetryLoop()
+  startPendingPriceRetryWatchdog()
 
   // Periodic health checks
   startListenerHealthCheck(rpcUrl, contractAddr)
@@ -842,6 +851,10 @@ function startListenerHealthCheck(
 const PENDING_PRICE_RETRY_INTERVAL_MS = 5 * 60 * 1000
 
 export async function retryPendingPriceTransactions(): Promise<void> {
+  // Record that the loop ran — the watchdog uses this to detect a stalled
+  // loop (e.g. an unhandled exception that silently killed the interval).
+  listenerState.lastRetryRunAt = Date.now()
+
   // Fetch price first — no point querying the DB if we still can't price
   const price = await fetchEthUsdPrice()
   if (price === null) {
@@ -905,7 +918,58 @@ export async function retryPendingPriceTransactions(): Promise<void> {
   }
 }
 
+// Tracks the currently active retry-loop interval so the watchdog can clear
+// it before rescheduling — otherwise a restart after a stall would leave two
+// intervals running concurrently.
+let retryLoopIntervalHandle: NodeJS.Timeout | null = null
+
 function startPendingPriceRetryLoop(): void {
-  setInterval(retryPendingPriceTransactions, PENDING_PRICE_RETRY_INTERVAL_MS)
+  if (retryLoopIntervalHandle) {
+    clearInterval(retryLoopIntervalHandle)
+  }
+  retryLoopIntervalHandle = setInterval(retryPendingPriceTransactions, PENDING_PRICE_RETRY_INTERVAL_MS)
   console.log('[Blockchain] Pending-price retry loop started (interval: 5 min)')
+}
+
+// ── Pending-price retry loop watchdog ──────────────────────────────────────
+// Guards against the retry loop silently dying (e.g. an unhandled exception
+// escaping retryPendingPriceTransactions, or the interval otherwise being
+// cleared/lost). Runs every 15 min and, if the loop hasn't run recently,
+// force-restarts it and logs a warning so stuck `pending_price` transactions
+// don't require a manual server restart to recover.
+const RETRY_WATCHDOG_INTERVAL_MS = 15 * 60 * 1000  // 15 minutes
+// Allow some slack over the normal 5-min cadence before declaring a stall.
+const RETRY_STALL_THRESHOLD_MS   = PENDING_PRICE_RETRY_INTERVAL_MS * 3  // 15 minutes
+
+function startPendingPriceRetryWatchdog(): void {
+  setInterval(() => {
+    const now = Date.now()
+    // lastRetryRunAt is null until the loop's first tick fires (5 min after
+    // startup), so treat "never run yet, but startup was longer ago than the
+    // stall threshold" the same as a stall.
+    const reference = listenerState.lastRetryRunAt ?? listenerState.startedAt
+    const sinceLastRun = reference ? now - reference : null
+
+    if (sinceLastRun !== null && sinceLastRun < RETRY_STALL_THRESHOLD_MS) {
+      return  // loop is healthy — nothing to do
+    }
+
+    const sinceLastRunSec = sinceLastRun !== null ? Math.round(sinceLastRun / 1000) : null
+    console.warn(
+      `[Blockchain] Pending-price retry loop watchdog: no run detected in ` +
+      `${sinceLastRunSec ?? 'an unknown amount of'}s (threshold ${Math.round(RETRY_STALL_THRESHOLD_MS / 1000)}s) — restarting loop`,
+    )
+
+    startPendingPriceRetryLoop()
+    // Kick off an immediate run so stuck transactions don't wait a further
+    // 5 minutes for the newly-scheduled interval to fire.
+    retryPendingPriceTransactions().catch(err => {
+      console.error('[Blockchain] Watchdog-triggered retry run failed:', err)
+    })
+  }, RETRY_WATCHDOG_INTERVAL_MS)
+
+  console.log(
+    `[Blockchain] Pending-price retry loop watchdog scheduled (interval: ${Math.round(RETRY_WATCHDOG_INTERVAL_MS / 60000)} min, ` +
+    `stall threshold: ${Math.round(RETRY_STALL_THRESHOLD_MS / 60000)} min)`,
+  )
 }
