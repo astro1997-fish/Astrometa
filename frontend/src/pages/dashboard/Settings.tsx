@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, Lock, Bell, Globe, Shield, Eye, EyeOff } from 'lucide-react'
+import { User, Lock, Bell, Globe, Shield, Eye, EyeOff, BellRing, BellOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useNotifications } from '@/contexts/NotificationContext'
 import { supabase } from '@/lib/supabase'
 import { LANGUAGES } from '@/i18n'
 import { COUNTRIES } from '@/lib/countries'
@@ -20,8 +21,33 @@ const TABS: { id: Tab; label: string; icon: typeof User }[] = [
 
 export default function Settings() {
   const { user, profile, refreshProfile } = useAuth()
+  const {
+    pushSupported,
+    pushPermission,
+    pushEnabled,
+    enablePush,
+    disablePush,
+  } = useNotifications()
   const [tab, setTab]     = useState<Tab>('profile')
   const [saving, setSaving] = useState(false)
+  const [enablingPush, setEnablingPush] = useState(false)
+
+  const handlePushToggle = async () => {
+    if (pushEnabled) {
+      disablePush()
+      toast.success('Push notifications disabled')
+      return
+    }
+    setEnablingPush(true)
+    const granted = await enablePush()
+    setEnablingPush(false)
+    if (granted) toast.success('Push notifications enabled!')
+    else if (pushPermission === 'denied' || Notification.permission === 'denied') {
+      toast.error('Notifications are blocked for this site. Enable them in your browser settings.')
+    } else {
+      toast.error('Permission was not granted')
+    }
+  }
 
   // Profile
   const [name,    setName]    = useState(profile?.full_name ?? '')
@@ -167,7 +193,39 @@ export default function Settings() {
 
         {/* Notifications tab */}
         {tab === 'notifications' && (
-          <div className="card space-y-5">
+          <div className="space-y-4">
+            {pushSupported && (
+              <div className="card">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    {pushEnabled
+                      ? <BellRing className="w-4 h-4 text-brand-400 mt-0.5 shrink-0" />
+                      : <BellOff className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />}
+                    <div>
+                      <h2 className="font-semibold text-gray-900 dark:text-white">Browser Push Notifications</h2>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        {pushPermission === 'denied'
+                          ? 'Notifications are blocked for this site. Update your browser\u2019s site permissions to enable them.'
+                          : pushEnabled
+                            ? 'You\u2019ll get a browser notification the moment a deposit is confirmed, even if this tab isn\u2019t open.'
+                            : 'Get notified the instant a deposit is confirmed, even if you\u2019ve closed this tab.'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handlePushToggle}
+                    disabled={enablingPush || pushPermission === 'denied'}
+                    className={clsx(
+                      'shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed',
+                      pushEnabled ? 'btn-secondary' : 'btn-primary',
+                    )}
+                  >
+                    {enablingPush ? 'Requesting...' : pushEnabled ? 'Disable' : 'Enable'}
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="card space-y-5">
             <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Bell className="w-4 h-4 text-brand-400" /> Notification Preferences
             </h2>
@@ -190,6 +248,7 @@ export default function Settings() {
                 </div>
               </label>
             ))}
+            </div>
           </div>
         )}
 
