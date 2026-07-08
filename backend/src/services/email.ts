@@ -72,10 +72,9 @@ export const emailService = {
         </p>
         <p style="color:#6B7280;font-size:15px;line-height:1.7;margin:0 0 24px;">
           <strong style="color:#111827;">Next steps:</strong><br/>
-          1. Verify your email address (check for a separate link)<br/>
-          2. Fund your account with your preferred method<br/>
-          3. Choose your investment package (Silver, Gold, or Platinum)<br/>
-          4. Your dedicated manager will activate your portfolio
+          1. Fund your account with your preferred method<br/>
+          2. Choose your investment package (Silver, Gold, or Platinum)<br/>
+          3. Your dedicated manager will activate your portfolio
         </p>
         <a href="${process.env.FRONTEND_URL}/dashboard" 
            style="display:inline-block;background:${BRAND_COLOR};color:#fff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;">

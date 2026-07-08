@@ -79,8 +79,8 @@ export default function Register() {
     setLoading(true)
     try {
       await signUp(form.email, form.password, form.fullName, form.country)
-      toast.success('Account created! Please verify your email.')
-      navigate('/verify-email')
+      toast.success('Account created! Redirecting to your dashboard...')
+      navigate('/dashboard')
     } catch (err: any) {
       setErrors({ form: err.message ?? t('errors.generic') })
     } finally {
