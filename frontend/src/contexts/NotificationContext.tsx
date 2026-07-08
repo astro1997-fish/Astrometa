@@ -26,15 +26,60 @@ const NotificationContext = createContext<NotificationContextValue>({
   clearAll: () => {},
 })
 
+const STORAGE_PREFIX = 'astro-deposit-notifications:'
+const NOTIFICATION_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+
+function storageKey(userId: string) {
+  return `${STORAGE_PREFIX}${userId}`
+}
+
+function pruneExpired(list: AppNotification[]): AppNotification[] {
+  const cutoff = Date.now() - NOTIFICATION_TTL_MS
+  return list.filter(n => new Date(n.createdAt).getTime() >= cutoff)
+}
+
+function loadStoredNotifications(userId: string): AppNotification[] {
+  try {
+    const raw = localStorage.getItem(storageKey(userId))
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return pruneExpired(parsed as AppNotification[])
+  } catch {
+    return []
+  }
+}
+
+function saveStoredNotifications(userId: string, list: AppNotification[]) {
+  try {
+    localStorage.setItem(storageKey(userId), JSON.stringify(list))
+  } catch {
+    // localStorage unavailable (e.g. private browsing quota) — fail silently,
+    // notifications simply won't persist across sessions this time.
+  }
+}
+
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const [notifications, setNotifications] = useState<AppNotification[]>([])
+
+  // Load persisted notifications for this user as soon as we know who they are
+  useEffect(() => {
+    if (!user?.id) return
+    setNotifications(pruneExpired(loadStoredNotifications(user.id)))
+  }, [user?.id])
+
+  // Persist any change to notifications for the current user
+  useEffect(() => {
+    if (!user?.id) return
+    saveStoredNotifications(user.id, notifications)
+  }, [user?.id, notifications])
 
   const addNotification = useCallback((notif: Omit<AppNotification, 'read'>) => {
     setNotifications(prev => {
       // Deduplicate by id
       if (prev.some(n => n.id === notif.id)) return prev
-      return [{ ...notif, read: false }, ...prev]
+      return [{ ...notif, read: false }, ...pruneExpired(prev)]
     })
   }, [])
 
@@ -95,7 +140,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const clearAll = useCallback(() => {
     setNotifications([])
-  }, [])
+    if (user?.id) {
+      try {
+        localStorage.removeItem(storageKey(user.id))
+      } catch {
+        // ignore
+      }
+    }
+  }, [user?.id])
 
   const unreadCount = notifications.filter(n => !n.read).length
 
