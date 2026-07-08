@@ -10,7 +10,7 @@ import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface Investment {
   id: string
-  package_type: 'silver' | 'gold' | 'platinum'
+  package_type: 'bronze' | 'silver' | 'gold' | 'platinum'
   amount_usd: number
   start_date: string
   projected_return_pct: string
@@ -25,6 +25,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number.isFinite(n) ? n : 0)
 
 const PKG_META: Record<string, { icon: string; color: string }> = {
+  bronze:   { icon: '🥉', color: '#D97706' },
   silver:   { icon: '🥈', color: '#94A3B8' },
   gold:     { icon: '🥇', color: '#F59E0B' },
   platinum: { icon: '💎', color: '#8B5CF6' },

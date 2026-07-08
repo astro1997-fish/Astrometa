@@ -9,7 +9,7 @@ import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
 
 interface Package {
-  id: 'silver' | 'gold' | 'platinum'
+  id: 'bronze' | 'silver' | 'gold' | 'platinum'
   icon: string
   nameKey: string
   min: number
@@ -24,6 +24,24 @@ interface Package {
 }
 
 const PACKAGES: Package[] = [
+  {
+    id: 'bronze',
+    icon: '🥉',
+    nameKey: 'packages.bronzeName',
+    min: 5,
+    max: 4999,
+    returnRange: '8%–15%',
+    risk: 2,
+    features: [
+      'Account Manager Access',
+      'Monthly Performance Reports',
+      'Email Support',
+      'Portfolio Dashboard Access',
+    ],
+    glow: 'hover:ring-glow-bronze',
+    border: 'border-orange-700/30',
+    gradient: 'bg-gradient-to-br from-orange-50 to-white dark:from-orange-900/20 dark:to-[#0D1627]',
+  },
   {
     id: 'silver',
     icon: '🥈',
@@ -113,7 +131,9 @@ function InvestModal({
     }
     if (pkg.max && num > pkg.max) {
       // Suggest upgrade
-      if (pkg.id === 'silver') {
+      if (pkg.id === 'bronze') {
+        toast(t('packages.switchSilver'), { icon: '⬆️' })
+      } else if (pkg.id === 'silver') {
         toast(t('packages.switchGold'), { icon: '⬆️' })
       } else if (pkg.id === 'gold') {
         toast(t('packages.switchPlatinum'), { icon: '⬆️' })
@@ -224,7 +244,7 @@ export default function Packages() {
           center
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {PACKAGES.map((pkg, i) => (
             <motion.div
               key={pkg.id}
@@ -259,6 +279,7 @@ export default function Packages() {
               <div className="flex items-end gap-1 mb-1">
                 <span className={clsx(
                   'text-4xl font-black',
+                  pkg.id === 'bronze'   && 'text-gradient-bronze',
                   pkg.id === 'silver'   && 'text-gradient',
                   pkg.id === 'gold'     && 'text-gradient-gold',
                   pkg.id === 'platinum' && 'text-gradient-plat',
@@ -298,6 +319,7 @@ export default function Packages() {
                   <li key={f} className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300">
                     <div className={clsx(
                       'w-4 h-4 rounded-full flex items-center justify-center shrink-0',
+                      pkg.id === 'bronze'   && 'bg-orange-100 dark:bg-orange-400/20 text-orange-600',
                       pkg.id === 'silver'   && 'bg-brand-100 dark:bg-brand-400/20 text-brand-500',
                       pkg.id === 'gold'     && 'bg-amber-100 dark:bg-amber-400/20 text-amber-500',
                       pkg.id === 'platinum' && 'bg-violet-100 dark:bg-violet-400/20 text-violet-500',
@@ -313,6 +335,7 @@ export default function Packages() {
                 onClick={() => setSelected(pkg)}
                 className={clsx(
                   'w-full py-3 rounded-xl font-bold text-sm transition-all duration-200',
+                  pkg.id === 'bronze'   && 'bg-gradient-bronze text-white hover:opacity-90 hover:shadow-glow-bronze',
                   pkg.id === 'silver'   && 'btn-primary',
                   pkg.id === 'gold'     && 'bg-gradient-gold text-amber-900 hover:opacity-90 hover:shadow-glow-gold',
                   pkg.id === 'platinum' && 'bg-gradient-plat text-white hover:opacity-90 hover:shadow-lg',

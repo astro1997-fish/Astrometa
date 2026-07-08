@@ -151,6 +151,7 @@ export default function AdminPortfolio() {
   )
 
   const pkgBadgeClass: Record<string, string> = {
+    bronze:   'badge-bronze',
     silver:   'badge-blue',
     gold:     'badge-gold',
     platinum: 'badge-violet',

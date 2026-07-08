@@ -47,7 +47,8 @@
   "packages": {
     "eyebrow": "Investment Propagation Packages",
     "title": "Choose your growth trajectory",
-    "subtitle": "Three tiers designed for different capital levels and risk appetites. All packages include a dedicated account manager.",
+    "subtitle": "Four tiers designed for different capital levels and risk appetites. All packages include a dedicated account manager.",
+    "bronzeName": "Bronze",
     "silverName": "Silver",
     "goldName": "Gold",
     "platinumName": "Platinum",
@@ -61,6 +62,7 @@
     "investNow": "Invest Now",
     "popular": "Most Popular",
     "premium": "Premium",
+    "switchSilver": "This amount qualifies for our Silver package. Switch?",
     "switchGold": "This amount qualifies for our Gold package. Switch?",
     "switchPlatinum": "This amount qualifies for our Platinum package. Switch?",
     "belowMin": "Amount is below the minimum for this package.",

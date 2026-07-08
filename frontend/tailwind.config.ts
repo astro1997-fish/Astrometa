@@ -29,6 +29,7 @@ const config: Config = {
         'gradient-brand': 'linear-gradient(135deg, #1A56DB 0%, #3B7EF6 100%)',
         'gradient-gold':  'linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%)',
         'gradient-plat':  'linear-gradient(135deg, #6366F1 0%, #A78BFA 100%)',
+        'gradient-bronze': 'linear-gradient(135deg, #92400E 0%, #D97706 100%)',
       },
       animation: {
         'float':          'float 6s ease-in-out infinite',
@@ -51,6 +52,7 @@ const config: Config = {
       boxShadow: {
         'glow-blue': '0 0 24px rgba(59,126,246,0.35)',
         'glow-gold': '0 0 24px rgba(245,158,11,0.35)',
+        'glow-bronze': '0 0 24px rgba(180,83,9,0.35)',
         'card-dark': '0 4px 24px rgba(0,0,0,0.4)',
       },
     },

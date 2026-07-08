@@ -110,7 +110,7 @@ export const emailService = {
 
   async sendInvestmentActivated(email: string, name: string, packageType: string, amount: number) {
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
-    const icons: Record<string, string> = { silver: '🥈', gold: '🥇', platinum: '💎' }
+    const icons: Record<string, string> = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' }
     await transporter.sendMail({
       from: FROM,
       to:   email,

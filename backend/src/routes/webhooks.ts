@@ -32,8 +32,8 @@ async function creditUser(userId: string, amountUsd: number, txId: string, packa
     .eq('id', txId)
 
   // 3. Activate investment package if specified
-  if (packageType && ['silver', 'gold', 'platinum'].includes(packageType)) {
-    const returnMap: Record<string, string> = { silver: '22', gold: '37', platinum: '50' }
+  if (packageType && ['bronze', 'silver', 'gold', 'platinum'].includes(packageType)) {
+    const returnMap: Record<string, string> = { bronze: '12', silver: '22', gold: '37', platinum: '50' }
     await supabase.from('investments').insert({
       user_id:             userId,
       package_type:        packageType,
