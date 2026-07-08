@@ -1,12 +1,73 @@
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight, Shield, Users, BarChart3, Globe,
-  TrendingUp, ChevronRight, Star, CheckCircle2
+  TrendingUp, ChevronRight, Star, CheckCircle2, Mail, MessageCircle
 } from 'lucide-react'
 import ParticleBackground from '@/components/ui/ParticleBackground'
 import { StatCard, SectionHeader } from '@/components/ui/index'
+import matteoPhoto from '@/assets/managers/matteo.png'
+import callumPhoto from '@/assets/managers/callum.png'
+import chantalPhoto from '@/assets/managers/chantal.png'
+import sarahPhoto from '@/assets/managers/sarah.png'
+
+const PORTFOLIO_MANAGERS = [
+  {
+    name: 'Matteo Rossi',
+    photo: matteoPhoto,
+    details: ['Italian', 'Age 31'],
+    email: '1matteorossi@gmail.com',
+  },
+  {
+    name: 'Callum Vance',
+    photo: callumPhoto,
+    details: ['British', 'Age 27'],
+    email: 'callumvance68@gmail.com',
+  },
+  {
+    name: 'Chantal Villiers',
+    photo: chantalPhoto,
+    details: ['South African', 'Age 33'],
+    email: 'villerschantal@gmail.com',
+  },
+  {
+    name: 'Sarah Barnett',
+    photo: sarahPhoto,
+    details: ['United States', 'Expert in crypto trading & investment strategy'],
+    email: '1Sarahb.com@gmail.com',
+  },
+]
+
+// ── Portfolio manager card ───────────────────────────────────────────────────
+function ManagerCard({ m, i }: { m: typeof PORTFOLIO_MANAGERS[number]; i: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.08, duration: 0.4 }}
+      className="card flex flex-col items-center text-center gap-3"
+    >
+      <img
+        src={m.photo}
+        alt={m.name}
+        className="w-24 h-24 rounded-full object-cover border-2 border-brand-400/30 shadow-glow-blue"
+      />
+      <h3 className="font-semibold text-gray-900 dark:text-white">{m.name}</h3>
+      <div className="text-sm text-gray-500 dark:text-gray-400 space-y-0.5">
+        {m.details.map(d => <p key={d}>{d}</p>)}
+      </div>
+      <a
+        href={`mailto:${m.email}`}
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline mt-1 break-all"
+      >
+        <Mail className="w-3.5 h-3.5 shrink-0" />
+        {m.email}
+      </a>
+    </motion.div>
+  )
+}
 
 // ── Testimonial card ─────────────────────────────────────────────────────────
 function TestimonialCard({ r }: { r: typeof TESTIMONIALS[number] }) {
@@ -217,6 +278,17 @@ const TRUST_BADGES = [
 
 export default function Home() {
   const { t } = useTranslation()
+  const [showManagers, setShowManagers] = useState(false)
+  const managersPanelRef = useRef<HTMLDivElement>(null)
+
+  // Keep the collapsed panel out of the tab order / accessibility tree — it
+  // stays mounted for the CSS collapse transition, so aria-hidden alone
+  // isn't enough to stop its links from being keyboard-focusable.
+  useEffect(() => {
+    const el = managersPanelRef.current as (HTMLDivElement & { inert?: boolean }) | null
+    if (!el) return
+    el.inert = !showManagers
+  }, [showManagers])
 
   return (
     <div className="overflow-hidden">
@@ -309,6 +381,37 @@ export default function Home() {
                 <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{t(f.descKey)}</p>
               </motion.div>
             ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setShowManagers(v => !v)}
+              aria-expanded={showManagers}
+              aria-controls="portfolio-managers-panel"
+              className="btn-primary inline-flex items-center gap-2 mx-auto"
+            >
+              <MessageCircle className="w-4 h-4" aria-hidden="true" />
+              {showManagers ? 'Hide portfolio managers' : 'Talk to portfolio manager'}
+            </button>
+          </div>
+
+          {/* Always mounted, CSS-driven open/close — avoids relying on an
+              animation-completion callback that can fail to fire and leave
+              the panel stuck open. */}
+          <div
+            id="portfolio-managers-panel"
+            ref={managersPanelRef}
+            aria-hidden={!showManagers}
+            className={`overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-in-out grid ${
+              showManagers ? 'opacity-100 mt-10' : 'opacity-0 mt-0'
+            }`}
+            style={{ gridTemplateRows: showManagers ? '1fr' : '0fr' }}
+          >
+            <div className="min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {PORTFOLIO_MANAGERS.map((m, i) => (
+                <ManagerCard key={m.name} m={m} i={i} />
+              ))}
+            </div>
           </div>
         </div>
       </section>
