@@ -33,12 +33,41 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
+  const drawerRef = useRef<HTMLElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
 
   // Safety net: always close the mobile sidebar whenever the route changes,
   // regardless of which element triggered the navigation.
   useEffect(() => {
     setSidebarOpen(false)
   }, [location.pathname])
+
+  // Keep the closed drawer out of the tab order / accessibility tree (it
+  // stays mounted for the CSS slide transition, so aria-hidden alone isn't
+  // enough — `inert` also removes it from focus and screen readers).
+  useEffect(() => {
+    const el = drawerRef.current as (HTMLElement & { inert?: boolean }) | null
+    if (!el) return
+    el.inert = !sidebarOpen
+  }, [sidebarOpen])
+
+  // Close on Escape, and return focus to the menu trigger when closing.
+  useEffect(() => {
+    if (!sidebarOpen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSidebarOpen(false)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [sidebarOpen])
+
+  useEffect(() => {
+    if (!sidebarOpen) {
+      menuButtonRef.current?.focus()
+    } else {
+      drawerRef.current?.querySelector<HTMLElement>('a, button')?.focus()
+    }
+  }, [sidebarOpen])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -133,37 +162,38 @@ export default function DashboardLayout() {
         <SidebarContent />
       </aside>
 
-      {/* Mobile sidebar overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 bg-black/60 z-40"
-              onClick={() => setSidebarOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: -280 }}
-              animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="lg:hidden fixed left-0 top-0 bottom-0 w-64 bg-white dark:bg-[#0D1627] border-r border-gray-100 dark:border-white/10 z-50 flex flex-col"
-            >
-              <SidebarContent />
-            </motion.aside>
-          </>
+      {/* Mobile sidebar overlay — always mounted, driven by CSS transforms so
+          it can never get stuck open if a spring/exit animation fails to
+          settle (AnimatePresence only unmounts after `exit` "completes",
+          which can hang indefinitely in throttled/background tabs). */}
+      <div
+        className={clsx(
+          'lg:hidden fixed inset-0 bg-black/60 z-40 transition-opacity duration-300',
+          sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         )}
-      </AnimatePresence>
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden={!sidebarOpen}
+      />
+      <aside
+        ref={drawerRef}
+        className={clsx(
+          'lg:hidden fixed left-0 top-0 bottom-0 w-64 bg-white dark:bg-[#0D1627] border-r border-gray-100 dark:border-white/10 z-50 flex flex-col transition-transform duration-300 ease-out',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+        aria-hidden={!sidebarOpen}
+      >
+        <SidebarContent />
+      </aside>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
         <header className="h-16 bg-white dark:bg-[#0D1627] border-b border-gray-100 dark:border-white/10 flex items-center justify-between px-4 lg:px-6 shrink-0">
           <button
+            ref={menuButtonRef}
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden btn-ghost w-9 h-9 p-0"
+            aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
           </button>

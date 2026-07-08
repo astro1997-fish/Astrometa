@@ -1,2 +1,4 @@
 - [Dark mode base styles](dark-mode-base.md) — globals.css must define html/html.dark base text colors + all @layer components (.card, .btn-*, .badge-*, .input, .skeleton, .sidebar-link, etc.) or inherited text stays browser-default black in dark mode.
 - [Crypto deposit on-chain design](crypto-deposit-design.md) — uses AstroPaymentReceiver contract + blockchain listener; CONTRACT_ADDRESS env var activates it.
+- [Supabase admin RLS recursion](supabase-admin-rls-recursion.md) — a policy on `users` that queries `users` to check role causes Postgres "infinite recursion"; breaks ALL authenticated REST calls, not just admin ones.
+- [Framer-motion AnimatePresence stuck-open drawers](framer-motion-animatepresence-hang.md) — spring exit animations can fail to signal completion, leaving AnimatePresence mounted forever; use CSS-transform toggled elements for critical show/hide UI instead.
