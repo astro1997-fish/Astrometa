@@ -351,4 +351,51 @@ router.get('/deposits', requireAuth, async (req: AuthRequest, res, next) => {
   }
 })
 
+// DELETE /api/payments/deposits/:id — cancel a pending deposit before it expires
+router.delete('/deposits/:id', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const userId = req.userId!
+    const { id } = req.params
+
+    const { data: existing, error: fetchErr } = await supabase
+      .from('transactions')
+      .select('id, user_id, status')
+      .eq('id', id)
+      .single()
+
+    if (fetchErr || !existing) {
+      return res.status(404).json({ error: 'Deposit not found' })
+    }
+    if (existing.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized to cancel this deposit' })
+    }
+    if (existing.status !== 'pending') {
+      return res.status(409).json({ error: 'Only pending deposits can be cancelled' })
+    }
+
+    const { data: updated, error: updateErr } = await supabase
+      .from('transactions')
+      .update({ status: 'failed', failure_reason: 'Cancelled by user' })
+      .eq('id', id)
+      .eq('status', 'pending')
+      .select('id, status')
+      .single()
+
+    if (updateErr || !updated) {
+      return res.status(409).json({ error: 'Deposit could not be cancelled — it may have already updated' })
+    }
+
+    await supabase.from('audit_logs').insert({
+      user_id:    userId,
+      action:     'crypto_deposit_cancelled',
+      metadata:   JSON.stringify({ txId: id }),
+      ip_address: req.ip,
+    })
+
+    res.json({ id: updated.id, status: updated.status })
+  } catch (err) {
+    next(err)
+  }
+})
+
 export default router

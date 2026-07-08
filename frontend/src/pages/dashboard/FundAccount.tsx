@@ -776,6 +776,20 @@ function DepositRow({
   const isBtc         = deposit.method === 'btc'
   const isEth         = !isBtc
   const isEthHash     = deposit.tx_hash && deposit.tx_hash.startsWith('0x') && deposit.tx_hash.length === 66
+  const [cancelling, setCancelling] = useState(false)
+
+  const cancelDeposit = async () => {
+    setCancelling(true)
+    try {
+      const { data } = await api.delete(`/api/payments/deposits/${deposit.id}`)
+      onUpdated(deposit.id, data.status)
+      toast.success('Deposit cancelled')
+    } catch (err: any) {
+      toast.error(err.response?.data?.error ?? 'Failed to cancel deposit')
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   // Subscribe to realtime updates for this deposit row
   useEffect(() => {
@@ -827,6 +841,18 @@ function DepositRow({
           )}
         </div>
       </div>
+
+      {/* Cancel button for pending deposits */}
+      {derivedStatus === 'pending' && (
+        <button
+          onClick={cancelDeposit}
+          disabled={cancelling}
+          className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-red-500 hover:text-red-600 disabled:opacity-50 border border-red-200 dark:border-red-400/20 rounded-lg px-2 py-1"
+        >
+          {cancelling ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+          Cancel
+        </button>
+      )}
 
       {/* Explorer link for confirmed deposits */}
       {derivedStatus === 'confirmed' && (
