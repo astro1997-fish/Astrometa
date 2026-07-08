@@ -114,17 +114,19 @@ adminRouter.use(requireAuth, requireAdmin)
 
 adminRouter.get('/stats', async (_req, res, next) => {
   try {
-    const [u, d, inv, w] = await Promise.all([
+    const [u, d, inv, w, pp] = await Promise.all([
       supabase.from('users').select('id', { count: 'exact' }),
       supabase.from('transactions').select('amount_usd').eq('type', 'deposit').eq('status', 'confirmed'),
       supabase.from('investments').select('amount_usd').eq('status', 'active'),
       supabase.from('withdrawals').select('id', { count: 'exact' }).eq('status', 'pending'),
+      supabase.from('transactions').select('id', { count: 'exact' }).eq('type', 'deposit').eq('status', 'pending_price'),
     ])
     res.json({
       totalUsers:          u.count,
       totalDeposits:       (d.data ?? []).reduce((s: number, t: any) => s + t.amount_usd, 0),
       activeAUM:           (inv.data ?? []).reduce((s: number, i: any) => s + i.amount_usd, 0),
       pendingWithdrawals:  w.count,
+      pendingPriceCount:   pp.count ?? 0,
     })
   } catch (err) { next(err) }
 })
