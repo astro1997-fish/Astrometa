@@ -194,10 +194,15 @@ adminRouter.get('/deposits', async (_req, res, next) => {
   try {
     const { data, error } = await supabase
       .from('transactions')
-      .select('id, user_id, amount_usd, tx_hash, created_at, method, status, failure_reason, metadata, users!inner(full_name, email)')
+      .select('id, user_id, amount_usd, tx_hash, btc_address, created_at, method, status, failure_reason, metadata, users!inner(full_name, email)')
       .eq('type', 'deposit')
       .in('status', ['pending', 'failed', 'pending_price'])
-      .not('tx_hash', 'is', null)
+      // ETH/ERC-20 deposits store their paymentId in tx_hash from creation, so
+      // `tx_hash not null` used to be a reasonable "has an on-chain identifier"
+      // filter. BTC deposits only get tx_hash once confirmed (see btcMonitor.ts
+      // header comment) — they carry btc_address instead while pending/stuck.
+      // Require one identifier or the other so stuck BTC deposits aren't hidden.
+      .or('tx_hash.not.is.null,btc_address.not.is.null')
       .order('created_at', { ascending: false })
     if (error) throw error
     res.json(data ?? [])

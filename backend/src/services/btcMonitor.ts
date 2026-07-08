@@ -402,6 +402,19 @@ async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcP
 
     if (confirmations < MIN_CONFIRMATIONS) {
       console.log(`[BTC] ${deposit.btcAddress}: tx ${tx.txid} has ${confirmations}/${MIN_CONFIRMATIONS} confirmations`)
+      // Surface progress as a failure_reason too, so the admin "Reason" column
+      // shows something more useful than "—" while a deposit is still waiting
+      // on-chain — mirrors the ETH listener's practice of always explaining
+      // why a deposit hasn't been credited yet.
+      try {
+        await supabase
+          .from('transactions')
+          .update({ failure_reason: `Confirmation count insufficient — ${confirmations}/${MIN_CONFIRMATIONS} confirmations` })
+          .eq('id', deposit.id)
+          .eq('status', 'pending')
+      } catch (err) {
+        console.warn(`[BTC] Failed to persist confirmation-wait reason for ${deposit.id}:`, (err as Error).message)
+      }
       continue
     }
 
@@ -435,6 +448,15 @@ async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcP
 
     if (usdValue <= 0) {
       console.warn(`[BTC] Cannot compute USD value (price=${btcPrice}) — skipping`)
+      try {
+        await supabase
+          .from('transactions')
+          .update({ failure_reason: 'BTC price returned $0 at confirmation time — use manual USD override' })
+          .eq('id', deposit.id)
+          .eq('status', 'pending')
+      } catch (err) {
+        console.warn(`[BTC] Failed to persist $0-price reason for ${deposit.id}:`, (err as Error).message)
+      }
       continue
     }
 
