@@ -408,6 +408,18 @@ ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "admins_all_system_settings" ON public.system_settings
   FOR ALL USING (public.is_admin());
 
+-- NOTE: this table is created AFTER the blanket
+-- `GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role` above, so that
+-- statement does not retroactively cover it (Postgres GRANT ... ALL TABLES
+-- only applies to tables that exist at the time it runs). Without this
+-- explicit grant, the backend's service-role key gets a Postgres-level
+-- "permission denied for table system_settings" error — RLS is bypassed by
+-- service_role, but the underlying GRANT is still required. Re-declare the
+-- grant here so it's covered regardless of statement order or partial
+-- re-runs of this file.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.system_settings TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.system_settings TO authenticated;
+
 -- ============================================================
 -- Stuck-deposit failure reasons
 -- ============================================================

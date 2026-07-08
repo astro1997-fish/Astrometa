@@ -129,15 +129,84 @@ function satsToBtc(sats: number): number {
 }
 
 // ── BTC price cache ──────────────────────────────────────────────────────────
+//
+// The cache is also persisted to the `system_settings` table under the key
+// `btc_price_cache` so it survives server restarts. On startup the in-memory
+// cache is seeded from the DB, meaning the `pending_price` retry loop can run
+// immediately after a cold restart without waiting for the next CoinGecko poll.
 
 const BTC_PRICE_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+const BTC_PRICE_CACHE_DB_KEY = 'btc_price_cache'
 
 let cachedBtcPrice: number | null = null
 let btcPriceCachedAt: number      = 0
 
+/**
+ * Persist the current in-memory BTC price cache to the `system_settings`
+ * table so it survives server restarts. Fire-and-forget — failures are
+ * logged but never thrown, so the caller's happy path is unaffected.
+ */
+async function persistBtcPriceCache(price: number, fetchedAt: number): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert(
+        {
+          key:        BTC_PRICE_CACHE_DB_KEY,
+          value:      JSON.stringify({ price, fetchedAt }),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'key' },
+      )
+    if (error) {
+      console.warn('[BTC] Failed to persist price cache to DB:', error.message)
+    }
+  } catch (err) {
+    console.warn('[BTC] Failed to persist price cache to DB:', (err as Error).message)
+  }
+}
+
+/**
+ * Seed the in-memory BTC price cache from the database on startup.
+ * This means a cold restart does not lose the last known price, so
+ * the `pending_price` retry loop can re-price deposits immediately.
+ */
+export async function loadBtcPriceCacheFromDb(): Promise<void> {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', BTC_PRICE_CACHE_DB_KEY)
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[BTC] Could not load price cache from DB:', error.message)
+      return
+    }
+
+    if (!data?.value) {
+      console.log('[BTC] No persisted price cache found — will fetch fresh on first poll')
+      return
+    }
+
+    const parsed: { price: number; fetchedAt: number } = JSON.parse(data.value)
+    if (parsed.price > 0 && parsed.fetchedAt) {
+      cachedBtcPrice   = parsed.price
+      btcPriceCachedAt = parsed.fetchedAt
+      const ageSec = Math.round((Date.now() - parsed.fetchedAt) / 1000)
+      console.log(`[BTC] Seeded price cache from DB: ${parsed.price} (${ageSec}s old)`)
+    }
+  } catch (err) {
+    console.warn('[BTC] Failed to parse persisted price cache:', (err as Error).message)
+  }
+}
+
 /** Fetch BTC/USD price from CoinGecko, with a 5-minute in-memory cache.
  *  Returns the cached price if CoinGecko is unreachable.
  *  Returns null only when no cached value is available either.
+ *
+ *  Every successful fetch is also written to the `system_settings` table so
+ *  the price survives a server restart (see `loadBtcPriceCacheFromDb`).
  */
 async function getBtcUsdPrice(): Promise<number | null> {
   const now = Date.now()
@@ -155,6 +224,8 @@ async function getBtcUsdPrice(): Promise<number | null> {
     if (price > 0) {
       cachedBtcPrice  = price
       btcPriceCachedAt = now
+      // Persist to DB asynchronously — don't await to avoid slowing the caller
+      persistBtcPriceCache(price, now).catch(() => {/* already logged inside */})
     }
     return price > 0 ? price : cachedBtcPrice
   } catch (e) {
@@ -386,8 +457,14 @@ export function startBtcMonitor() {
   monitorRunning = true
   console.log(`[BTC] Monitor loop started (min ${MIN_CONFIRMATIONS} confirmations, polling every ${POLL_INTERVAL_MS / 1000}s)`)
 
-  // Run once immediately (best-effort), then on a fixed interval.
-  runPollCycle().catch(e => console.error('[BTC] Poll cycle error:', e))
+  // Seed the in-memory price cache from the DB first so a cold restart
+  // doesn't lose the last known price, then run the first poll cycle.
+  loadBtcPriceCacheFromDb()
+    .catch(e => console.error('[BTC] Failed to seed price cache from DB:', e))
+    .finally(() => {
+      runPollCycle().catch(e => console.error('[BTC] Poll cycle error:', e))
+    })
+
   setInterval(
     () => runPollCycle().catch(e => console.error('[BTC] Poll cycle error:', e)),
     POLL_INTERVAL_MS,
