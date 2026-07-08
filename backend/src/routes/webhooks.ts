@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import axios from 'axios'
 import { supabase } from '../lib/supabase'
 import { emailService } from '../services/email'
+import { sendDepositConfirmedPush } from '../services/pushNotifications'
 
 const router = Router()
 
@@ -49,6 +50,14 @@ async function creditUser(userId: string, amountUsd: number, txId: string, packa
   const { data: user } = await supabase.from('users').select('email, full_name').eq('id', userId).single()
   if (user) {
     await emailService.sendDepositConfirmed(user.email, user.full_name, amountUsd)
+  }
+
+  // Real Web Push notification — reaches the user even if the browser is
+  // fully closed, unlike the realtime-subscription-driven in-app toast.
+  try {
+    await sendDepositConfirmedPush(userId, amountUsd, 'fiat')
+  } catch (e) {
+    console.warn('[Webhooks] Push notification failed (non-fatal):', e)
   }
 
   // 5. Audit log

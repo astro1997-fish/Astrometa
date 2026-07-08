@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import api from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export interface AppNotification {
@@ -59,7 +60,52 @@ function pushDismissedKey(userId: string) {
   return `${PUSH_DISMISSED_PREFIX}${userId}`
 }
 
-const PUSH_SUPPORTED = typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator
+const PUSH_SUPPORTED = typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
+
+/** Converts the VAPID public key (base64url) to the Uint8Array pushManager.subscribe() expects. */
+function urlBase64ToUint8Array(base64String: string): BufferSource {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = atob(base64)
+  const bytes = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; i++) bytes[i] = rawData.charCodeAt(i)
+  return bytes.buffer
+}
+
+/**
+ * Subscribes this browser to real Web Push (VAPID) and registers the
+ * subscription with the backend, so deposit-confirmed notifications are
+ * delivered even if the browser is fully closed. Best-effort: if this
+ * fails, the in-app realtime toast/notification path still works whenever
+ * the browser process is running.
+ */
+async function subscribeToWebPush(): Promise<void> {
+  const registration = await navigator.serviceWorker.ready
+  let subscription = await registration.pushManager.getSubscription()
+
+  if (!subscription) {
+    const { data } = await api.get('/api/push/vapid-public-key')
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+    })
+  }
+
+  await api.post('/api/push/subscribe', subscription.toJSON())
+}
+
+/** Unsubscribes this browser from Web Push and tells the backend to drop it. */
+async function unsubscribeFromWebPush(): Promise<void> {
+  const registration = await navigator.serviceWorker.ready
+  const subscription = await registration.pushManager.getSubscription()
+  if (!subscription) return
+
+  const endpoint = subscription.endpoint
+  await subscription.unsubscribe()
+  await api.post('/api/push/unsubscribe', { endpoint }).catch(() => {
+    // Best-effort — the subscription is already gone client-side either way.
+  })
+}
 
 function pruneExpired(list: AppNotification[]): AppNotification[] {
   const cutoff = Date.now() - NOTIFICATION_TTL_MS
@@ -106,13 +152,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     })
   }, [])
 
-  // Load this user's push opt-in state
+  // Load this user's push opt-in state, and re-establish the real Web Push
+  // subscription if it was previously granted (e.g. after a service worker
+  // update invalidated the old subscription, or on a new browser session).
   useEffect(() => {
     if (!user?.id || !PUSH_SUPPORTED) return
     try {
       const enabled = localStorage.getItem(pushEnabledKey(user.id)) === 'true'
-      setPushEnabled(enabled && Notification.permission === 'granted')
+      const isEnabled = enabled && Notification.permission === 'granted'
+      setPushEnabled(isEnabled)
       setPushPromptDismissed(localStorage.getItem(pushDismissedKey(user.id)) === 'true')
+      if (isEnabled) {
+        subscribeToWebPush().catch((e) => console.warn('Web Push re-subscription failed:', e))
+      }
     } catch {
       // ignore
     }
@@ -145,6 +197,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // ignore
     }
     setPushPromptDismissed(true)
+
+    if (granted) {
+      try {
+        await subscribeToWebPush()
+      } catch (e) {
+        // Real push registration failed (e.g. push service unreachable) —
+        // the in-app notification path while the browser is open still works.
+        console.warn('Web Push subscription failed:', e)
+      }
+    }
+
     return granted
   }, [user?.id])
 
@@ -156,6 +219,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } catch {
       // ignore
     }
+    unsubscribeFromWebPush().catch(() => {
+      // Best-effort — nothing more to do if this fails.
+    })
   }, [user?.id])
 
   const dismissPushPrompt = useCallback(() => {

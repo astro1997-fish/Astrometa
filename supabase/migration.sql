@@ -469,5 +469,44 @@ ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS failure_reason TEXT;
 ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
 
 -- ============================================================
+-- Web Push subscriptions (closed-browser deposit notifications)
+-- ============================================================
+-- Stores each browser/device's PushSubscription so the backend can deliver a
+-- real Web Push message (via VAPID + the browser's push service) when a
+-- deposit confirms, even if the app/browser is fully closed. A user can have
+-- several rows (multiple browsers/devices); each is pruned automatically if
+-- the push service reports it gone (404/410).
+CREATE TABLE IF NOT EXISTS public.push_subscriptions (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id     UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  endpoint    TEXT NOT NULL UNIQUE,
+  p256dh      TEXT NOT NULL,
+  auth        TEXT NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON public.push_subscriptions (user_id);
+
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "push_subscriptions_select_own" ON public.push_subscriptions
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "push_subscriptions_insert_own" ON public.push_subscriptions
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "push_subscriptions_delete_own" ON public.push_subscriptions
+  FOR DELETE USING (auth.uid() = user_id);
+
+CREATE POLICY "admins_all_push_subscriptions" ON public.push_subscriptions
+  FOR ALL USING (public.is_admin());
+
+-- NOTE: created after the blanket service_role GRANT block above (see the
+-- system_settings note further up) — that GRANT only covers tables that
+-- existed at the time it ran, so re-declare it explicitly here.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.push_subscriptions TO service_role;
+GRANT SELECT, INSERT, DELETE         ON public.push_subscriptions TO authenticated;
+
+-- ============================================================
 -- DONE ✅
 -- ============================================================

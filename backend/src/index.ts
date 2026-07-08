@@ -15,6 +15,7 @@ import webhookRoutes  from './routes/webhooks'
 import portfolioRoutes from './routes/portfolio'
 import supportRoutes  from './routes/support'
 import adminRoutes    from './routes/admin'
+import pushRoutes     from './routes/push'
 import { errorHandler } from './middleware/errorHandler'
 
 const app  = express()
@@ -124,6 +125,7 @@ app.use('/api/webhooks',  webhookRoutes)
 app.use('/api/portfolio', portfolioRoutes)
 app.use('/api/support',   supportRoutes)
 app.use('/api/admin',     adminRoutes)
+app.use('/api/push',      pushRoutes)
 
 // ── Static frontend (production only) ───────────────────────────────
 // Must come BEFORE errorHandler so errors from static/sendFile are caught.

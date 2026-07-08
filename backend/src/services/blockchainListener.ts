@@ -15,6 +15,7 @@
 import { ethers } from 'ethers'
 import { supabase } from '../lib/supabase'
 import { emailService } from './email'
+import { sendDepositConfirmedPush } from './pushNotifications'
 
 // Minimal ABI — only the event we need
 export const CONTRACT_ABI = [
@@ -267,6 +268,14 @@ export async function atomicCredit(
     }
   } catch (e) {
     console.warn('[Blockchain] Confirmation email failed (non-fatal):', e)
+  }
+
+  // 3b. Real Web Push notification — reaches the user even if the browser is
+  // fully closed, unlike the realtime-subscription-driven in-app toast.
+  try {
+    await sendDepositConfirmedPush(userId, amountUsd, 'eth')
+  } catch (e) {
+    console.warn('[Blockchain] Push notification failed (non-fatal):', e)
   }
 
   try {

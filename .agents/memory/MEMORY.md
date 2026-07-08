@@ -9,3 +9,4 @@
 - [Supabase signup email sender](supabase-signup-email-sender.md) — "Supabase Auth" as sender means signup used auth.signUp/admin.createUser without email_confirm:true, or a stale deployed build predates the fix.
 - [Health endpoint as shared status source](health-endpoint-shared-status.md) — `/health` on the backend is the single source for both listener and ETH price freshness; reuse it rather than adding parallel status endpoints.
 - [Reconnect mutex flag reset](reconnect-mutex-flag-reset.md) — a loop's "in progress" guard must only be reset by the loop itself, not by unrelated success callbacks, or concurrent triggers can race past it.
+- [Web Push (VAPID) setup](web-push-vapid.md) — closed-browser push notifications; VAPID keys self-generated and stored in system_settings, not requested as a secret.

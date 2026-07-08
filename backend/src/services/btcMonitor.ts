@@ -26,6 +26,7 @@ import BIP32Factory   from 'bip32'
 import * as ecc       from 'tiny-secp256k1'
 import { supabase }   from '../lib/supabase'
 import { emailService } from './email'
+import { sendDepositConfirmedPush } from './pushNotifications'
 import { decryptSetting } from '../lib/encryption'
 
 // Initialise BIP32 with the secp256k1 implementation
@@ -292,6 +293,14 @@ async function atomicCreditBtc(
     if (user) await emailService.sendDepositConfirmed(user.email, user.full_name, amountUsd)
   } catch (e) {
     console.warn('[BTC] Confirmation email failed (non-fatal):', e)
+  }
+
+  // Real Web Push notification — reaches the user even if the browser is
+  // fully closed, unlike the realtime-subscription-driven in-app toast.
+  try {
+    await sendDepositConfirmedPush(userId, amountUsd, 'btc')
+  } catch (e) {
+    console.warn('[BTC] Push notification failed (non-fatal):', e)
   }
 
   // Audit log (best-effort)
