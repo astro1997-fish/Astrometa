@@ -97,18 +97,28 @@ function EthPriceCard({ ethPrice, error }: { ethPrice: EthPriceStatus | null; er
   )
 }
 
-function BlockchainListenerCard({ health, fetchedAt, error }: { health: ListenerHealth | null; fetchedAt: Date | null; error: boolean }) {
+function BlockchainListenerCard({ health, fetchedAt, error, consecutiveFailures }: { health: ListenerHealth | null; fetchedAt: Date | null; error: boolean; consecutiveFailures: number }) {
+  // If polling has failed for more than one consecutive cycle, the last-known
+  // state is too old to trust — surface it as stale rather than letting a
+  // green "Healthy" badge linger while the backend is unreachable.
+  const isStaleData = consecutiveFailures > 1
+
   // Derived display state
-  const isUnhealthy = error || (health !== null && health.active && !health.healthy)
-  const isWarning   = !isUnhealthy && health?.silenceWarning
-  const isInactive  = health !== null && !health.active
+  const isUnhealthy = !isStaleData && (error || (health !== null && health.active && !health.healthy))
+  const isWarning   = !isStaleData && !isUnhealthy && health?.silenceWarning
+  const isInactive  = !isStaleData && health !== null && !health.active
 
   let StatusIcon = CheckCircle2
   let iconColor  = 'text-emerald-400'
   let badgeClass = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
   let badgeLabel = 'Healthy'
 
-  if (isUnhealthy) {
+  if (isStaleData) {
+    StatusIcon = AlertTriangle
+    iconColor  = 'text-gray-400'
+    badgeClass = 'bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300'
+    badgeLabel = 'Stale data'
+  } else if (isUnhealthy) {
     StatusIcon = XCircle
     iconColor  = 'text-red-400'
     badgeClass = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
@@ -173,6 +183,16 @@ function BlockchainListenerCard({ health, fetchedAt, error }: { health: Listener
         </div>
       )}
 
+      {error && (
+        <div className="mt-4 flex items-start gap-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-3">
+          <AlertTriangle className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-gray-600 dark:text-gray-300">
+            Data may be stale — the dashboard could not reach <code className="font-mono bg-gray-100 dark:bg-white/10 px-1 rounded">/health</code>{' '}
+            on its last poll. Last successful fetch: {fetchedAt ? fmtRelative(fetchedAt.toISOString()) : 'never'}.
+          </p>
+        </div>
+      )}
+
       {isUnhealthy && (
         <div className="mt-4 flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 p-3">
           <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
@@ -196,6 +216,7 @@ export default function AdminDashboard() {
   const [ethPrice, setEthPrice]   = useState<EthPriceStatus | null>(null)
   const [healthFetchedAt, setHealthFetchedAt] = useState<Date | null>(null)
   const [healthError, setHealthError]         = useState(false)
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0)
   const healthIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -208,8 +229,10 @@ export default function AdminDashboard() {
         setEthPrice(json.ethPrice as EthPriceStatus)
         setHealthFetchedAt(new Date())
         setHealthError(false)
+        setConsecutiveFailures(0)
       } catch {
         setHealthError(true)
+        setConsecutiveFailures((n) => n + 1)
       }
     }
     pollHealth()
@@ -277,7 +300,7 @@ export default function AdminDashboard() {
         }
       </div>
       <EthPriceCard ethPrice={ethPrice} error={healthError} />
-      <BlockchainListenerCard health={health} fetchedAt={healthFetchedAt} error={healthError} />
+      <BlockchainListenerCard health={health} fetchedAt={healthFetchedAt} error={healthError} consecutiveFailures={consecutiveFailures} />
     </div>
   )
 }
