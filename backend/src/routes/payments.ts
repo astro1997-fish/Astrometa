@@ -337,7 +337,7 @@ router.get('/deposits', requireAuth, async (req: AuthRequest, res, next) => {
     const userId = req.userId!
     const { data, error } = await supabase
       .from('transactions')
-      .select('id, method, amount_usd, status, tx_hash, btc_address, created_at')
+      .select('id, method, amount_usd, status, tx_hash, btc_address, created_at, metadata')
       .eq('user_id', userId)
       .eq('type', 'deposit')
       .in('method', ['eth', 'usdt', 'usdc', 'btc'])

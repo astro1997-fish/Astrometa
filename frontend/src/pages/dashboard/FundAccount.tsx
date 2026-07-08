@@ -130,6 +130,7 @@ export default function FundAccount() {
     tx_hash: string | null
     btc_address: string | null
     created_at: string
+    metadata: string | null
   }
   const [recentDeposits,        setRecentDeposits]        = useState<RecentDeposit[]>([])
   const [recentDepositsLoading, setRecentDepositsLoading] = useState(false)
@@ -702,9 +703,9 @@ export default function FundAccount() {
         deposits={recentDeposits}
         loading={recentDepositsLoading}
         onRefresh={fetchRecentDeposits}
-        onDepositUpdated={(id, status) =>
+        onDepositUpdated={(id, status, metadata) =>
           setRecentDeposits(prev =>
-            prev.map(d => d.id === id ? { ...d, status } : d)
+            prev.map(d => d.id === id ? { ...d, status, ...(metadata !== undefined ? { metadata } : {}) } : d)
           )
         }
       />
@@ -759,6 +760,17 @@ type RecentDepositItem = {
   tx_hash: string | null
   btc_address: string | null
   created_at: string
+  metadata: string | null
+}
+
+/** Parse the JSON `metadata` column, tolerating null/malformed values. */
+function parseDepositMetadata(metadata: string | null): { confirmations?: number; minConfirmations?: number } {
+  if (!metadata) return {}
+  try {
+    return JSON.parse(metadata)
+  } catch {
+    return {}
+  }
 }
 
 function DepositRow({
@@ -766,7 +778,7 @@ function DepositRow({
   onUpdated,
 }: {
   deposit: RecentDepositItem
-  onUpdated: (id: string, status: string) => void
+  onUpdated: (id: string, status: string, metadata?: string | null) => void
 }) {
   const expiresAt     = getDepositExpiresAt(deposit.created_at)
   const { remaining, label: countdownLabel } = useCountdown(
@@ -775,6 +787,9 @@ function DepositRow({
   const derivedStatus = depositRowStatus(deposit)
   const isBtc         = deposit.method === 'btc'
   const isEth         = !isBtc
+  const { confirmations, minConfirmations } = parseDepositMetadata(deposit.metadata)
+  const showConfirmations =
+    isBtc && derivedStatus === 'pending' && typeof confirmations === 'number' && typeof minConfirmations === 'number'
   const isEthHash     = deposit.tx_hash && deposit.tx_hash.startsWith('0x') && deposit.tx_hash.length === 66
   const [cancelling, setCancelling] = useState(false)
 
@@ -802,7 +817,8 @@ function DepositRow({
         { event: 'UPDATE', schema: 'public', table: 'transactions', filter: `id=eq.${deposit.id}` },
         (payload) => {
           const s = (payload.new as any)?.status
-          if (s) onUpdated(deposit.id, s)
+          const m = (payload.new as any)?.metadata
+          if (s) onUpdated(deposit.id, s, m)
         },
       )
       .subscribe()
@@ -827,6 +843,11 @@ function DepositRow({
           <StatusBadge status={derivedStatus} />
         </div>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+          {showConfirmations && (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+              {confirmations} / {minConfirmations} confirmations
+            </span>
+          )}
           {derivedStatus === 'pending' && remaining > 0 ? (
             <span className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
               <Clock className="w-3 h-3" />
@@ -892,7 +913,7 @@ function RecentDepositsPanel({
   deposits: RecentDepositItem[]
   loading: boolean
   onRefresh: () => void
-  onDepositUpdated: (id: string, status: string) => void
+  onDepositUpdated: (id: string, status: string, metadata?: string | null) => void
 }) {
   if (!loading && deposits.length === 0) return null
 

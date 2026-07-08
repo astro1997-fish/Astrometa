@@ -342,6 +342,33 @@ async function loadPendingBtcDeposits(): Promise<PendingBtcDeposit[]> {
   }))
 }
 
+/**
+ * Persist the current confirmation count for a still-pending BTC deposit so
+ * the frontend can show "X / MIN_CONFIRMATIONS confirmations" progress. This
+ * is a no-op once the deposit has moved past 'pending' (confirmed / failed /
+ * pending_price), guarded by the .eq('status', 'pending') filter below.
+ */
+async function persistConfirmationProgress(
+  depositId: string,
+  txid: string,
+  confirmations: number,
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('transactions')
+      .update({
+        metadata: JSON.stringify({ confirmations, btcTxid: txid, minConfirmations: MIN_CONFIRMATIONS }),
+      })
+      .eq('id', depositId)
+      .eq('status', 'pending')
+    if (error) {
+      console.warn(`[BTC] Failed to persist confirmation progress for ${depositId}:`, error.message)
+    }
+  } catch (err) {
+    console.warn(`[BTC] Failed to persist confirmation progress for ${depositId}:`, (err as Error).message)
+  }
+}
+
 async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcPrice: number | null): Promise<void> {
   let txs: BlockstreamTx[]
   try {
@@ -351,15 +378,15 @@ async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcP
     return
   }
 
+  // Track the best (highest-confirmation) tx that actually pays this address,
+  // so we can persist progress even before MIN_CONFIRMATIONS is reached.
+  let bestConfirmations = -1
+  let bestTxid: string | null = null
+
   for (const tx of txs) {
     const confirmations = tx.status.block_height
       ? chainHeight - tx.status.block_height + 1
       : 0
-
-    if (confirmations < MIN_CONFIRMATIONS) {
-      console.log(`[BTC] ${deposit.btcAddress}: tx ${tx.txid} has ${confirmations}/${MIN_CONFIRMATIONS} confirmations`)
-      continue
-    }
 
     // Sum sats sent to our address in this tx
     const satsReceived = tx.vout
@@ -367,6 +394,16 @@ async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcP
       .reduce((sum, o) => sum + o.value, 0)
 
     if (satsReceived <= 0) continue
+
+    if (confirmations > bestConfirmations) {
+      bestConfirmations = confirmations
+      bestTxid = tx.txid
+    }
+
+    if (confirmations < MIN_CONFIRMATIONS) {
+      console.log(`[BTC] ${deposit.btcAddress}: tx ${tx.txid} has ${confirmations}/${MIN_CONFIRMATIONS} confirmations`)
+      continue
+    }
 
     const btcAmount = satsToBtc(satsReceived)
 
@@ -409,6 +446,12 @@ async function pollDeposit(deposit: PendingBtcDeposit, chainHeight: number, btcP
     // pending_price (outage recovered) are credited here too.
     await atomicCreditBtc(deposit.id, deposit.userId, usdValue, tx.txid, ['pending', 'pending_price'])
     return // this deposit is settled — stop scanning txs for it
+  }
+
+  // Nothing reached MIN_CONFIRMATIONS this cycle — persist whatever progress
+  // exists so the frontend can show "X / MIN_CONFIRMATIONS confirmations".
+  if (bestTxid && bestConfirmations >= 0) {
+    await persistConfirmationProgress(deposit.id, bestTxid, bestConfirmations)
   }
 }
 
