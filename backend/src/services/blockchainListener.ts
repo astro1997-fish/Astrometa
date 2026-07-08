@@ -350,30 +350,46 @@ export async function getUsdValue(
 // ── Listener health state ──────────────────────────────────────────────────
 // Exported so the /health endpoint can surface real-time status.
 
+export type CircuitState = 'closed' | 'open' | 'half_open'
+
 export interface ListenerStatus {
-  active:            boolean        // true while the listener is configured and running
-  lastEventAt:       string | null  // ISO timestamp of last PaymentReceived event
-  lastCheckedAt:     string | null  // ISO timestamp of last health probe
-  healthy:           boolean        // false only on confirmed provider/contract failure
-  silenceSec:        number | null  // seconds since last event — informational, not a failure signal
-  silenceWarning:    boolean        // true when silence exceeds threshold but provider is still healthy
-  reconnecting:      boolean        // true while a reconnect attempt is in progress
-  reconnectAttempts: number         // how many reconnect attempts have been made since last success
-  message:           string         // human-readable status description
-  lastRetryRunAt:    string | null  // ISO timestamp of the last pending-price retry loop run
+  active:              boolean        // true while the listener is configured and running
+  lastEventAt:         string | null  // ISO timestamp of last PaymentReceived event
+  lastCheckedAt:       string | null  // ISO timestamp of last health probe
+  healthy:             boolean        // false only on confirmed provider/contract failure
+  silenceSec:          number | null  // seconds since last event — informational, not a failure signal
+  silenceWarning:      boolean        // true when silence exceeds threshold but provider is still healthy
+  reconnecting:        boolean        // true while a reconnect attempt is in progress
+  reconnectAttempts:   number         // how many reconnect attempts have been made since last success
+  circuitState:        CircuitState   // closed (normal) / open (suppressing reconnects) / half_open (trial reconnect)
+  consecutiveFailures: number         // consecutive reconnect-cycle failures since the circuit last closed
+  circuitCooldownRemainingSec: number | null  // seconds left before a half-open trial is allowed, if open
+  message:             string         // human-readable status description
+  lastRetryRunAt:      string | null  // ISO timestamp of the last pending-price retry loop run
 }
 
 const listenerState = {
-  active:            false,
-  lastEventAt:       null as number | null,  // Date.now() of last event
-  startedAt:         null as number | null,
-  lastCheckedAt:     null as number | null,
-  healthy:           true,
-  lastAlertAt:       null as number | null,  // Date.now() of last admin alert sent
-  reconnecting:      false,
-  reconnectAttempts: 0,
-  lastReconnectAt:   null as number | null,
-  lastRetryRunAt:    null as number | null,  // Date.now() of the last retryPendingPriceTransactions run
+  active:              false,
+  lastEventAt:         null as number | null,  // Date.now() of last event
+  startedAt:           null as number | null,
+  lastCheckedAt:       null as number | null,
+  healthy:             true,
+  lastAlertAt:         null as number | null,  // Date.now() of last admin alert sent
+  reconnecting:        false,
+  reconnectAttempts:   0,
+  lastReconnectAt:     null as number | null,
+  lastRetryRunAt:      null as number | null,  // Date.now() of the last retryPendingPriceTransactions run
+  // Circuit breaker — replaces the plain boolean mutex so repeated/flapping
+  // failures are handled as an explicit state machine instead of ad-hoc flag
+  // resets scattered across success/failure callbacks.
+  circuitState:        'closed' as CircuitState,
+  consecutiveFailures: 0,
+  circuitOpenedAt:     null as number | null,
+  // True only while a reconnectWithBackoff() call is actively executing.
+  // Serializes reconnect sequences: unlike `reconnecting` (which is also
+  // touched by the event handler for display purposes), this is the actual
+  // mutex, so concurrent error events can never spawn parallel backoff loops.
+  reconnectInFlight:   false,
 }
 
 // Tracks the currently active contract instance so listeners can be removed
@@ -443,6 +459,9 @@ export function getListenerStatus(): ListenerStatus {
       silenceWarning:    false,
       reconnecting:      false,
       reconnectAttempts: 0,
+      circuitState:      'closed',
+      consecutiveFailures: 0,
+      circuitCooldownRemainingSec: null,
       message:           'Listener not configured (ETH_RPC_URL or CONTRACT_ADDRESS missing)',
       lastRetryRunAt:    listenerState.lastRetryRunAt
         ? new Date(listenerState.lastRetryRunAt).toISOString()
@@ -467,8 +486,17 @@ export function getListenerStatus(): ListenerStatus {
     silenceSec !== null &&
     silenceSec * 1000 > LISTENER_SILENCE_THRESHOLD_MS
 
+  const cooldownRemainingSec =
+    listenerState.circuitState === 'open' && listenerState.circuitOpenedAt !== null
+      ? Math.max(0, Math.round((CIRCUIT_OPEN_COOLDOWN_MS - (now - listenerState.circuitOpenedAt)) / 1000))
+      : null
+
   let message: string
-  if (listenerState.reconnecting) {
+  if (listenerState.circuitState === 'open') {
+    message = `Circuit breaker OPEN after ${listenerState.consecutiveFailures} consecutive failures — reconnects suppressed for ${cooldownRemainingSec}s`
+  } else if (listenerState.circuitState === 'half_open') {
+    message = 'Circuit breaker HALF_OPEN — attempting a trial reconnect'
+  } else if (listenerState.reconnecting) {
     message = `Reconnecting to provider (attempt ${listenerState.reconnectAttempts} with exponential backoff)…`
   } else if (!listenerState.healthy) {
     message = 'Provider unreachable or contract not found — check RPC connection'
@@ -492,10 +520,69 @@ export function getListenerStatus(): ListenerStatus {
     silenceWarning,
     reconnecting:      listenerState.reconnecting,
     reconnectAttempts: listenerState.reconnectAttempts,
+    circuitState:      listenerState.circuitState,
+    consecutiveFailures: listenerState.consecutiveFailures,
+    circuitCooldownRemainingSec: cooldownRemainingSec,
     message,
     lastRetryRunAt:    listenerState.lastRetryRunAt
       ? new Date(listenerState.lastRetryRunAt).toISOString()
       : null,
+  }
+}
+
+// ── Circuit breaker helpers ─────────────────────────────────────────────────
+// Consecutive-failure threshold before we stop attempting reconnects
+// altogether for a cooldown period. Protects against a flapping provider
+// causing an unbounded stream of reconnect cycles.
+const CIRCUIT_FAILURE_THRESHOLD =
+  parseInt(process.env.CIRCUIT_FAILURE_THRESHOLD ?? '3', 10)
+
+// How long the circuit stays OPEN (reconnects fully suppressed) before a
+// single HALF_OPEN trial reconnect is allowed.
+const CIRCUIT_OPEN_COOLDOWN_MS =
+  parseInt(process.env.CIRCUIT_OPEN_COOLDOWN_MS ?? String(5 * 60 * 1000), 10)
+
+/**
+ * Confirms the provider is fully working again (either a live event was
+ * processed or a reconnect/health-check succeeded) and resets the circuit
+ * back to CLOSED.
+ */
+function closeCircuit(): void {
+  if (listenerState.circuitState !== 'closed') {
+    console.log(
+      `[Blockchain] Circuit breaker CLOSED — provider recovered after ${listenerState.consecutiveFailures} consecutive failure(s)`,
+    )
+  }
+  listenerState.circuitState        = 'closed'
+  listenerState.consecutiveFailures = 0
+  listenerState.circuitOpenedAt     = null
+  listenerState.reconnectAttempts   = 0
+}
+
+/**
+ * Records a connectivity failure (provider error or failed health check).
+ * Once CIRCUIT_FAILURE_THRESHOLD consecutive failures accumulate, the
+ * circuit trips OPEN and reconnect attempts are suppressed until the
+ * cooldown elapses. A failed HALF_OPEN trial reconnect re-opens the circuit
+ * and restarts the cooldown.
+ */
+function recordCircuitFailure(): void {
+  listenerState.consecutiveFailures += 1
+
+  if (listenerState.circuitState === 'half_open') {
+    listenerState.circuitState    = 'open'
+    listenerState.circuitOpenedAt = Date.now()
+    console.error('[Blockchain] Circuit breaker: trial reconnect failed — re-opening, cooldown restarted')
+    return
+  }
+
+  if (listenerState.circuitState === 'closed' && listenerState.consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+    listenerState.circuitState    = 'open'
+    listenerState.circuitOpenedAt = Date.now()
+    console.error(
+      `[Blockchain] Circuit breaker OPEN after ${listenerState.consecutiveFailures} consecutive failures — ` +
+      `suppressing reconnects for ${Math.round(CIRCUIT_OPEN_COOLDOWN_MS / 1000)}s`,
+    )
   }
 }
 
@@ -536,10 +623,9 @@ function attachPaymentReceivedHandler(
       event:     ethers.EventLog,
     ) => {
       // A successful event means the provider is healthy
-      listenerState.lastEventAt        = Date.now()
-      listenerState.healthy            = true
-      listenerState.reconnecting       = false
-      listenerState.reconnectAttempts  = 0
+      listenerState.lastEventAt = Date.now()
+      listenerState.healthy     = true
+      closeCircuit()
 
       const txHash   = event.transactionHash
       const logIndex = event.index
@@ -652,73 +738,102 @@ function attachPaymentReceivedHandler(
  * using exponential backoff.  Called when a provider error is detected or the
  * periodic health check confirms the connection is broken.
  *
- * Uses `listenerState.reconnecting` as a mutex so concurrent triggers (e.g. a
- * provider error fired while a health check is also running) only start one
- * reconnect sequence.
+ * Serialization: `listenerState.reconnectInFlight` is a dedicated mutex set
+ * only inside this function (unlike the old `reconnecting` flag, which was
+ * also reset by the event handler on every successful event — that let a
+ * stray success mid-cycle clear the guard and allow a second, overlapping
+ * reconnect sequence to start from a concurrent error/health-check trigger).
+ * With the mutex isolated here, however many error events fire in quick
+ * succession, only one backoff loop ever runs at a time.
+ *
+ * Circuit breaker: on top of the mutex, a CLOSED/OPEN/HALF_OPEN state machine
+ * (see `recordCircuitFailure` / `closeCircuit`) tracks consecutive failed
+ * reconnect cycles. Once OPEN, reconnect attempts are suppressed entirely
+ * for a cooldown window instead of immediately retrying — this is what
+ * actually stops a flapping provider from causing a reconnect storm, since
+ * without it a provider that fails right after every successful reconnect
+ * would otherwise trigger a fresh multi-attempt backoff cycle every time.
  */
 async function reconnectWithBackoff(rpcUrl: string, contractAddr: string): Promise<void> {
-  if (listenerState.reconnecting) {
+  if (listenerState.reconnectInFlight) {
     // A reconnect sequence is already running — don't start another
     return
   }
 
-  // Reset the per-outage budget so exhausted state from a previous cycle
-  // never blocks future reconnection attempts.
-  listenerState.reconnecting      = true
-  listenerState.reconnectAttempts = 0
-
-  while (listenerState.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-    const attempt  = listenerState.reconnectAttempts + 1
-    const delayMs  = RECONNECT_BACKOFF_MS[listenerState.reconnectAttempts]
-    listenerState.reconnectAttempts = attempt
-    listenerState.lastReconnectAt   = Date.now()
-
-    console.log(`[Blockchain] Reconnect attempt ${attempt}/${MAX_RECONNECT_ATTEMPTS} in ${delayMs / 1000}s…`)
-
-    await new Promise<void>(resolve => setTimeout(resolve, delayMs))
-
-    try {
-      const provider = new ethers.JsonRpcProvider(rpcUrl)
-
-      // Quick connectivity check before attaching a full listener
-      await provider.getBlockNumber()
-
-      const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider)
-      attachPaymentReceivedHandler(provider, contract)
-
-      // Re-arm the provider error handler for this new provider instance
-      provider.on('error', (err: Error) => {
-        console.error('[Blockchain] Provider error (post-reconnect):', err.message)
-        listenerState.healthy = false
-        maybeSendUnhealthyAlert(`Provider error: ${err.message}`).catch(console.error)
-        reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
-      })
-
-      listenerState.healthy            = true
-      listenerState.reconnecting       = false
-      listenerState.reconnectAttempts  = 0   // reset per-outage budget for the next drop
-      console.log(`[Blockchain] Reconnected successfully on attempt ${attempt}`)
+  if (listenerState.circuitState === 'open') {
+    const elapsed = Date.now() - (listenerState.circuitOpenedAt ?? 0)
+    if (elapsed < CIRCUIT_OPEN_COOLDOWN_MS) {
+      // Still cooling down — suppress this trigger entirely
       return
-    } catch (err) {
-      console.error(
-        `[Blockchain] Reconnect attempt ${attempt} failed:`,
-        (err as Error).message,
-      )
     }
+    // Cooldown elapsed — allow exactly one trial reconnect
+    listenerState.circuitState = 'half_open'
+    console.log('[Blockchain] Circuit breaker HALF_OPEN — attempting trial reconnect')
   }
 
-  // All attempts exhausted
-  listenerState.reconnecting = false
-  listenerState.healthy      = false
+  listenerState.reconnectInFlight = true
+  listenerState.reconnecting      = true
+  // Reset the per-outage budget so exhausted state from a previous cycle
+  // never blocks future reconnection attempts.
+  listenerState.reconnectAttempts = 0
 
-  console.error(
-    `[Blockchain] All ${MAX_RECONNECT_ATTEMPTS} reconnect attempts failed — listener is degraded. Manual intervention required.`,
-  )
+  try {
+    while (listenerState.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      const attempt  = listenerState.reconnectAttempts + 1
+      const delayMs  = RECONNECT_BACKOFF_MS[listenerState.reconnectAttempts]
+      listenerState.reconnectAttempts = attempt
+      listenerState.lastReconnectAt   = Date.now()
 
-  // Send admin alert (rate-limited by ALERT_COOLDOWN_MS — see maybeSendUnhealthyAlert)
-  await maybeSendUnhealthyAlert(
-    `Automatic reconnection failed after ${MAX_RECONNECT_ATTEMPTS} attempts — contract ${contractAddr}`,
-  )
+      console.log(`[Blockchain] Reconnect attempt ${attempt}/${MAX_RECONNECT_ATTEMPTS} in ${delayMs / 1000}s… (circuit: ${listenerState.circuitState})`)
+
+      await new Promise<void>(resolve => setTimeout(resolve, delayMs))
+
+      try {
+        const provider = new ethers.JsonRpcProvider(rpcUrl)
+
+        // Quick connectivity check before attaching a full listener
+        await provider.getBlockNumber()
+
+        const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider)
+        attachPaymentReceivedHandler(provider, contract)
+
+        // Re-arm the provider error handler for this new provider instance
+        provider.on('error', (err: Error) => {
+          console.error('[Blockchain] Provider error (post-reconnect):', err.message)
+          listenerState.healthy = false
+          recordCircuitFailure()
+          maybeSendUnhealthyAlert(`Provider error: ${err.message}`).catch(console.error)
+          reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
+        })
+
+        listenerState.healthy = true
+        closeCircuit()
+        console.log(`[Blockchain] Reconnected successfully on attempt ${attempt}`)
+        return
+      } catch (err) {
+        console.error(
+          `[Blockchain] Reconnect attempt ${attempt} failed:`,
+          (err as Error).message,
+        )
+      }
+    }
+
+    // All attempts in this cycle exhausted
+    listenerState.healthy = false
+    recordCircuitFailure()
+
+    console.error(
+      `[Blockchain] All ${MAX_RECONNECT_ATTEMPTS} reconnect attempts failed — listener is degraded. Manual intervention required.`,
+    )
+
+    // Send admin alert (rate-limited by ALERT_COOLDOWN_MS — see maybeSendUnhealthyAlert)
+    await maybeSendUnhealthyAlert(
+      `Automatic reconnection failed after ${MAX_RECONNECT_ATTEMPTS} attempts — contract ${contractAddr}`,
+    )
+  } finally {
+    listenerState.reconnecting      = false
+    listenerState.reconnectInFlight = false
+  }
 }
 
 export async function startBlockchainListener() {
@@ -747,6 +862,10 @@ export async function startBlockchainListener() {
   listenerState.healthy            = true
   listenerState.reconnecting       = false
   listenerState.reconnectAttempts  = 0
+  listenerState.reconnectInFlight  = false
+  listenerState.circuitState       = 'closed'
+  listenerState.consecutiveFailures = 0
+  listenerState.circuitOpenedAt    = null
   activeContract                   = contract
 
   console.log(`[Blockchain] Listening for PaymentReceived on ${contractAddr} (min ${MIN_CONFIRMATIONS} confirmations)`)
@@ -757,6 +876,7 @@ export async function startBlockchainListener() {
   provider.on('error', (err: Error) => {
     console.error('[Blockchain] Provider error:', err.message)
     listenerState.healthy = false
+    recordCircuitFailure()
     maybeSendUnhealthyAlert(`Provider error: ${err.message}`).catch(console.error)
     reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
   })
@@ -809,6 +929,7 @@ async function runListenerHealthCheck(
 
   if (isHealthy) {
     listenerState.healthy = true
+    closeCircuit()
     console.log('[Blockchain] Health check: OK (provider reachable, contract found)')
     return
   }
@@ -824,6 +945,7 @@ async function runListenerHealthCheck(
   // 4. Mark unhealthy, alert admins (rate-limited), and trigger automatic
   //    reconnect — all non-blocking.
   listenerState.healthy = false
+  recordCircuitFailure()
   maybeSendUnhealthyAlert(reason).catch(console.error)
   reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
 }

@@ -8,3 +8,4 @@
 - [No direct Supabase DDL access](supabase-no-direct-ddl.md) — this project's Supabase has no exposed DB connection string or exec_sql RPC; agent can edit migration.sql but user must run it manually in the Supabase SQL editor.
 - [Supabase signup email sender](supabase-signup-email-sender.md) — "Supabase Auth" as sender means signup used auth.signUp/admin.createUser without email_confirm:true, or a stale deployed build predates the fix.
 - [Health endpoint as shared status source](health-endpoint-shared-status.md) — `/health` on the backend is the single source for both listener and ETH price freshness; reuse it rather than adding parallel status endpoints.
+- [Reconnect mutex flag reset](reconnect-mutex-flag-reset.md) — a loop's "in progress" guard must only be reset by the loop itself, not by unrelated success callbacks, or concurrent triggers can race past it.
