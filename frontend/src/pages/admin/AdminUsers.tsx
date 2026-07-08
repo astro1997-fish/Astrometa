@@ -274,15 +274,37 @@ export function AdminAddresses() {
 
 // ── Admin Audit Logs ──────────────────────────────────────────────
 export function AdminAuditLogs() {
-  const [logs, setLogs]       = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [logs, setLogs]                 = useState<any[]>([])
+  const [adminNames, setAdminNames]     = useState<Record<string, string>>({})
+  const [loading, setLoading]           = useState(true)
 
   useEffect(() => {
     supabase.from('audit_logs')
       .select('*, users!inner(full_name, email)')
       .order('created_at', { ascending: false })
       .limit(100)
-      .then(({ data }) => { setLogs(data ?? []); setLoading(false) })
+      .then(async ({ data }) => {
+        const rows = data ?? []
+        setLogs(rows)
+
+        // Resolve the acting admin's name for manual deposit overrides —
+        // metadata only stores the adminId UUID, so look up full_name for display.
+        const adminIds = Array.from(new Set(
+          rows
+            .filter(l => l.action === 'deposit_admin_retry' && l.metadata)
+            .map(l => { try { return JSON.parse(l.metadata).adminId } catch { return null } })
+            .filter((id): id is string => !!id)
+        ))
+
+        if (adminIds.length > 0) {
+          const { data: admins } = await supabase.from('users').select('id, full_name').in('id', adminIds)
+          const map: Record<string, string> = {}
+          for (const a of admins ?? []) map[a.id] = a.full_name
+          setAdminNames(map)
+        }
+
+        setLoading(false)
+      })
   }, [])
 
   const actionColor = (action: string) => {
@@ -294,6 +316,11 @@ export function AdminAuditLogs() {
     return 'badge-gray'
   }
 
+  const parseMetadata = (metadata: string | null): any => {
+    if (!metadata) return null
+    try { return JSON.parse(metadata) } catch { return null }
+  }
+
   return (
     <div className="space-y-5">
       <div>
@@ -301,33 +328,49 @@ export function AdminAuditLogs() {
         <p className="text-sm text-gray-500 dark:text-gray-400">Last 100 platform events</p>
       </div>
       <div className="card p-0 overflow-hidden">
-        {loading ? <div className="p-4"><SkeletonTable rows={10} cols={4} /></div> : (
+        {loading ? <div className="p-4"><SkeletonTable rows={10} cols={5} /></div> : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-white/5">
-                  {['User', 'Action', 'Metadata', 'IP', 'Time'].map(h => (
+                  {['User', 'Action', 'Admin', 'Metadata', 'IP', 'Time'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-white/5">
-                {logs.map(log => (
-                  <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
-                    <td className="px-4 py-3">
-                      <p className="text-xs font-medium text-gray-900 dark:text-white">{log.users?.full_name}</p>
-                      <p className="text-[10px] text-gray-400">{log.users?.email}</p>
-                    </td>
-                    <td className="px-4 py-3"><span className={clsx('badge text-[11px]', actionColor(log.action))}>{log.action}</span></td>
-                    <td className="px-4 py-3">
-                      <code className="text-[10px] text-gray-400 font-mono">{log.metadata ? JSON.stringify(JSON.parse(log.metadata)).slice(0, 40) : '—'}</code>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-400 font-mono">{log.ip_address ?? '—'}</td>
-                    <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                  </tr>
-                ))}
+                {logs.map(log => {
+                  const meta = parseMetadata(log.metadata)
+                  const isOverride = log.action === 'deposit_admin_retry'
+                  return (
+                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
+                      <td className="px-4 py-3">
+                        <p className="text-xs font-medium text-gray-900 dark:text-white">{log.users?.full_name}</p>
+                        <p className="text-[10px] text-gray-400">{log.users?.email}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className={clsx('badge text-[11px]', actionColor(log.action))}>{log.action}</span>
+                          {isOverride && meta?.mode && (
+                            <span className={clsx('badge text-[10px]', meta.mode === 'chain' ? 'badge-blue' : 'badge-gold')}>
+                              {meta.mode === 'chain' ? 'On-chain' : 'Manual'}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+                        {isOverride && meta?.adminId ? (adminNames[meta.adminId] ?? '—') : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <code className="text-[10px] text-gray-400 font-mono">{log.metadata ? JSON.stringify(JSON.parse(log.metadata)).slice(0, 40) : '—'}</code>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-400 font-mono">{log.ip_address ?? '—'}</td>
+                      <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
+                        {new Date(log.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
