@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -29,6 +29,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [langOpen, setLangOpen]   = useState(false)
   const [userOpen, setUserOpen]   = useState(false)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -40,6 +42,38 @@ export default function Navbar() {
   useEffect(() => {
     setMobileOpen(false)
   }, [location.key])
+
+  // Close on Escape, and return focus to the menu trigger when closing.
+  useEffect(() => {
+    if (!mobileOpen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [mobileOpen])
+
+  // Keep the closed menu out of the tab order / accessibility tree (it stays
+  // mounted for the CSS collapse transition, so aria-hidden alone isn't
+  // enough — `inert` also removes it from focus and screen readers).
+  useEffect(() => {
+    const el = mobileMenuRef.current as (HTMLDivElement & { inert?: boolean }) | null
+    if (!el) return
+    el.inert = !mobileOpen
+  }, [mobileOpen])
+
+  // Move focus into the menu on open, and only return it to the trigger
+  // when we actually transition from open -> closed (not on initial mount
+  // or unrelated re-renders, which would otherwise steal focus).
+  const wasMobileOpen = useRef(false)
+  useEffect(() => {
+    if (mobileOpen) {
+      mobileMenuRef.current?.querySelector<HTMLElement>('a, button')?.focus()
+    } else if (wasMobileOpen.current) {
+      mobileMenuButtonRef.current?.focus()
+    }
+    wasMobileOpen.current = mobileOpen
+  }, [mobileOpen])
 
   const handleSignOut = async () => {
     await signOut()
@@ -182,64 +216,69 @@ export default function Navbar() {
 
         {/* Mobile menu button */}
         <button
+          ref={mobileMenuButtonRef}
           onClick={() => setMobileOpen(o => !o)}
           className="lg:hidden btn-ghost w-9 h-9 p-0"
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-nav-menu"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="lg:hidden bg-white dark:bg-[#0D1627] border-t border-gray-100 dark:border-white/10 overflow-hidden"
-          >
-            <div className="px-4 py-4 space-y-1">
-              {NAV_LINKS.map(link => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  end={link.to === '/'}
-                  onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) =>
-                    clsx(
-                      'block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-brand-50 dark:bg-brand-400/10 text-brand-600 dark:text-brand-400'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
-                    )
-                  }
-                >
-                  {t(link.key)}
-                </NavLink>
-              ))}
-              <div className="pt-3 flex items-center gap-2 border-t border-gray-100 dark:border-white/10">
-                {user ? (
-                  <>
-                    <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="btn-primary flex-1 justify-center text-center">
-                      {t('nav.dashboard')}
-                    </Link>
-                    <button onClick={handleSignOut} className="btn-secondary flex-1">Sign Out</button>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/login" onClick={() => setMobileOpen(false)} className="btn-secondary flex-1 justify-center">{t('nav.login')}</Link>
-                    <Link to="/register" onClick={() => setMobileOpen(false)} className="btn-primary flex-1 justify-center">{t('nav.register')}</Link>
-                  </>
-                )}
-                <button onClick={toggleTheme} className="btn-ghost w-10 h-10 p-0 shrink-0">
-                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-          </motion.div>
+      {/* Mobile menu — always mounted, driven by CSS max-height/opacity so it
+          can never get stuck open if a framer-motion exit animation fails to
+          signal completion (AnimatePresence only unmounts after `exit`
+          "completes", which can hang indefinitely). */}
+      <div
+        id="mobile-nav-menu"
+        ref={mobileMenuRef}
+        className={clsx(
+          'lg:hidden bg-white dark:bg-[#0D1627] border-t border-gray-100 dark:border-white/10 overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
+          mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0',
         )}
-      </AnimatePresence>
+        aria-hidden={!mobileOpen}
+      >
+        <div className="px-4 py-4 space-y-1">
+          {NAV_LINKS.map(link => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.to === '/'}
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) =>
+                clsx(
+                  'block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-brand-50 dark:bg-brand-400/10 text-brand-600 dark:text-brand-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+                )
+              }
+            >
+              {t(link.key)}
+            </NavLink>
+          ))}
+          <div className="pt-3 flex items-center gap-2 border-t border-gray-100 dark:border-white/10">
+            {user ? (
+              <>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="btn-primary flex-1 justify-center text-center">
+                  {t('nav.dashboard')}
+                </Link>
+                <button onClick={handleSignOut} className="btn-secondary flex-1">Sign Out</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="btn-secondary flex-1 justify-center">{t('nav.login')}</Link>
+                <Link to="/register" onClick={() => setMobileOpen(false)} className="btn-primary flex-1 justify-center">{t('nav.register')}</Link>
+              </>
+            )}
+            <button onClick={toggleTheme} className="btn-ghost w-10 h-10 p-0 shrink-0">
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+      </div>
     </header>
   )
 }
