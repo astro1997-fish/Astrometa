@@ -11,3 +11,4 @@
 - [Reconnect mutex flag reset](reconnect-mutex-flag-reset.md) — a loop's "in progress" guard must only be reset by the loop itself, not by unrelated success callbacks, or concurrent triggers can race past it.
 - [Web Push (VAPID) setup](web-push-vapid.md) — closed-browser push notifications; VAPID keys self-generated and stored in system_settings, not requested as a secret.
 - [Multi-asset portfolio holdings](multi-asset-holdings.md) — asset_holdings table + live CoinGecko pricing is a supplementary breakdown layer, kept separate from unified_usd_balance and from deposit-pricing caches.
+- [Fixed-address EVM deposit matching](fixed-address-evm-deposits.md) — ETH/USDT/USDC use one shared address per coin + a unique jittered required amount per deposit, not a smart contract.

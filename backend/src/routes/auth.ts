@@ -231,15 +231,15 @@ adminRouter.get('/deposits', async (_req, res, next) => {
   try {
     const { data, error } = await supabase
       .from('transactions')
-      .select('id, user_id, amount_usd, tx_hash, btc_address, created_at, method, status, failure_reason, metadata, users!inner(full_name, email)')
+      .select('id, user_id, amount_usd, tx_hash, btc_address, match_amount, created_at, method, status, failure_reason, metadata, users!inner(full_name, email)')
       .eq('type', 'deposit')
       .in('status', ['pending', 'failed', 'pending_price'])
-      // ETH/ERC-20 deposits store their paymentId in tx_hash from creation, so
-      // `tx_hash not null` used to be a reasonable "has an on-chain identifier"
-      // filter. BTC deposits only get tx_hash once confirmed (see btcMonitor.ts
-      // header comment) — they carry btc_address instead while pending/stuck.
-      // Require one identifier or the other so stuck BTC deposits aren't hidden.
-      .or('tx_hash.not.is.null,btc_address.not.is.null')
+      // A deposit only gets tx_hash once confirmed. While pending/stuck it
+      // instead carries whichever identifier its flow allocated up front:
+      // btc_address for BTC (per-user derived address), match_amount for
+      // fixed-address ETH/USDT/USDC (unique required amount). Require one of
+      // the three so stuck deposits of any coin aren't hidden from admins.
+      .or('tx_hash.not.is.null,btc_address.not.is.null,match_amount.not.is.null')
       .order('created_at', { ascending: false })
     if (error) throw error
     res.json(data ?? [])
@@ -268,7 +268,7 @@ adminRouter.post('/deposits/:id/retry', async (req: AuthRequest, res, next) => {
     // Fetch the pending transaction
     const { data: txRecord, error: fetchErr } = await supabase
       .from('transactions')
-      .select('id, user_id, amount_usd, tx_hash, status')
+      .select('id, user_id, amount_usd, tx_hash, status, method, match_amount, metadata')
       .eq('id', id)
       .single()
 
@@ -282,63 +282,39 @@ adminRouter.post('/deposits/:id/retry', async (req: AuthRequest, res, next) => {
     let eventKey: string
 
     if (txHash) {
-      // ── On-chain retry ────────────────────────────────────────────
-      const rpcUrl       = process.env.ETH_RPC_URL
-      const contractAddr = process.env.CONTRACT_ADDRESS
-      if (!rpcUrl)       return res.status(503).json({ error: 'ETH_RPC_URL not configured — use manual amountUsd override instead' })
-      if (!contractAddr) return res.status(503).json({ error: 'CONTRACT_ADDRESS not configured — use manual amountUsd override instead' })
-
-      const ethersLib = await import('ethers') as typeof import('ethers')
-      const { CONTRACT_ABI, TOKEN_MAP, getUsdValue } = await import('../services/blockchainListener')
-      const provider    = new ethersLib.ethers.JsonRpcProvider(rpcUrl)
-
-      // Wait for MIN_CONFIRMATIONS — same finality policy as the listener
-      const MIN_CONFIRMATIONS = parseInt(process.env.MIN_CONFIRMATIONS ?? '12', 10)
-      const receipt = await provider.waitForTransaction(txHash, MIN_CONFIRMATIONS, 60_000)
-      if (!receipt)             return res.status(404).json({ error: 'Transaction not found on chain — check the hash' })
-      if (receipt.status !== 1) return res.status(400).json({ error: 'Transaction reverted on chain — cannot credit' })
-
-      // Parse the PaymentReceived event, validating both contract address and paymentId
-      const iface = new ethersLib.ethers.Interface(CONTRACT_ABI)
-      let parsed: import('ethers').LogDescription | null = null
-      let logIndex = 0
-      for (const log of receipt.logs) {
-        // Guard 1: log must come from our contract, not any other contract
-        if (log.address.toLowerCase() !== contractAddr.toLowerCase()) continue
-        try {
-          const desc = iface.parseLog({ topics: [...log.topics], data: log.data })
-          if (desc && desc.name === 'PaymentReceived') {
-            parsed   = desc
-            logIndex = log.index
-            break
-          }
-        } catch { /* not our event signature */ }
+      // ── On-chain retry — verifies the tx pays an active fixed deposit
+      // address for the transaction's coin (eth/usdt/usdc). ──────────────
+      const coin = txRecord.method as 'eth' | 'usdt' | 'usdc' | string
+      if (coin !== 'eth' && coin !== 'usdt' && coin !== 'usdc') {
+        return res.status(400).json({ error: `txHash-based retry is not supported for method "${coin}" — use manual amountUsd override instead` })
       }
 
-      if (!parsed) return res.status(400).json({ error: 'No PaymentReceived event found in this transaction from the configured contract' })
-
-      // Guard 2: paymentId in the event must match the stored tx_hash on this record
-      const eventPaymentId: string = parsed.args[0]
-      if (eventPaymentId.toLowerCase() !== (txRecord.tx_hash ?? '').toLowerCase()) {
-        return res.status(400).json({
-          error: `paymentId mismatch — event has ${eventPaymentId}, record has ${txRecord.tx_hash}. Wrong transaction hash?`,
-        })
+      // Resolve the exact raw amount this specific deposit was allocated, so
+      // the supplied tx hash can only credit its own record — not any other
+      // pending deposit for the same coin.
+      let expectedRaw: bigint
+      try {
+        const meta = txRecord.metadata ? JSON.parse(txRecord.metadata) : null
+        if (meta?.requiredRaw) {
+          expectedRaw = BigInt(meta.requiredRaw)
+        } else if (txRecord.match_amount) {
+          const ethersLib = await import('ethers') as typeof import('ethers')
+          const decimals = coin === 'eth' ? 18 : 6
+          expectedRaw = ethersLib.ethers.parseUnits(txRecord.match_amount, decimals)
+        } else {
+          return res.status(400).json({ error: 'This deposit has no allocated match amount to verify against — use manual amountUsd override instead' })
+        }
+      } catch {
+        return res.status(500).json({ error: 'Could not parse this deposit\'s expected amount' })
       }
 
-      const [, , token, rawAmount] = parsed.args
-      const isETH = token === ethersLib.ethers.ZeroAddress
-      if (isETH) {
-        usdValue = await getUsdValue('ETH', rawAmount, 18)
-      } else {
-        const tokenInfo = TOKEN_MAP[token.toLowerCase()]
-        if (!tokenInfo) return res.status(400).json({ error: `Unknown token ${token}` })
-        usdValue = await getUsdValue(tokenInfo.symbol, rawAmount, tokenInfo.decimals)
-      }
+      const { verifyEvmTransaction } = await import('../services/blockchainListener')
+      const result = await verifyEvmTransaction(coin, txHash, expectedRaw)
+      if ('error' in result) return res.status(400).json({ error: result.error })
 
-      if (!usdValue || usdValue <= 0) return res.status(400).json({ error: 'ETH price unavailable or returned $0 — use manual amountUsd override instead' })
-
+      usdValue        = result.usdValue
       effectiveTxHash = txHash
-      eventKey        = `${txHash}:${logIndex}`
+      eventKey        = `${txHash}:manual-retry`
     } else {
       // ── Manual override ───────────────────────────────────────────
       usdValue        = manualAmount!

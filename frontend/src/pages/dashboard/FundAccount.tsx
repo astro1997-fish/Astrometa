@@ -10,14 +10,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   Copy, Check, AlertTriangle, ChevronRight, CreditCard, Bitcoin,
-  Clock, ExternalLink, Wallet, Loader2, RefreshCw,
+  Clock, ExternalLink, Loader2, RefreshCw,
 } from 'lucide-react'
 import QRCode from 'react-qr-code'
 import { useAuth } from '@/contexts/AuthContext'
 import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
-import { ethers } from 'ethers'
 import { supabase } from '@/lib/supabase'
 
 type FundMethod    = 'crypto' | 'fiat'
@@ -37,30 +36,17 @@ const FIAT_PROVIDERS: { id: FiatProvider; label: string; logo: string }[] = [
   { id: 'paypal',   label: 'PayPal',         logo: '🅿️' },
 ]
 
-// Minimal ABI for the AstroPaymentReceiver contract
-const CONTRACT_ABI = [
-  'function depositETH(bytes32 paymentId) payable',
-  'function depositToken(address token, uint256 amount, bytes32 paymentId)',
-]
-
-// ERC-20 approve ABI
-const ERC20_ABI = [
-  'function approve(address spender, uint256 amount) returns (bool)',
-]
-
 const ETHERSCAN   = 'https://etherscan.io'
 const MEMPOOL_URL = 'https://mempool.space'
 
 interface DepositInfo {
-  txId:            string
-  paymentId:       string
-  contractAddress: string | null
-  btcAddress:      string | null
-  coin:            CryptoOption
-  amountUsd:       number
-  cryptoAmount:    string | null
-  tokenAddress:    string | null
-  expiresAt:       string
+  txId:         string
+  address:      string | null   // shared fixed address for eth/usdt/usdc
+  btcAddress:   string | null   // per-deposit derived address for btc
+  coin:         CryptoOption
+  amountUsd:    number
+  cryptoAmount: string | null   // exact amount to send (unique per deposit)
+  expiresAt:    string
 }
 
 function useCountdown(expiresAt: string | null) {
@@ -117,8 +103,6 @@ export default function FundAccount() {
 
   const [depositInfo,    setDepositInfo]    = useState<DepositInfo | null>(null)
   const [loadingDeposit, setLoadingDeposit] = useState(false)
-  const [txStep,         setTxStep]         = useState<'idle' | 'approving' | 'depositing' | 'done'>('idle')
-  const [onchainTxHash,  setOnchainTxHash]  = useState<string | null>(null)
   const [depositStatus,  setDepositStatus]  = useState<'waiting' | 'confirmed'>('waiting')
 
   // Recent deposits panel
@@ -155,8 +139,6 @@ export default function FundAccount() {
   // Reset deposit info when coin or method changes
   useEffect(() => {
     setDepositInfo(null)
-    setTxStep('idle')
-    setOnchainTxHash(null)
     setDepositStatus('waiting')
   }, [coin, method])
 
@@ -216,63 +198,6 @@ export default function FundAccount() {
     setCopied(key)
     toast.success(`${label} copied!`)
     setTimeout(() => setCopied(null), 2000)
-  }
-
-  // MetaMask / wallet transaction (ETH / ERC-20 only)
-  const payWithWallet = async () => {
-    if (!depositInfo) return
-
-    if (!window.ethereum) {
-      toast.error('No wallet detected. Install MetaMask or use the manual send instructions below.')
-      return
-    }
-
-    try {
-      const browserProvider = new ethers.BrowserProvider(window.ethereum as any)
-      await browserProvider.send('eth_requestAccounts', [])
-      const signer   = await browserProvider.getSigner()
-      const contract = new ethers.Contract(depositInfo.contractAddress!, CONTRACT_ABI, signer)
-
-      if (depositInfo.coin === 'eth') {
-        if (!depositInfo.cryptoAmount) {
-          toast.error('ETH amount not available. Please try again.')
-          return
-        }
-        setTxStep('depositing')
-        const weiAmount = ethers.parseEther(depositInfo.cryptoAmount)
-        const tx = await contract.depositETH(depositInfo.paymentId, { value: weiAmount })
-        toast.loading('Transaction submitted — waiting for confirmation…', { id: 'tx' })
-        await tx.wait()
-        toast.success('Payment sent! Your balance will update shortly.', { id: 'tx' })
-        setOnchainTxHash(tx.hash)
-        setTxStep('done')
-      } else {
-        if (!depositInfo.tokenAddress || !depositInfo.cryptoAmount) {
-          toast.error('Token details not available. Please try again.')
-          return
-        }
-        const decimals       = 6
-        const rawAmount      = ethers.parseUnits(depositInfo.cryptoAmount, decimals)
-        const tokenContract  = new ethers.Contract(depositInfo.tokenAddress, ERC20_ABI, signer)
-
-        setTxStep('approving')
-        toast.loading('Step 1/2: Approving token spend…', { id: 'tx' })
-        const approveTx = await tokenContract.approve(depositInfo.contractAddress!, rawAmount)
-        await approveTx.wait()
-        toast.loading('Step 2/2: Sending payment…', { id: 'tx' })
-
-        setTxStep('depositing')
-        const tx = await contract.depositToken(depositInfo.tokenAddress, rawAmount, depositInfo.paymentId)
-        await tx.wait()
-        toast.success('Payment sent! Your balance will update shortly.', { id: 'tx' })
-        setOnchainTxHash(tx.hash)
-        setTxStep('done')
-      }
-    } catch (err: any) {
-      const msg = err.reason ?? err.message ?? 'Transaction failed'
-      toast.error(msg, { id: 'tx' })
-      setTxStep('idle')
-    }
   }
 
   const handleFiatPay = async () => {
@@ -474,57 +399,35 @@ export default function FundAccount() {
                   </div>
                 )}
 
-                {/* QR code + address */}
+                {/* QR code + address — same shape for BTC and ETH/USDT/USDC: a
+                    fixed address plus an exact amount unique to this deposit */}
                 <div className="flex items-start gap-4">
                   <div className="shrink-0 p-3 bg-white rounded-xl border border-gray-100 dark:border-white/10">
                     <QRCode
                       value={isBtc
                         ? `bitcoin:${depositInfo.btcAddress}${depositInfo.cryptoAmount ? `?amount=${depositInfo.cryptoAmount}` : ''}`
-                        : depositInfo.paymentId}
+                        : (depositInfo.address ?? '')}
                       size={100}
                     />
                   </div>
 
                   <div className="flex-1 min-w-0 space-y-3">
-                    {/* BTC: show deposit address */}
-                    {isBtc && depositInfo.btcAddress && (
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                          Bitcoin address
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <code className="flex-1 text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 font-mono truncate text-gray-700 dark:text-gray-300">
-                            {depositInfo.btcAddress}
-                          </code>
-                          <button
-                            onClick={() => copyText(depositInfo.btcAddress!, 'Address', 'addr')}
-                            className="btn-ghost w-9 h-9 p-0 shrink-0"
-                          >
-                            {copied === 'addr' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                          </button>
-                        </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                        {isBtc ? 'Bitcoin address' : `${currentCoin.label} deposit address`}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 font-mono truncate text-gray-700 dark:text-gray-300">
+                          {isBtc ? depositInfo.btcAddress : depositInfo.address}
+                        </code>
+                        <button
+                          onClick={() => copyText((isBtc ? depositInfo.btcAddress : depositInfo.address)!, 'Address', 'addr')}
+                          className="btn-ghost w-9 h-9 p-0 shrink-0"
+                        >
+                          {copied === 'addr' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                        </button>
                       </div>
-                    )}
-
-                    {/* ETH/token: show payment ID */}
-                    {!isBtc && (
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                          Payment ID
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <code className="flex-1 text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 font-mono truncate text-gray-700 dark:text-gray-300">
-                            {depositInfo.paymentId}
-                          </code>
-                          <button
-                            onClick={() => copyText(depositInfo.paymentId, 'Payment ID', 'pid')}
-                            className="btn-ghost w-9 h-9 p-0 shrink-0"
-                          >
-                            {copied === 'pid' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    </div>
 
                     <div>
                       <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
@@ -549,7 +452,8 @@ export default function FundAccount() {
                   </div>
                 </div>
 
-                {/* BTC-specific instructions */}
+                {/* Instructions — the exact-amount match is what identifies this
+                    deposit as yours on a shared address, so it must be precise */}
                 {isBtc ? (
                   <div className="flex items-start gap-2 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/30 rounded-xl p-3">
                     <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
@@ -563,63 +467,34 @@ export default function FundAccount() {
                   <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-xl p-3">
                     <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                     <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
-                      <strong>Do not send {currentCoin.label} directly to a wallet address.</strong>{' '}
-                      Deposits must go through our smart contract to be credited. Use the{' '}
-                      <strong>"Pay with Wallet"</strong> button below — it handles everything automatically.
+                      Send <strong>exactly</strong> {depositInfo.cryptoAmount} {depositInfo.coin.toUpperCase()} to the address above
+                      from your wallet or exchange. The exact amount is what identifies this deposit as yours — sending a
+                      rounded or different amount may delay crediting. Your balance updates automatically after{' '}
+                      <strong>{coin === 'eth' ? '12' : '3'} confirmations</strong>.
                     </p>
                   </div>
                 )}
 
-                {/* Transaction status / action buttons */}
-                {txStep === 'done' && onchainTxHash ? (
-                  <div className="flex items-center justify-between gap-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-3">
-                    <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400">
-                      <Check className="w-4 h-4" />
-                      Transaction submitted! Balance updates after confirmation.
-                    </div>
-                    <a
-                      href={`${ETHERSCAN}/tx/${onchainTxHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline shrink-0"
-                    >
-                      View on Etherscan <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                ) : remaining > 0 ? (
+                {/* Status / action buttons */}
+                {remaining > 0 ? (
                   <div className="space-y-3">
-                    {/* BTC: waiting notice */}
-                    {isBtc ? (
-                      <div className="flex items-center justify-center gap-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                        <Clock className="w-4 h-4 shrink-0" />
-                        Waiting for your Bitcoin transaction… We'll credit your balance automatically after 3 confirmations.
-                      </div>
-                    ) : (
-                      /* ETH/ERC-20: pay with wallet */
-                      <button
-                        onClick={payWithWallet}
-                        disabled={txStep !== 'idle'}
-                        className="btn-primary w-full justify-center gap-2"
-                      >
-                        <Wallet className="w-4 h-4" />
-                        {txStep === 'approving'  ? 'Step 1/2: Approving…' :
-                         txStep === 'depositing' ? 'Step 2/2: Sending…' :
-                         'Pay with Wallet (MetaMask)'}
-                      </button>
-                    )}
+                    <div className="flex items-center justify-center gap-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                      <Clock className="w-4 h-4 shrink-0" />
+                      Waiting for your {currentCoin.label} transaction… We'll credit your balance automatically once detected.
+                    </div>
 
                     <button
-                      onClick={() => { setDepositInfo(null); setTxStep('idle'); setOnchainTxHash(null) }}
+                      onClick={() => setDepositInfo(null)}
                       className="w-full text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-center"
                     >
-                      Generate a new deposit address
+                      Generate a new deposit
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     <div className="text-sm text-red-500 text-center font-medium">This deposit has expired.</div>
                     <button
-                      onClick={() => { setDepositInfo(null); setTxStep('idle') }}
+                      onClick={() => setDepositInfo(null)}
                       className="btn-primary w-full justify-center"
                     >
                       Generate new deposit
@@ -636,6 +511,18 @@ export default function FundAccount() {
                     className="flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     Track on mempool.space <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+
+                {/* Etherscan link for ETH/USDT/USDC deposit address */}
+                {!isBtc && depositInfo.address && (
+                  <a
+                    href={`${ETHERSCAN}/address/${depositInfo.address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    View address on Etherscan <ExternalLink className="w-3 h-3" />
                   </a>
                 )}
               </div>

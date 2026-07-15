@@ -198,9 +198,9 @@ function BlockchainListenerCard({ health, fetchedAt, error, consecutiveFailures 
           <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
           <p className="text-xs text-red-700 dark:text-red-300">
             The blockchain listener is not healthy. Check that{' '}
-            <code className="font-mono bg-red-100 dark:bg-red-900/30 px-1 rounded">ETH_RPC_URL</code> and{' '}
-            <code className="font-mono bg-red-100 dark:bg-red-900/30 px-1 rounded">CONTRACT_ADDRESS</code> are set
-            correctly, then restart the backend to reinitialise the listener.
+            <code className="font-mono bg-red-100 dark:bg-red-900/30 px-1 rounded">ETH_RPC_URL</code> is set
+            correctly and that at least one ETH/USDT/USDC deposit address is active on the Deposit Addresses
+            page, then restart the backend to reinitialise the listener.
           </p>
         </div>
       )}

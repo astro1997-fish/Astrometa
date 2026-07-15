@@ -1,28 +1,39 @@
 /**
- * Ethereum blockchain listener for AstroPaymentReceiver contract events.
- * Watches for PaymentReceived events, matches them to pending transactions,
- * and atomically credits user balances after sufficient confirmations.
+ * Ethereum blockchain monitor for fixed-address ETH/USDT/USDC deposits.
+ * Watches the admin-configured deposit address(es) — see
+ * `services/depositAddresses.ts` — for incoming native ETH transfers and
+ * USDT/USDC ERC-20 `Transfer` events, matches them to pending transactions
+ * by exact amount, and atomically credits user balances after sufficient
+ * confirmations.
+ *
+ * Matching: since all deposits for a coin share one fixed address (unlike
+ * BTC's per-user derived addresses), each pending deposit is allocated a
+ * unique required amount at creation time (see `POST
+ * /api/payments/create-crypto-deposit`), stored as an exact raw integer in
+ * `transactions.metadata.requiredRaw`. An incoming transfer is matched to a
+ * pending row only when its raw amount matches exactly.
  *
  * Safety properties:
  *  - Idempotent: uses conditional status update (pending → confirmed) so
  *    replayed events or multi-instance races never double-credit.
  *  - Finality-guarded: waits MIN_CONFIRMATIONS blocks before crediting to
  *    protect against chain reorgs.
- *  - Deduplication: processed (txHash + logIndex) pairs are persisted so
- *    restarts cannot replay an already-handled event.
+ *  - Deduplication: processed (txHash + logIndex/native) event keys are
+ *    persisted so restarts cannot replay an already-handled event.
  */
 
 import { ethers } from 'ethers'
 import { supabase } from '../lib/supabase'
 import { emailService } from './email'
 import { sendDepositConfirmedPush } from './pushNotifications'
+import { loadActiveEvmAddressSets, type EvmCoin } from './depositAddresses'
 
-// Minimal ABI — only the event we need
-export const CONTRACT_ABI = [
-  'event PaymentReceived(bytes32 indexed paymentId, address indexed sender, address token, uint256 amount)',
+// Minimal ABI for the ERC-20 Transfer event — used to watch USDT/USDC
+export const ERC20_TRANSFER_ABI = [
+  'event Transfer(address indexed from, address indexed to, uint256 value)',
 ]
 
-// Known ERC-20 token addresses on Ethereum mainnet
+// Known ERC-20 token contract addresses on Ethereum mainnet
 export const TOKEN_MAP: Record<string, { symbol: string; decimals: number }> = {
   '0xdac17f958d2ee523a2206206994597c13d831ec7': { symbol: 'USDT', decimals: 6 },
   '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': { symbol: 'USDC', decimals: 6 },
@@ -356,6 +367,76 @@ export async function getUsdValue(
   return amount * price
 }
 
+/**
+ * Verifies a user-supplied on-chain transaction hash for the admin manual
+ * retry path (`POST /api/admin/deposits/:id/retry`). Checks that the tx:
+ *  - has reached MIN_CONFIRMATIONS and did not revert,
+ *  - pays one of the currently-active deposit addresses for the given coin
+ *    (native ETH transfer, or an ERC-20 Transfer for USDT/USDC),
+ * and returns the raw value and computed USD amount for the caller to
+ * credit. Independent of the live block/Transfer watchers — used only for
+ * manually re-checking a specific transaction an admin points at.
+ */
+export async function verifyEvmTransaction(
+  coin:        EvmCoin,
+  txHash:      string,
+  expectedRaw: bigint,  // the specific deposit's allocated match_amount, in raw units — must match exactly
+): Promise<{ usdValue: number; rawAmount: string } | { error: string }> {
+  const rpcUrl = process.env.ETH_RPC_URL
+  if (!rpcUrl) return { error: 'ETH_RPC_URL not configured' }
+
+  const addressSets = await loadActiveEvmAddressSets()
+  const activeAddresses = addressSets[coin]
+  if (activeAddresses.size === 0) {
+    return { error: `No active ${coin.toUpperCase()} deposit address configured` }
+  }
+
+  const provider = new ethers.JsonRpcProvider(rpcUrl)
+  const receipt = await provider.waitForTransaction(txHash, MIN_CONFIRMATIONS, 60_000)
+  if (!receipt)             return { error: 'Transaction not found on chain — check the hash' }
+  if (receipt.status !== 1) return { error: 'Transaction reverted on chain — cannot credit' }
+
+  if (coin === 'eth') {
+    const tx = await provider.getTransaction(txHash)
+    if (!tx || !tx.to || !activeAddresses.has(tx.to.toLowerCase())) {
+      return { error: 'Transaction does not pay the active ETH deposit address' }
+    }
+    if (tx.value !== expectedRaw) {
+      return { error: `Amount mismatch — this transaction sent ${ethers.formatEther(tx.value)} ETH, but this deposit requires exactly ${ethers.formatEther(expectedRaw)} ETH. Wrong transaction hash?` }
+    }
+    const usdValue = await getUsdValue('ETH', tx.value, 18)
+    if (usdValue === null || usdValue <= 0) return { error: 'ETH price unavailable or returned $0 — use manual amountUsd override instead' }
+    return { usdValue, rawAmount: tx.value.toString() }
+  }
+
+  // USDT/USDC: find a matching Transfer log paying an active address with the exact expected amount
+  const iface = new ethers.Interface(ERC20_TRANSFER_ABI)
+  const tokenInfo = Object.entries(TOKEN_MAP).find(([, info]) => info.symbol.toLowerCase() === coin)
+  if (!tokenInfo) return { error: `Unknown token for coin ${coin}` }
+  const [tokenAddress] = tokenInfo
+
+  let sawTransferToActiveAddress = false
+  for (const log of receipt.logs) {
+    if (log.address.toLowerCase() !== tokenAddress) continue
+    try {
+      const desc = iface.parseLog({ topics: [...log.topics], data: log.data })
+      if (desc && desc.name === 'Transfer' && activeAddresses.has((desc.args[1] as string).toLowerCase())) {
+        sawTransferToActiveAddress = true
+        const rawValue = desc.args[2] as bigint
+        if (rawValue !== expectedRaw) continue // amount doesn't match this deposit — keep looking, then fall through to error
+        const usdValue = Number(rawValue) / 1e6
+        if (usdValue <= 0) return { error: `${coin.toUpperCase()} transfer amount is $0` }
+        return { usdValue, rawAmount: rawValue.toString() }
+      }
+    } catch { /* not our event signature */ }
+  }
+
+  if (sawTransferToActiveAddress) {
+    return { error: `This transaction pays the active ${coin.toUpperCase()} deposit address, but not the exact amount required by this deposit. Wrong transaction hash?` }
+  }
+  return { error: `No ${coin.toUpperCase()} Transfer to the active deposit address found in this transaction` }
+}
+
 // ── Listener health state ──────────────────────────────────────────────────
 // Exported so the /health endpoint can surface real-time status.
 
@@ -401,9 +482,28 @@ const listenerState = {
   reconnectInFlight:   false,
 }
 
-// Tracks the currently active contract instance so listeners can be removed
-// before a new provider/contract pair is attached on reconnect.
-let activeContract: ethers.Contract | null = null
+// Tracks the currently active provider/token-contract instances so listeners
+// can be removed before a new set is attached on reconnect.
+let activeProvider:       ethers.JsonRpcProvider | null = null
+let activeTokenContracts: ethers.Contract[]             = []
+
+// The exact set of addresses each token's Transfer filter is currently bound
+// to. Used to detect when an admin adds/removes/deactivates a deposit
+// address so the filter can be rebuilt — otherwise a newly-activated address
+// would silently receive no events until the next process restart.
+let boundTokenAddressSets: Partial<Record<EvmCoin, Set<string>>> = {}
+
+function sameAddressSet(a: Set<string> | undefined, b: Set<string>): boolean {
+  if (!a || a.size !== b.size) return false
+  for (const addr of a) if (!b.has(addr)) return false
+  return true
+}
+
+/** A live event firing proves the RPC connection is healthy. */
+function markProviderAlive(): void {
+  listenerState.healthy = true
+  closeCircuit()
+}
 
 // How long with no events before we consider the listener stalled.
 // Mainnet blocks arrive every ~12 s, so 10 min with zero events is suspicious.
@@ -471,7 +571,7 @@ export function getListenerStatus(): ListenerStatus {
       circuitState:      'closed',
       consecutiveFailures: 0,
       circuitCooldownRemainingSec: null,
-      message:           'Listener not configured (ETH_RPC_URL or CONTRACT_ADDRESS missing)',
+      message:           'Listener not configured (ETH_RPC_URL missing, or no active deposit address configured)',
       lastRetryRunAt:    listenerState.lastRetryRunAt
         ? new Date(listenerState.lastRetryRunAt).toISOString()
         : null,
@@ -602,144 +702,243 @@ const RECONNECT_BACKOFF_MS    = [5_000, 10_000, 30_000, 60_000, 60_000]
 const MAX_RECONNECT_ATTEMPTS  = RECONNECT_BACKOFF_MS.length
 
 /**
- * Attach the PaymentReceived event handler to a contract instance.
- * Extracted so it can be called on initial start and on every reconnect.
- *
- * Removes all listeners from the previous contract instance first so old
- * handlers do not accumulate and process events twice after a reconnect.
+ * Finds the pending deposit (for the given coin) whose allocated exact
+ * amount matches the raw on-chain value, by scanning `metadata.requiredRaw`
+ * on pending rows for that method. Volumes are low enough that an in-memory
+ * scan per candidate transfer is fine — no index needed.
  */
-function attachPaymentReceivedHandler(
-  provider:     ethers.JsonRpcProvider,
-  contract:     ethers.Contract,
-): void {
-  // Detach handlers from the previously active contract (if any)
-  if (activeContract && activeContract !== contract) {
+async function matchPendingEvmDeposit(
+  coin:      EvmCoin,
+  rawValue:  bigint,
+): Promise<{ id: string; user_id: string } | null> {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('id, user_id, metadata')
+    .eq('method', coin)
+    .eq('status', 'pending')
+
+  if (error) {
+    console.error(`[Blockchain] Failed to load pending ${coin} deposits for matching:`, error.message)
+    return null
+  }
+
+  for (const row of data ?? []) {
     try {
-      activeContract.removeAllListeners()
+      const meta = JSON.parse(row.metadata ?? '{}')
+      if (meta.requiredRaw && BigInt(meta.requiredRaw) === rawValue) {
+        return { id: row.id, user_id: row.user_id }
+      }
     } catch {
-      // Ignore — old provider may already be dead
+      // malformed metadata — skip
     }
   }
-  activeContract = contract
+  return null
+}
 
-  contract.on(
-    'PaymentReceived',
-    async (
-      paymentId: string,
-      _sender:   string,
-      token:     string,
-      rawAmount: bigint,
-      event:     ethers.EventLog,
-    ) => {
-      // A successful event means the provider is healthy
-      listenerState.lastEventAt = Date.now()
-      listenerState.healthy     = true
-      closeCircuit()
+/** Marks a pending deposit as deferred until the price feed recovers. */
+async function deferEvmDepositToPendingPrice(
+  txId: string,
+  meta: { rawAmount: string; token: string; txHash: string; eventKey: string },
+): Promise<void> {
+  const { error } = await supabase
+    .from('transactions')
+    .update({
+      status:         'pending_price',
+      failure_reason: 'ETH price unavailable — no cache at confirmation time (retry loop will re-price)',
+      metadata:       JSON.stringify(meta),
+    })
+    .eq('id', txId)
+    .eq('status', 'pending')
 
-      const txHash   = event.transactionHash
-      const logIndex = event.index
-      const eventKey = `${txHash}:${logIndex}`
+  if (error) {
+    console.error(
+      `[Blockchain] CRITICAL: could not defer tx ${txId} to pending_price — ` +
+      `deposit may require manual admin credit. Error: ${error.message}`,
+    )
+  } else {
+    console.log(`[Blockchain] Tx ${txId} deferred to pending_price — retry loop will credit it when price recovers`)
+  }
+}
 
-      console.log(`[Blockchain] PaymentReceived paymentId=${paymentId} tx=${txHash} — waiting ${MIN_CONFIRMATIONS} confirmations…`)
+/** Processes a candidate native-ETH transfer to the configured deposit address. */
+async function processNativeCandidate(
+  provider:  ethers.JsonRpcProvider,
+  txHash:    string,
+  rawValue:  bigint,
+): Promise<void> {
+  const eventKey = `${txHash}:native`
+  console.log(`[Blockchain] Candidate ETH deposit tx=${txHash} amount=${ethers.formatEther(rawValue)} — waiting ${MIN_CONFIRMATIONS} confirmations…`)
 
-      try {
-        // ── Wait for finality ──────────────────────────────────────────────
-        const receipt = await provider.waitForTransaction(txHash, MIN_CONFIRMATIONS)
-        if (!receipt || receipt.status !== 1) {
-          const reason = receipt ? 'Transaction reverted on chain' : 'Receipt not found — transaction may have been dropped'
-          console.warn(`[Blockchain] Transaction ${txHash} ${receipt ? 'reverted' : 'not found'} — skipping`)
-          await supabase
-            .from('transactions')
-            .update({ failure_reason: reason })
-            .eq('tx_hash', paymentId)
-            .in('status', ['pending'])
-          return
-        }
+  const receipt = await provider.waitForTransaction(txHash, MIN_CONFIRMATIONS)
+  if (!receipt || receipt.status !== 1) {
+    console.warn(`[Blockchain] ETH tx ${txHash} ${receipt ? 'reverted' : 'not found'} — skipping`)
+    return
+  }
 
-        // ── Look up pending transaction ────────────────────────────────────
-        const { data: txRecord, error: lookupErr } = await supabase
-          .from('transactions')
-          .select('id, user_id, amount_usd')
-          .eq('tx_hash', paymentId)
-          .in('status', ['pending', 'confirmed'])  // include confirmed for idempotency check
-          .maybeSingle()
+  const txRecord = await matchPendingEvmDeposit('eth', rawValue)
+  if (!txRecord) {
+    console.warn(`[Blockchain] No pending ETH deposit matches amount ${ethers.formatEther(rawValue)} (tx ${txHash})`)
+    return
+  }
 
-        if (lookupErr) {
-          console.error('[Blockchain] DB lookup error:', lookupErr.message)
-          return
-        }
+  const usdValue = await getUsdValue('ETH', rawValue, 18)
+  if (usdValue === null) {
+    await deferEvmDepositToPendingPrice(txRecord.id, {
+      rawAmount: rawValue.toString(), token: 'ETH', txHash, eventKey,
+    })
+    return
+  }
+  if (usdValue <= 0) {
+    console.warn(`[Blockchain] USD value is 0 for ETH tx ${txHash} — skipping credit`)
+    await supabase
+      .from('transactions')
+      .update({ failure_reason: 'ETH price returned $0 at confirmation time — use manual USD override' })
+      .eq('id', txRecord.id)
+      .eq('status', 'pending')
+    return
+  }
 
-        if (!txRecord) {
-          console.warn(`[Blockchain] No transaction found for paymentId ${paymentId}`)
-          return
-        }
+  await atomicCredit(txRecord.id, txRecord.user_id, usdValue, txHash, eventKey)
+}
 
-        // ── Determine USD value ────────────────────────────────────────────
-        const isETH = token === ethers.ZeroAddress
-        let usdValue: number | null
+/** Scans a newly-arrived block for native ETH transfers to the active deposit address. */
+async function handleNewBlock(provider: ethers.JsonRpcProvider, blockNumber: number): Promise<void> {
+  markProviderAlive()
 
-        if (isETH) {
-          usdValue = await getUsdValue('ETH', rawAmount, 18)
-        } else {
-          const tokenInfo = TOKEN_MAP[token.toLowerCase()]
-          if (!tokenInfo) {
-            console.warn(`[Blockchain] Unknown token ${token} — cannot determine USD value`)
-            await supabase
-              .from('transactions')
-              .update({ failure_reason: `Unknown token ${token} — not in supported token list` })
-              .eq('id', txRecord.id)
-              .in('status', ['pending'])
-            return
-          }
-          usdValue = await getUsdValue(tokenInfo.symbol, rawAmount, tokenInfo.decimals)
-        }
+  const addressSets = await loadActiveEvmAddressSets()
+  if (addressSets.eth.size === 0) return // ETH deposits not active
 
-        if (usdValue === null) {
-          // ETH price unavailable and no cache — defer rather than drop.
-          console.warn(`[Blockchain] ETH price unavailable for paymentId ${paymentId} — marking pending_price for retry`)
-          const { error: deferErr } = await supabase
-            .from('transactions')
-            .update({
-              status:         'pending_price',
-              failure_reason: 'ETH price unavailable — no cache at confirmation time (retry loop will re-price)',
-              metadata: JSON.stringify({
-                rawAmount:  rawAmount.toString(),
-                token:      isETH ? 'ETH' : token,
-                txHash,
-                eventKey,
-              }),
-            })
-            .eq('id', txRecord.id)
-            .in('status', ['pending'])
+  const block = await provider.getBlock(blockNumber, true)
+  if (!block) return
 
-          if (deferErr) {
-            console.error(
-              `[Blockchain] CRITICAL: could not defer tx ${txRecord.id} to pending_price — ` +
-              `deposit may require manual admin credit. Error: ${deferErr.message}`,
-            )
-          } else {
-            console.log(`[Blockchain] Tx ${txRecord.id} deferred to pending_price — retry loop will credit it when price recovers`)
-          }
-          return
-        }
+  for (const tx of block.prefetchedTransactions) {
+    if (!tx.to || tx.value === 0n) continue
+    if (!addressSets.eth.has(tx.to.toLowerCase())) continue
 
-        if (usdValue <= 0) {
-          console.warn(`[Blockchain] USD value is 0 for paymentId ${paymentId} — skipping credit`)
-          await supabase
-            .from('transactions')
-            .update({ failure_reason: 'ETH price returned $0 at confirmation time — use manual USD override' })
-            .eq('id', txRecord.id)
-            .in('status', ['pending'])
-          return
-        }
+    listenerState.lastEventAt = Date.now()
+    processNativeCandidate(provider, tx.hash, tx.value).catch(err =>
+      console.error(`[Blockchain] Error processing native ETH candidate ${tx.hash}:`, err),
+    )
+  }
+}
 
-        // ── Atomic, idempotent credit ──────────────────────────────────────
-        await atomicCredit(txRecord.id, txRecord.user_id, usdValue, txHash, eventKey)
-      } catch (err) {
-        console.error('[Blockchain] Error processing PaymentReceived:', err)
-      }
-    },
+/** Processes a candidate USDT/USDC Transfer event to the configured deposit address. */
+async function handleTokenTransfer(
+  coin:      EvmCoin,
+  to:        string,
+  rawValue:  bigint,
+  event:     ethers.EventLog,
+): Promise<void> {
+  markProviderAlive()
+
+  const addressSets = await loadActiveEvmAddressSets()
+  if (!addressSets[coin].has(to.toLowerCase())) return
+
+  const provider = activeProvider
+  if (!provider) return
+
+  listenerState.lastEventAt = Date.now()
+
+  const txHash   = event.transactionHash
+  const eventKey = `${txHash}:${event.index}`
+  console.log(`[Blockchain] Candidate ${coin.toUpperCase()} deposit tx=${txHash} amount=${Number(rawValue) / 1e6} — waiting ${MIN_CONFIRMATIONS} confirmations…`)
+
+  const receipt = await provider.waitForTransaction(txHash, MIN_CONFIRMATIONS)
+  if (!receipt || receipt.status !== 1) {
+    console.warn(`[Blockchain] ${coin.toUpperCase()} tx ${txHash} ${receipt ? 'reverted' : 'not found'} — skipping`)
+    return
+  }
+
+  const txRecord = await matchPendingEvmDeposit(coin, rawValue)
+  if (!txRecord) {
+    console.warn(`[Blockchain] No pending ${coin.toUpperCase()} deposit matches amount ${Number(rawValue) / 1e6} (tx ${txHash})`)
+    return
+  }
+
+  // Stablecoins are 1:1 with USD — no price feed needed.
+  const usdValue = Number(rawValue) / 1e6
+  if (usdValue <= 0) {
+    console.warn(`[Blockchain] USD value is 0 for ${coin.toUpperCase()} tx ${txHash} — skipping credit`)
+    return
+  }
+
+  await atomicCredit(txRecord.id, txRecord.user_id, usdValue, txHash, eventKey)
+}
+
+/**
+ * Attach the block + Transfer-event watchers to a provider instance.
+ * Extracted so it can be called on initial start, on every reconnect, and
+ * whenever the active deposit-address set changes (see
+ * `maybeRebindDepositWatchers`).
+ *
+ * Removes all listeners from the previously active provider/contracts first
+ * so old handlers do not accumulate and process events twice after a
+ * reconnect or rebind.
+ *
+ * Each token's Transfer listener is bound with an indexed-`to` filter
+ * scoped to only the currently active deposit address(es) for that coin —
+ * NOT a bare `contract.on('Transfer', ...)`, which would subscribe to every
+ * Transfer emitted by USDT/USDC globally (extremely high volume on mainnet)
+ * and run DB/confirmation work per unrelated transfer. A token with no
+ * active address gets no listener at all.
+ */
+async function attachDepositWatchers(provider: ethers.JsonRpcProvider): Promise<void> {
+  if (activeProvider && activeProvider !== provider) {
+    try { activeProvider.removeAllListeners() } catch { /* old provider may already be dead */ }
+  }
+  for (const contract of activeTokenContracts) {
+    try { contract.removeAllListeners() } catch { /* ignore */ }
+  }
+
+  activeProvider       = provider
+  activeTokenContracts = []
+
+  // Native ETH deposits: scan every new block for txs paying an active address.
+  provider.on('block', (blockNumber: number) => {
+    handleNewBlock(provider, blockNumber).catch(err =>
+      console.error(`[Blockchain] Error handling block ${blockNumber}:`, err),
+    )
+  })
+
+  // USDT/USDC deposits: watch Transfer events on each token contract,
+  // filtered server-side (via the RPC's log filter) to only the active
+  // deposit address(es) for that coin.
+  const addressSets = await loadActiveEvmAddressSets()
+  boundTokenAddressSets = {}
+
+  for (const [tokenAddress, info] of Object.entries(TOKEN_MAP)) {
+    const coin      = info.symbol.toLowerCase() as EvmCoin
+    const addresses = addressSets[coin]
+    boundTokenAddressSets[coin] = new Set(addresses)
+    if (addresses.size === 0) continue // no active address for this coin — don't subscribe at all
+
+    const contract = new ethers.Contract(tokenAddress, ERC20_TRANSFER_ABI, provider)
+    const filter   = contract.filters.Transfer(null, Array.from(addresses))
+    contract.on(filter, (_from: string, to: string, value: bigint, event: ethers.EventLog) => {
+      handleTokenTransfer(coin, to, value, event).catch(err =>
+        console.error(`[Blockchain] Error handling ${coin.toUpperCase()} Transfer event:`, err),
+      )
+    })
+    activeTokenContracts.push(contract)
+  }
+}
+
+/**
+ * Re-checks the active deposit-address configuration and rebuilds the
+ * Transfer-event filters if it changed (address added/removed/deactivated
+ * on the admin Deposit Addresses page). Called from the periodic listener
+ * health check so config changes take effect without a backend restart,
+ * without re-subscribing on every single event.
+ */
+async function maybeRebindDepositWatchers(provider: ethers.JsonRpcProvider): Promise<void> {
+  const addressSets = await loadActiveEvmAddressSets()
+  const changed = (Object.keys(TOKEN_MAP).length > 0) && (['usdt', 'usdc'] as EvmCoin[]).some(
+    coin => !sameAddressSet(boundTokenAddressSets[coin], addressSets[coin]),
   )
+  if (!changed) return
+
+  console.log('[Blockchain] Active deposit address configuration changed — rebinding Transfer filters')
+  await attachDepositWatchers(provider)
 }
 
 /**
@@ -763,7 +962,7 @@ function attachPaymentReceivedHandler(
  * without it a provider that fails right after every successful reconnect
  * would otherwise trigger a fresh multi-attempt backoff cycle every time.
  */
-async function reconnectWithBackoff(rpcUrl: string, contractAddr: string): Promise<void> {
+async function reconnectWithBackoff(rpcUrl: string): Promise<void> {
   if (listenerState.reconnectInFlight) {
     // A reconnect sequence is already running — don't start another
     return
@@ -803,8 +1002,7 @@ async function reconnectWithBackoff(rpcUrl: string, contractAddr: string): Promi
         // Quick connectivity check before attaching a full listener
         await provider.getBlockNumber()
 
-        const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider)
-        attachPaymentReceivedHandler(provider, contract)
+        await attachDepositWatchers(provider)
 
         // Re-arm the provider error handler for this new provider instance
         provider.on('error', (err: Error) => {
@@ -812,7 +1010,7 @@ async function reconnectWithBackoff(rpcUrl: string, contractAddr: string): Promi
           listenerState.healthy = false
           recordCircuitFailure()
           maybeSendUnhealthyAlert(`Provider error: ${err.message}`).catch(console.error)
-          reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
+          reconnectWithBackoff(rpcUrl).catch(console.error)
         })
 
         listenerState.healthy = true
@@ -837,7 +1035,7 @@ async function reconnectWithBackoff(rpcUrl: string, contractAddr: string): Promi
 
     // Send admin alert (rate-limited by ALERT_COOLDOWN_MS — see maybeSendUnhealthyAlert)
     await maybeSendUnhealthyAlert(
-      `Automatic reconnection failed after ${MAX_RECONNECT_ATTEMPTS} attempts — contract ${contractAddr}`,
+      `Automatic reconnection failed after ${MAX_RECONNECT_ATTEMPTS} attempts — RPC ${rpcUrl}`,
     )
   } finally {
     listenerState.reconnecting      = false
@@ -846,15 +1044,17 @@ async function reconnectWithBackoff(rpcUrl: string, contractAddr: string): Promi
 }
 
 export async function startBlockchainListener() {
-  const rpcUrl       = process.env.ETH_RPC_URL
-  const contractAddr = process.env.CONTRACT_ADDRESS
+  const rpcUrl = process.env.ETH_RPC_URL
 
   if (!rpcUrl) {
     console.warn('[Blockchain] ETH_RPC_URL not set — listener not started')
     return
   }
-  if (!contractAddr) {
-    console.warn('[Blockchain] CONTRACT_ADDRESS not set — listener not started (deploy the contract first)')
+
+  const addressSets = await loadActiveEvmAddressSets()
+  const anyActive = addressSets.eth.size > 0 || addressSets.usdt.size > 0 || addressSets.usdc.size > 0
+  if (!anyActive) {
+    console.warn('[Blockchain] No active ETH/USDT/USDC deposit address configured — listener not started (set one on the Deposit Addresses admin page)')
     return
   }
 
@@ -864,7 +1064,6 @@ export async function startBlockchainListener() {
   await loadEthPriceCacheFromDb()
 
   const provider = new ethers.JsonRpcProvider(rpcUrl)
-  const contract = new ethers.Contract(contractAddr, CONTRACT_ABI, provider)
 
   listenerState.active             = true
   listenerState.startedAt          = Date.now()
@@ -875,11 +1074,10 @@ export async function startBlockchainListener() {
   listenerState.circuitState       = 'closed'
   listenerState.consecutiveFailures = 0
   listenerState.circuitOpenedAt    = null
-  activeContract                   = contract
 
-  console.log(`[Blockchain] Listening for PaymentReceived on ${contractAddr} (min ${MIN_CONFIRMATIONS} confirmations)`)
+  console.log(`[Blockchain] Watching for fixed-address ETH/USDT/USDC deposits (min ${MIN_CONFIRMATIONS} confirmations)`)
 
-  attachPaymentReceivedHandler(provider, contract)
+  await attachDepositWatchers(provider)
 
   // Trigger reconnect on provider errors
   provider.on('error', (err: Error) => {
@@ -887,7 +1085,7 @@ export async function startBlockchainListener() {
     listenerState.healthy = false
     recordCircuitFailure()
     maybeSendUnhealthyAlert(`Provider error: ${err.message}`).catch(console.error)
-    reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
+    reconnectWithBackoff(rpcUrl).catch(console.error)
   })
 
   // Retry any transactions that were deferred due to missing ETH price
@@ -895,15 +1093,12 @@ export async function startBlockchainListener() {
   startPendingPriceRetryWatchdog()
 
   // Periodic health checks
-  startListenerHealthCheck(rpcUrl, contractAddr)
+  startListenerHealthCheck(rpcUrl)
 }
 
 // ── Listener health check ──────────────────────────────────────────────────
 
-async function runListenerHealthCheck(
-  rpcUrl:       string,
-  contractAddr: string,
-): Promise<void> {
+async function runListenerHealthCheck(rpcUrl: string): Promise<void> {
   const now = Date.now()
   listenerState.lastCheckedAt = now
 
@@ -911,7 +1106,10 @@ async function runListenerHealthCheck(
   // does not give a false-positive result.
   const probeProvider = new ethers.JsonRpcProvider(rpcUrl)
 
-  // 1. Verify provider connectivity by fetching the latest block number.
+  // Verify provider connectivity by fetching the latest block number.
+  // There is no single "contract" to probe anymore — reachability of the
+  // RPC endpoint is the only meaningful health signal for a fixed-address
+  // deposit watcher (event silence alone is not a failure criterion).
   let providerOk = false
   try {
     await probeProvider.getBlockNumber()
@@ -920,56 +1118,37 @@ async function runListenerHealthCheck(
     console.error('[Blockchain] Health check: provider unreachable —', (err as Error).message)
   }
 
-  // 2. Check contract reachability (light call — no gas, no writes).
-  let contractOk = false
   if (providerOk) {
-    try {
-      const code = await probeProvider.getCode(contractAddr)
-      contractOk = code !== '0x' && code !== ''  // non-empty = contract deployed
-    } catch (err) {
-      console.error('[Blockchain] Health check: contract unreachable —', (err as Error).message)
-    }
-  }
-
-  // 3. Healthy = provider reachable AND contract deployed.
-  //    Event silence is NOT a failure criterion — no deposits during a quiet period
-  //    is normal and does not indicate the listener is broken.
-  const isHealthy = providerOk && contractOk
-
-  if (isHealthy) {
     listenerState.healthy = true
     closeCircuit()
-    console.log('[Blockchain] Health check: OK (provider reachable, contract found)')
+    console.log('[Blockchain] Health check: OK (provider reachable)')
+    if (activeProvider) {
+      maybeRebindDepositWatchers(activeProvider).catch(err =>
+        console.error('[Blockchain] Failed to rebind deposit watchers:', err),
+      )
+    }
     return
   }
 
-  // Build a clear reason string for logs + alert email
-  const reasons: string[] = []
-  if (!providerOk) reasons.push('RPC provider unreachable')
-  if (!contractOk) reasons.push('contract not found at address (code = 0x)')
-
-  const reason = reasons.join('; ')
+  const reason = 'RPC provider unreachable'
   console.warn(`[Blockchain] Health check FAILED: ${reason}`)
 
-  // 4. Mark unhealthy, alert admins (rate-limited), and trigger automatic
-  //    reconnect — all non-blocking.
+  // Mark unhealthy, alert admins (rate-limited), and trigger automatic
+  // reconnect — all non-blocking.
   listenerState.healthy = false
   recordCircuitFailure()
   maybeSendUnhealthyAlert(reason).catch(console.error)
-  reconnectWithBackoff(rpcUrl, contractAddr).catch(console.error)
+  reconnectWithBackoff(rpcUrl).catch(console.error)
 }
 
-function startListenerHealthCheck(
-  rpcUrl:       string,
-  contractAddr: string,
-): void {
+function startListenerHealthCheck(rpcUrl: string): void {
   // Run once shortly after startup, then on the regular interval
   setTimeout(
-    () => runListenerHealthCheck(rpcUrl, contractAddr),
+    () => runListenerHealthCheck(rpcUrl),
     30_000,  // 30 s after startup — let things settle first
   )
   setInterval(
-    () => runListenerHealthCheck(rpcUrl, contractAddr),
+    () => runListenerHealthCheck(rpcUrl),
     LISTENER_HEALTH_CHECK_INTERVAL_MS,
   )
   console.log('[Blockchain] Health check scheduled (interval: 5 min, silence threshold: ' +

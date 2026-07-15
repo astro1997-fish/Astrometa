@@ -540,5 +540,34 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.asset_holdings TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.asset_holdings TO authenticated;
 
 -- ============================================================
+-- Fixed-address ETH/USDT/USDC deposits (replaces the smart-contract flow)
+-- ============================================================
+-- ETH, USDT (ERC-20), and USDC (ERC-20) deposits now use a single shared,
+-- admin-managed address per coin (same UX as BTC) instead of a smart
+-- contract + MetaMask transaction. Since a fixed address can't distinguish
+-- depositors, each pending deposit is allocated a unique exact required
+-- amount (jittered at the last relevant decimal place) that the blockchain
+-- monitor matches on-chain by exact value.
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS match_amount TEXT;
+
+-- Unique partial index on match_amount: prevents two pending ETH/USDT/USDC
+-- deposits from being allocated the same required amount. Combined with the
+-- route's unique-constraint + retry loop (mirroring the BTC address
+-- allocation pattern) this is concurrency-safe without a sequence.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_evm_pending_match_amount
+  ON public.transactions (method, match_amount)
+  WHERE method IN ('eth', 'usdt', 'usdc') AND match_amount IS NOT NULL AND status = 'pending';
+
+-- Seed the shared deposit address for ETH, USDT, and USDC. Admins can
+-- change or deactivate these later from the Deposit Addresses admin page
+-- (same UI already used for BTC).
+INSERT INTO public.deposit_addresses (coin, chain, address, is_active)
+VALUES
+  ('eth',  'eth',   '0x9FD4DCFf935f4b9f31384DB4E91e11D1edA7FDB5', TRUE),
+  ('usdt', 'erc20', '0x9FD4DCFf935f4b9f31384DB4E91e11D1edA7FDB5', TRUE),
+  ('usdc', 'erc20', '0x9FD4DCFf935f4b9f31384DB4E91e11D1edA7FDB5', TRUE)
+ON CONFLICT (coin, chain) DO NOTHING;
+
+-- ============================================================
 -- DONE ✅
 -- ============================================================

@@ -2,10 +2,11 @@ import { Router } from 'express'
 import Stripe from 'stripe'
 import axios from 'axios'
 import { z } from 'zod'
-import { randomBytes } from 'crypto'
+import { ethers } from 'ethers'
 import { requireAuth, type AuthRequest } from '../middleware/auth'
 import { supabase } from '../lib/supabase'
 import { deriveBtcAddress, getXpub } from '../services/btcMonitor'
+import { getActiveEvmAddress, type EvmCoin } from '../services/depositAddresses'
 
 const router = Router()
 
@@ -119,12 +120,17 @@ router.post('/create-session', requireAuth, async (req: AuthRequest, res, next) 
 // GET /api/payments/capabilities — which coins are currently active
 router.get('/capabilities', async (_req, res, next) => {
   try {
-    const xpub = await getXpub()
+    const [xpub, ethAddr, usdtAddr, usdcAddr] = await Promise.all([
+      getXpub(),
+      getActiveEvmAddress('eth'),
+      getActiveEvmAddress('usdt'),
+      getActiveEvmAddress('usdc'),
+    ])
     res.json({
       btc:  !!xpub,
-      eth:  !!process.env.CONTRACT_ADDRESS,
-      usdt: !!process.env.CONTRACT_ADDRESS,
-      usdc: !!process.env.CONTRACT_ADDRESS,
+      eth:  !!ethAddr,
+      usdt: !!usdtAddr,
+      usdc: !!usdcAddr,
     })
   } catch (err) { next(err) }
 })
@@ -147,11 +153,9 @@ const CryptoDepositSchema = z.object({
   amountUsd: z.number().min(10),
 })
 
-// Token addresses on Ethereum mainnet
-const TOKEN_ADDRESSES: Record<string, string> = {
-  usdt: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-  usdc: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-}
+// Cap on how much a jittered amount may differ from the requested USD value
+// — keeps the extra cents invisible to the user regardless of coin or price.
+const MAX_JITTER_USD = 0.01
 
 // POST /api/payments/create-crypto-deposit
 router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res, next) => {
@@ -254,82 +258,125 @@ router.post('/create-crypto-deposit', requireAuth, async (req: AuthRequest, res,
       })
 
       return res.json({
-        txId:            txRecord?.id,
-        paymentId:       btcAddress,   // reuse paymentId field for display
+        txId:      txRecord?.id,
         btcAddress,
-        coin:            'btc',
+        coin:      'btc',
         amountUsd,
         cryptoAmount,
-        contractAddress: null,
-        tokenAddress:    null,
-        expiresAt:       btcExpiresAt,
+        expiresAt: btcExpiresAt,
       })
     }
 
-    // ── ETH / ERC-20 ──────────────────────────────────────────────────────
-    const contractAddress = process.env.CONTRACT_ADDRESS
-    if (!contractAddress) {
+    // ── ETH / USDT / USDC: fixed shared address + exact-amount matching ────
+    const evmCoin = coin as EvmCoin
+    const address = await getActiveEvmAddress(evmCoin)
+    if (!address) {
       return res.status(503).json({
         error: 'Crypto deposits are not yet active. Please contact support.',
       })
     }
 
-    // Generate a unique payment ID as a 32-byte hex string (bytes32 in Solidity)
-    const paymentIdHex = '0x' + randomBytes(32).toString('hex')
+    const decimals    = evmCoin === 'eth' ? 18 : 6
+    const ethExpiresAt = new Date(Date.now() + 20 * 60 * 1000).toISOString()
 
-    // Fetch live ETH price if needed
-    let cryptoAmount: string | null = null
-    if (coin === 'eth') {
+    let pricePerUnit: number
+    let baseCryptoAmount: number
+    if (evmCoin === 'eth') {
       try {
         const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
           params: { ids: 'ethereum', vs_currencies: 'usd' },
         })
         const ethPrice: number = data.ethereum?.usd ?? 0
-        if (ethPrice > 0) {
-          cryptoAmount = (amountUsd / ethPrice).toFixed(6)
+        if (!(ethPrice > 0)) {
+          return res.status(503).json({ error: 'ETH price temporarily unavailable. Please try again shortly.' })
         }
+        pricePerUnit     = ethPrice
+        baseCryptoAmount = amountUsd / ethPrice
       } catch {
-        // non-fatal — frontend can still show USD amount
+        return res.status(503).json({ error: 'ETH price temporarily unavailable. Please try again shortly.' })
       }
     } else {
-      // USDT/USDC are stablecoins — 1:1 with USD (6 decimals)
-      cryptoAmount = amountUsd.toFixed(2)
+      // USDT/USDC are stablecoins — 1:1 with USD
+      pricePerUnit     = 1
+      baseCryptoAmount = amountUsd
     }
 
-    const ethExpiresAt = new Date(Date.now() + 20 * 60 * 1000).toISOString()
+    // ── Atomic amount allocation via unique-constraint + retry ─────────────
+    // A fixed shared address can't distinguish depositors by address, so each
+    // pending deposit gets a unique exact amount that the monitor matches
+    // on-chain. The jitter is added directly to the raw integer (smallest
+    // on-chain unit) rather than a decimal string, so its magnitude can be
+    // bounded by real USD value (MAX_JITTER_USD) while still spanning a huge
+    // number of possible raw offsets — e.g. ~10,000 values for stablecoins
+    // and trillions for ETH — making collisions effectively impossible even
+    // under heavy concurrent traffic. A partial unique index on
+    // (method, match_amount) WHERE status='pending' is the hard backstop;
+    // retry with a fresh jitter on violation, mirroring the BTC address
+    // allocation loop above.
+    const baseRaw = ethers.parseUnits(baseCryptoAmount.toFixed(decimals), decimals)
+    const maxJitterRawNum = Math.max(1000, Math.floor((MAX_JITTER_USD / pricePerUnit) * 10 ** decimals))
+    let txRecord: { id: string } | null = null
+    let matchAmountStr: string | null = null
+    let requiredRaw: bigint | null = null
 
-    // Insert pending transaction — store paymentId in tx_hash so the listener can match it
-    const { data: txRecord } = await supabase
-      .from('transactions')
-      .insert({
-        user_id:    userId,
-        type:       'deposit',
-        amount_usd: amountUsd,
-        method:     coin,
-        status:     'pending',
-        tx_hash:    paymentIdHex,
-        expires_at: ethExpiresAt,
-      })
-      .select('id')
-      .single()
+    for (let attempt = 0; attempt < 20; attempt++) {
+      // Random raw-unit offset in [1, maxJitterRawNum] — never zero, so the
+      // amount always differs from the plain base amount too.
+      const jitterOffset = BigInt(1 + Math.floor(Math.random() * maxJitterRawNum))
+      const candidateRaw = baseRaw + jitterOffset
+      const candidateStr = ethers.formatUnits(candidateRaw, decimals)
+
+      const { data, error: insertErr } = await supabase
+        .from('transactions')
+        .insert({
+          user_id:      userId,
+          type:         'deposit',
+          amount_usd:   amountUsd,
+          method:       evmCoin,
+          status:       'pending',
+          match_amount: candidateStr,
+          expires_at:   ethExpiresAt,
+          metadata:     JSON.stringify({ address, requiredRaw: candidateRaw.toString(), decimals }),
+        })
+        .select('id')
+        .single()
+
+      if (!insertErr) {
+        txRecord       = data
+        matchAmountStr = candidateStr
+        requiredRaw    = candidateRaw
+        break
+      }
+
+      if (insertErr.code === '23505') {
+        console.warn(`[Crypto] Match-amount collision for ${evmCoin} at ${candidateStr} — retrying (attempt ${attempt + 1})`)
+        continue
+      }
+
+      console.error(`[Crypto] Failed to insert ${evmCoin} deposit:`, insertErr.message)
+      return res.status(500).json({ error: 'Failed to create deposit. Please try again.' })
+    }
+
+    if (!txRecord || !matchAmountStr || requiredRaw === null) {
+      console.error(`[Crypto] Exhausted retry attempts for unique ${evmCoin} match amount`)
+      return res.status(500).json({ error: 'Failed to allocate a unique deposit amount. Please try again.' })
+    }
 
     // Audit log
     await supabase.from('audit_logs').insert({
       user_id:   userId,
       action:    'crypto_deposit_initiated',
-      metadata:  JSON.stringify({ coin, amountUsd, paymentId: paymentIdHex }),
+      metadata:  JSON.stringify({ coin: evmCoin, amountUsd, address, matchAmount: matchAmountStr }),
       ip_address: req.ip,
     })
 
     res.json({
-      txId:            txRecord?.id,
-      paymentId:       paymentIdHex,
-      contractAddress,
-      coin,
+      txId:         txRecord.id,
+      coin:         evmCoin,
+      address,
       amountUsd,
-      cryptoAmount,
-      tokenAddress:    TOKEN_ADDRESSES[coin] ?? null, // null for ETH
-      expiresAt:       ethExpiresAt,
+      cryptoAmount: matchAmountStr,
+      expiresAt:    ethExpiresAt,
     })
   } catch (err) {
     next(err)

@@ -518,7 +518,8 @@ export default function AdminDeposits() {
                     className="input text-sm font-mono"
                   />
                   <p className="text-[11px] text-gray-400">
-                    The backend will fetch the receipt, parse the PaymentReceived event, compute the USD value, and credit the user.
+                    The backend will verify the transaction on-chain, confirm it pays the active deposit address for the
+                    exact amount allocated to this deposit, compute the USD value, and credit the user.
                   </p>
                 </div>
               ) : (
