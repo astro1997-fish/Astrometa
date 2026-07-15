@@ -16,18 +16,21 @@ import sarahPhoto from '@/assets/managers/sarah.png'
 const PORTFOLIO_MANAGERS = [
   {
     name: 'Matteo Rossi',
+    title: 'Financial and Investment Analyst',
     photo: matteoPhoto,
     details: ['Italian', 'Age 31'],
     email: '1matteorossi@gmail.com',
   },
   {
     name: 'Callum Vance',
+    title: 'Financial Risk Specialist',
     photo: callumPhoto,
     details: ['British', 'Age 27'],
     email: 'callumvance68@gmail.com',
   },
   {
     name: 'Chantal Villiers',
+    title: 'Financial and Investment Analyst',
     photo: chantalPhoto,
     details: ['South African', 'Age 33'],
     email: 'villerschantal@gmail.com',
@@ -55,6 +58,9 @@ function ManagerCard({ m, i }: { m: typeof PORTFOLIO_MANAGERS[number]; i: number
         className="w-24 h-24 rounded-full object-cover border-2 border-brand-400/30 shadow-glow-blue"
       />
       <h3 className="font-semibold text-gray-900 dark:text-white">{m.name}</h3>
+      {'title' in m && m.title && (
+        <p className="text-xs font-medium text-brand-500 dark:text-brand-400 -mt-2">{m.title}</p>
+      )}
       <div className="text-sm text-gray-500 dark:text-gray-400 space-y-0.5">
         {m.details.map(d => <p key={d}>{d}</p>)}
       </div>
