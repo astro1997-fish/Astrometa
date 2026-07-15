@@ -4,6 +4,7 @@ import { authLimiter } from '../middleware/rateLimiter'
 import { requireAuth, requireAdmin, type AuthRequest } from '../middleware/auth'
 import { supabase } from '../lib/supabase'
 import { emailService } from '../services/email'
+import { getLiveAssetPrices } from '../services/holdingsPrices'
 
 // ── Auth routes ───────────────────────────────────────────────────
 export const authRouter = Router()
@@ -85,6 +86,40 @@ portfolioRouter.get('/me', requireAuth, async (req: AuthRequest, res, next) => {
       supabase.from('portfolio_updates').select('*').eq('user_id', req.userId!).order('created_at').limit(30),
     ])
     res.json({ balance, investments, updates })
+  } catch (err) { next(err) }
+})
+
+// Multi-asset holdings breakdown (USD/USDT/BTC/ETH) shown on the Portfolio
+// page. Quantities come from `asset_holdings`; USD/BTC/ETH prices (and BTC's
+// 24h % change) are looked up live so the numbers move like a real exchange.
+portfolioRouter.get('/holdings', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const { data: holdings, error } = await supabase
+      .from('asset_holdings')
+      .select('asset, quantity, updated_at')
+      .eq('user_id', req.userId!)
+      .gt('quantity', 0)
+    if (error) throw error
+
+    const livePrices = await getLiveAssetPrices()
+
+    const rows = (holdings ?? []).map(h => {
+      const isPegged = h.asset === 'USD' || h.asset === 'USDT'
+      const price = isPegged ? 1 : livePrices[h.asset]?.usd ?? 0
+      const change24hPct = isPegged ? 0.01 : livePrices[h.asset]?.usd_24h_change ?? 0
+      const quantity = Number(h.quantity)
+      const value = quantity * price
+      return {
+        asset: h.asset,
+        quantity,
+        price,
+        change24hPct,
+        value,
+        change24hUsd: value * (change24hPct / 100),
+      }
+    }).sort((a, b) => b.value - a.value)
+
+    res.json({ holdings: rows })
   } catch (err) { next(err) }
 })
 

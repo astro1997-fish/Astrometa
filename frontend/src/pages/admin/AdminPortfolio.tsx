@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Edit3, Send, TrendingUp, X, ChevronDown } from 'lucide-react'
+import { Search, Edit3, Send, TrendingUp, X, ChevronDown, Coins } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
+
+const ASSET_OPTIONS = ['USDT', 'USD', 'BTC', 'ETH'] as const
+type AssetSymbol = typeof ASSET_OPTIONS[number]
 
 interface InvestorRow {
   user_id: string
@@ -38,6 +41,13 @@ export default function AdminPortfolio() {
   const [saving,         setSaving]         = useState(false)
   const [sendingMsg,     setSendingMsg]     = useState(false)
   const [showMsgForm,    setShowMsgForm]    = useState(false)
+
+  // Multi-asset holdings (USDT/USD/BTC/ETH) for the selected investor
+  const [assetQtys,      setAssetQtys]      = useState<Record<AssetSymbol, string>>(
+    { USDT: '', USD: '', BTC: '', ETH: '' }
+  )
+  const [assetsLoading,  setAssetsLoading]  = useState(false)
+  const [savingAssets,   setSavingAssets]   = useState(false)
 
   useEffect(() => {
     supabase
@@ -81,6 +91,37 @@ export default function AdminPortfolio() {
     setManager(inv.manager_name)
     setAdminNote('')
     setShowMsgForm(false)
+
+    setAssetsLoading(true)
+    setAssetQtys({ USDT: '', USD: '', BTC: '', ETH: '' })
+    supabase
+      .from('asset_holdings')
+      .select('asset, quantity')
+      .eq('user_id', inv.user_id)
+      .then(({ data }) => {
+        const next: Record<AssetSymbol, string> = { USDT: '', USD: '', BTC: '', ETH: '' }
+        for (const row of data ?? []) {
+          if (ASSET_OPTIONS.includes(row.asset)) next[row.asset as AssetSymbol] = String(row.quantity)
+        }
+        setAssetQtys(next)
+        setAssetsLoading(false)
+      })
+  }
+
+  const saveAssetHoldings = async () => {
+    if (!selected) return
+    setSavingAssets(true)
+    try {
+      const rows = ASSET_OPTIONS
+        .map(asset => ({ user_id: selected.user_id, asset, quantity: parseFloat(assetQtys[asset] || '0') || 0 }))
+      const { error } = await supabase.from('asset_holdings').upsert(rows, { onConflict: 'user_id,asset' })
+      if (error) throw error
+      toast.success('Asset holdings updated!')
+    } catch {
+      toast.error('Failed to update asset holdings.')
+    } finally {
+      setSavingAssets(false)
+    }
   }
 
   const saveUpdate = async () => {
@@ -287,6 +328,36 @@ export default function AdminPortfolio() {
                 <TrendingUp className="w-3.5 h-3.5" />
                 {saving ? 'Saving...' : 'Save Daily Update'}
               </button>
+
+              {/* Multi-asset holdings breakdown */}
+              <div className="border-t border-gray-100 dark:border-white/5 pt-3 space-y-3">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Coins className="w-3.5 h-3.5 text-brand-400" /> Asset Holdings
+                </p>
+                {assetsLoading ? (
+                  <div className="skeleton h-24 rounded-xl" />
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      {ASSET_OPTIONS.map(asset => (
+                        <div key={asset}>
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-500 mb-1">{asset} qty</label>
+                          <input
+                            type="number"
+                            value={assetQtys[asset]}
+                            onChange={e => setAssetQtys(q => ({ ...q, [asset]: e.target.value }))}
+                            placeholder="0"
+                            className="input text-sm py-2"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={saveAssetHoldings} disabled={savingAssets} className="btn-secondary w-full justify-center text-xs py-2">
+                      {savingAssets ? 'Saving...' : 'Save Asset Holdings'}
+                    </button>
+                  </>
+                )}
+              </div>
 
               {/* Message form */}
               <div className="border-t border-gray-100 dark:border-white/5 pt-3">

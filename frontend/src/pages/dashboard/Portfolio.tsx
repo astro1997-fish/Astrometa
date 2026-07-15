@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { PieChart as PieIcon, History, Eye, EyeOff, Plus, TrendingUp, TrendingDown } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import api from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { SkeletonCard } from '@/components/ui/index'
 import { clsx } from 'clsx'
@@ -20,9 +21,29 @@ interface Investment {
 
 interface Balance { unified_usd_balance: number }
 interface PortfolioPoint { created_at: string; new_balance: number }
+interface AssetHolding {
+  asset: string
+  quantity: number
+  price: number
+  change24hPct: number
+  value: number
+  change24hUsd: number
+}
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number.isFinite(n) ? n : 0)
+
+const fmtQty = (n: number, asset: string) => {
+  const digits = asset === 'BTC' || asset === 'ETH' ? 8 : 2
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: digits }).format(n) + ' ' + asset
+}
+
+const ASSET_META: Record<string, { icon: string; color: string; name: string }> = {
+  USDT: { icon: 'T', color: '#26A17B', name: 'Tether' },
+  USD:  { icon: 'US', color: '#22C55E', name: 'US Dollar' },
+  BTC:  { icon: 'B', color: '#F7931A', name: 'Bitcoin' },
+  ETH:  { icon: 'E', color: '#627EEA', name: 'Ethereum' },
+}
 
 const PKG_META: Record<string, { icon: string; color: string }> = {
   bronze:   { icon: '🥉', color: '#D97706' },
@@ -51,6 +72,8 @@ export default function Portfolio() {
   const [loadError, setLoadError]     = useState(false)
   const [hideBalance, setHideBalance] = useState(false)
   const [range, setRange]             = useState('24H')
+  const [assets, setAssets]           = useState<AssetHolding[]>([])
+  const [assetsLoading, setAssetsLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
@@ -77,8 +100,20 @@ export default function Portfolio() {
     return () => { cancelled = true }
   }, [user])
 
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    setAssetsLoading(true)
+    api.get('/api/portfolio/holdings')
+      .then(res => { if (!cancelled) setAssets(res.data.holdings ?? []) })
+      .catch(() => { if (!cancelled) setAssets([]) })
+      .finally(() => { if (!cancelled) setAssetsLoading(false) })
+    return () => { cancelled = true }
+  }, [user])
+
   const totalInvested = investments.reduce((s, i) => s + i.amount_usd, 0)
   const totalBalance   = balance?.unified_usd_balance ?? 0
+  const totalAssetsValue = assets.reduce((s, a) => s + a.value, 0)
 
   const activeRange = RANGES.find(r => r.label === range) ?? RANGES[0]
 
@@ -236,7 +271,72 @@ export default function Portfolio() {
         ))}
       </div>
 
-      {/* Holdings table */}
+      {/* Multi-asset holdings breakdown */}
+      <div className="card !p-0 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-white/5">
+          <p className="font-semibold text-gray-900 dark:text-white text-sm">Assets</p>
+          {!assetsLoading && assets.length > 0 && (
+            <p className="text-xs text-gray-400 dark:text-gray-500">{fmt(totalAssetsValue)} total</p>
+          )}
+        </div>
+        {assetsLoading ? (
+          <div className="p-5"><SkeletonCard lines={3} /></div>
+        ) : assets.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center px-5">
+            <p className="text-sm text-gray-400 dark:text-gray-500">No asset holdings yet.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-2 px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-white/5">
+              <span>Asset / Qty.</span>
+              <span className="text-right">Price/24h</span>
+              <span className="text-right">Holdings</span>
+            </div>
+            <div className="divide-y divide-gray-100 dark:divide-white/5">
+              {assets.map((a, i) => {
+                const meta = ASSET_META[a.asset] ?? { icon: a.asset.charAt(0), color: '#3B7EF6', name: a.asset }
+                const changePositive = a.change24hPct >= 0
+                return (
+                  <motion.div
+                    key={a.asset}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="grid grid-cols-3 gap-2 px-5 py-4 items-center"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                        style={{ background: meta.color }}
+                      >
+                        {meta.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{a.asset}</p>
+                        <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{fmtQty(a.quantity, a.asset)}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{fmt(a.price)}</p>
+                      <p className={clsx('text-[11px] font-medium', changePositive ? 'text-emerald-500' : 'text-red-400')}>
+                        {changePositive ? '+' : ''}{a.change24hPct.toFixed(2)}%
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{fmt(a.value)}</p>
+                      <p className={clsx('text-[11px] font-medium', changePositive ? 'text-emerald-500' : 'text-red-400')}>
+                        {changePositive ? '+' : ''}{fmt(a.change24hUsd)}
+                      </p>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Holdings table (investment packages) */}
       <div className="card !p-0 overflow-hidden">
         {loading ? (
           <div className="p-5"><SkeletonCard lines={4} /></div>
