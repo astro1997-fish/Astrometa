@@ -37,8 +37,9 @@ const PORTFOLIO_MANAGERS = [
   },
   {
     name: 'Sarah Barnett',
+    title: 'Expert in Crypto Trading & Investment Strategy',
     photo: sarahPhoto,
-    details: ['Expert in crypto trading & investment strategy', 'Age 39', 'United States'],
+    details: ['Age 39', 'United States'],
     email: '1Sarahb.com@gmail.com',
   },
 ]
