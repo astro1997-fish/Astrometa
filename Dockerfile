@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copy package files and install ALL dependencies (including devDeps for tsc)
 COPY backend/package*.json ./
-RUN npm install
+RUN npm install --include=dev
 
 # Copy source and compile TypeScript
 COPY backend/ .
