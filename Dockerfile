@@ -2,9 +2,12 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Copy package files and install ALL dependencies (including devDeps for tsc)
+# Install TypeScript globally so tsc is available during build
+RUN npm install -g typescript
+
+# Copy package files and install production dependencies
 COPY backend/package*.json ./
-RUN npm install --include=dev
+RUN npm install
 
 # Copy source and compile TypeScript
 COPY backend/ .
