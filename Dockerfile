@@ -6,8 +6,8 @@ WORKDIR /app
 COPY backend/dist/ ./dist/
 COPY backend/package*.json ./
 
-# Install production dependencies only
-RUN npm install --omit=dev
+# Install all dependencies (dotenv and others needed at runtime)
+RUN npm install
 
 EXPOSE 8000
 ENV NODE_ENV=production
