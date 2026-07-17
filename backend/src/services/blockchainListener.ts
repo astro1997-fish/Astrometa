@@ -643,8 +643,20 @@ export function getListenerStatus(): ListenerStatus {
 // Consecutive-failure threshold before we stop attempting reconnects
 // altogether for a cooldown period. Protects against a flapping provider
 // causing an unbounded stream of reconnect cycles.
-const CIRCUIT_FAILURE_THRESHOLD =
+// Mutable so admins can change it at runtime without a restart.
+let circuitFailureThreshold =
   parseInt(process.env.CIRCUIT_FAILURE_THRESHOLD ?? '3', 10)
+
+/** Update the circuit-breaker failure threshold at runtime (admin setting). */
+export function setCircuitFailureThreshold(n: number): void {
+  circuitFailureThreshold = Math.max(1, Math.floor(n))
+  console.log(`[Blockchain] Circuit breaker threshold updated to ${circuitFailureThreshold}`)
+}
+
+/** Return the current circuit-breaker failure threshold. */
+export function getCircuitFailureThreshold(): number {
+  return circuitFailureThreshold
+}
 
 // How long the circuit stays OPEN (reconnects fully suppressed) before a
 // single HALF_OPEN trial reconnect is allowed.
@@ -685,7 +697,7 @@ function recordCircuitFailure(): void {
     return
   }
 
-  if (listenerState.circuitState === 'closed' && listenerState.consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+  if (listenerState.circuitState === 'closed' && listenerState.consecutiveFailures >= circuitFailureThreshold) {
     listenerState.circuitState    = 'open'
     listenerState.circuitOpenedAt = Date.now()
     console.error(
@@ -1057,6 +1069,22 @@ export async function startBlockchainListener() {
     console.warn('[Blockchain] No active ETH/USDT/USDC deposit address configured — listener not started (set one on the Deposit Addresses admin page)')
     return
   }
+
+  // Load admin-configured circuit breaker threshold from DB (if set)
+  try {
+    const { data } = await (await import('../lib/supabase')).supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'circuit_failure_threshold')
+      .maybeSingle()
+    if (data?.value) {
+      const n = parseInt(data.value, 10)
+      if (!isNaN(n) && n >= 1) {
+        circuitFailureThreshold = n
+        console.log(`[Blockchain] Circuit breaker threshold loaded from DB: ${n}`)
+      }
+    }
+  } catch { /* non-fatal */ }
 
   // Seed the in-memory price cache from the database before the listener
   // starts so the pending_price retry loop can run on a cold restart without

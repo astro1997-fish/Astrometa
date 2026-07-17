@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, Lock, Bell, Globe, Shield, Eye, EyeOff, BellRing, BellOff } from 'lucide-react'
+import { User, Lock, Bell, Globe, Shield, Eye, EyeOff, BellRing, BellOff, Smartphone, Trash2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { supabase } from '@/lib/supabase'
@@ -9,6 +9,13 @@ import { COUNTRIES } from '@/lib/countries'
 import i18n from '@/i18n'
 import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
+
+interface DeviceInfo {
+  id:        string
+  endpoint:  string
+  label:     string
+  createdAt: string | null
+}
 
 type Tab = 'profile' | 'security' | 'notifications' | 'language'
 
@@ -31,6 +38,45 @@ export default function Settings() {
   const [tab, setTab]     = useState<Tab>('profile')
   const [saving, setSaving] = useState(false)
   const [enablingPush, setEnablingPush] = useState(false)
+  const [devices, setDevices]           = useState<DeviceInfo[]>([])
+  const [devicesLoading, setDevicesLoading] = useState(false)
+  const [removingEndpoint, setRemovingEndpoint] = useState<string | null>(null)
+
+  const fetchDevices = async () => {
+    setDevicesLoading(true)
+    try {
+      const res = await fetch('/api/push/subscriptions', { credentials: 'include' })
+      if (res.ok) {
+        const { devices: d } = await res.json()
+        setDevices(d ?? [])
+      }
+    } catch { /* ignore */ } finally {
+      setDevicesLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (tab === 'notifications') fetchDevices()
+  }, [tab])
+
+  const removeDevice = async (endpoint: string) => {
+    setRemovingEndpoint(endpoint)
+    try {
+      const res = await fetch('/api/push/subscriptions', {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint }),
+      })
+      if (!res.ok) throw new Error('Failed to remove device')
+      setDevices(prev => prev.filter(d => d.endpoint !== endpoint))
+      toast.success('Device removed')
+    } catch {
+      toast.error('Failed to remove device')
+    } finally {
+      setRemovingEndpoint(null)
+    }
+  }
 
   const handlePushToggle = async () => {
     if (pushEnabled) {
@@ -225,6 +271,47 @@ export default function Settings() {
                 </div>
               </div>
             )}
+
+            {/* Registered devices */}
+            <div className="card space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-brand-400" /> Push-Enabled Devices
+                </h2>
+                <button onClick={fetchDevices} className="text-xs text-gray-400 hover:text-brand-400 transition-colors">
+                  Refresh
+                </button>
+              </div>
+              {devicesLoading ? (
+                <p className="text-xs text-gray-400">Loading devices…</p>
+              ) : devices.length === 0 ? (
+                <p className="text-xs text-gray-400">No devices registered for push notifications.</p>
+              ) : (
+                <ul className="divide-y divide-gray-100 dark:divide-white/5">
+                  {devices.map(d => (
+                    <li key={d.id} className="flex items-center justify-between py-2.5 gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{d.label}</p>
+                        {d.createdAt && (
+                          <p className="text-xs text-gray-400">
+                            Registered {new Date(d.createdAt).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => removeDevice(d.endpoint)}
+                        disabled={removingEndpoint === d.endpoint}
+                        className="shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all disabled:opacity-40"
+                        title="Remove this device"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             <div className="card space-y-5">
             <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Bell className="w-4 h-4 text-brand-400" /> Notification Preferences

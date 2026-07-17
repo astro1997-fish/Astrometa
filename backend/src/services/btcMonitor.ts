@@ -36,6 +36,83 @@ const BLOCKSTREAM_API   = 'https://blockstream.info/api'
 const POLL_INTERVAL_MS  = 60_000          // poll every 60 s
 const MIN_CONFIRMATIONS = parseInt(process.env.BTC_MIN_CONFIRMATIONS ?? '3', 10)
 
+// ── BTC monitor health state ───────────────────────────────────────────────
+// Tracks Blockstream API reachability so the admin dashboard can show
+// a real-time health status independent of whether any deposits are pending.
+
+export interface BtcMonitorStatus {
+  running:              boolean       // true once startBtcMonitor() has been called
+  lastPollAt:           string | null // ISO — last time runPollCycle ran (even if no-op)
+  lastSuccessAt:        string | null // ISO — last time Blockstream returned a chain height
+  consecutiveApiErrors: number        // Blockstream failures since last success
+  healthy:              boolean       // false after BTC_ERROR_THRESHOLD consecutive errors
+  message:              string        // human-readable status
+}
+
+// How many consecutive Blockstream API errors before we consider it unhealthy
+const BTC_ERROR_THRESHOLD   = 3
+// Minimum gap between admin alert emails
+const BTC_ALERT_COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
+
+const btcState = {
+  lastPollAt:           null as number | null,
+  lastSuccessAt:        null as number | null,
+  consecutiveApiErrors: 0,
+  lastAlertAt:          null as number | null,
+}
+
+export function getBtcMonitorStatus(): BtcMonitorStatus {
+  if (!monitorRunning) {
+    return {
+      running:              false,
+      lastPollAt:           null,
+      lastSuccessAt:        null,
+      consecutiveApiErrors: 0,
+      healthy:              true,
+      message:              'BTC monitor not started (no xpub configured yet)',
+    }
+  }
+
+  const healthy = btcState.consecutiveApiErrors < BTC_ERROR_THRESHOLD
+  let message: string
+  if (btcState.consecutiveApiErrors === 0) {
+    message = btcState.lastSuccessAt ? 'BTC monitor healthy' : 'BTC monitor running — first poll pending'
+  } else if (!healthy) {
+    message = `Blockstream API unreachable — ${btcState.consecutiveApiErrors} consecutive errors`
+  } else {
+    message = `Warning: ${btcState.consecutiveApiErrors} consecutive Blockstream error(s)`
+  }
+
+  return {
+    running:              true,
+    lastPollAt:           btcState.lastPollAt   ? new Date(btcState.lastPollAt).toISOString()   : null,
+    lastSuccessAt:        btcState.lastSuccessAt ? new Date(btcState.lastSuccessAt).toISOString() : null,
+    consecutiveApiErrors: btcState.consecutiveApiErrors,
+    healthy,
+    message,
+  }
+}
+
+async function maybeSendBtcUnhealthyAlert(reason: string): Promise<void> {
+  const now        = Date.now()
+  const cooldownOk = btcState.lastAlertAt === null || now - btcState.lastAlertAt > BTC_ALERT_COOLDOWN_MS
+  if (!cooldownOk) return
+
+  btcState.lastAlertAt = now
+  const status  = getBtcMonitorStatus()
+  const details =
+    `Last successful poll: ${status.lastSuccessAt ?? 'never'}\n` +
+    `Consecutive Blockstream errors: ${status.consecutiveApiErrors}\n` +
+    `Admin dashboard: ${process.env.FRONTEND_URL ?? ''}/admin`
+
+  try {
+    await emailService.sendListenerAlert(`[BTC Monitor] ${reason}`, details)
+    console.warn('[BTC] Admin alert email sent:', reason)
+  } catch (alertErr) {
+    console.error('[BTC] Failed to send admin alert email:', (alertErr as Error).message)
+  }
+}
+
 // ── xpub resolution (env → DB fallback) ─────────────────────────────────────
 
 /** In-memory cache so we don't hit the DB on every poll cycle */
@@ -491,18 +568,34 @@ async function runPollCycle(): Promise<void> {
   const xpub = await getXpub()
   if (!xpub) return
 
-  const [deposits, chainHeight, btcPrice] = await Promise.all([
+  btcState.lastPollAt = Date.now()
+
+  let chainHeight = 0
+  try {
+    chainHeight = await fetchBlockchainHeight()
+    // Blockstream is reachable — reset consecutive error counter
+    if (btcState.consecutiveApiErrors > 0) {
+      console.log('[BTC] Blockstream API recovered after', btcState.consecutiveApiErrors, 'error(s)')
+    }
+    btcState.consecutiveApiErrors = 0
+    btcState.lastSuccessAt        = Date.now()
+  } catch (err) {
+    btcState.consecutiveApiErrors += 1
+    console.warn('[BTC] Could not fetch chain height — skipping poll cycle. Consecutive errors:', btcState.consecutiveApiErrors)
+    if (btcState.consecutiveApiErrors >= BTC_ERROR_THRESHOLD) {
+      maybeSendBtcUnhealthyAlert(
+        `Blockstream API unreachable — ${btcState.consecutiveApiErrors} consecutive failures. BTC deposits may not be detected.`,
+      ).catch(e => console.error('[BTC] Alert send error:', e))
+    }
+    return
+  }
+
+  const [deposits, btcPrice] = await Promise.all([
     loadPendingBtcDeposits(),
-    fetchBlockchainHeight().catch(() => 0),
     getBtcUsdPrice(),
   ])
 
   if (deposits.length === 0) return
-
-  if (chainHeight === 0) {
-    console.warn('[BTC] Could not fetch chain height — skipping poll cycle')
-    return
-  }
 
   if (btcPrice === null) {
     console.warn('[BTC] BTC/USD price unavailable (CoinGecko down, no cache) — checking confirmations only; USD credit deferred')

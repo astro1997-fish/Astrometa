@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Users, DollarSign, TrendingUp, Clock, Radio, AlertTriangle, CheckCircle2, XCircle, Activity } from 'lucide-react'
+import { Users, DollarSign, TrendingUp, Clock, Radio, AlertTriangle, CheckCircle2, XCircle, Activity, Bitcoin, Settings2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { SkeletonCard } from '@/components/ui/index'
+import toast from 'react-hot-toast'
 
 const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 const fmtPrice = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n)
@@ -22,13 +23,24 @@ function fmtDuration(sec: number): string {
 }
 
 interface ListenerHealth {
-  active:         boolean
-  lastEventAt:    string | null
-  lastCheckedAt:  string | null
-  healthy:        boolean
-  silenceSec:     number | null
-  silenceWarning: boolean
-  message:        string
+  active:              boolean
+  lastEventAt:         string | null
+  lastCheckedAt:       string | null
+  healthy:             boolean
+  silenceSec:          number | null
+  silenceWarning:      boolean
+  consecutiveFailures: number
+  circuitState:        'closed' | 'open' | 'half_open'
+  message:             string
+}
+
+interface BtcMonitorStatus {
+  running:              boolean
+  lastPollAt:           string | null
+  lastSuccessAt:        string | null
+  consecutiveApiErrors: number
+  healthy:              boolean
+  message:              string
 }
 
 export interface EthPriceStatus {
@@ -208,12 +220,150 @@ function BlockchainListenerCard({ health, fetchedAt, error, consecutiveFailures 
   )
 }
 
+function BtcMonitorCard({ btc, error, stale }: { btc: BtcMonitorStatus | null; error: boolean; stale: boolean }) {
+  const isUnhealthy = !stale && (error || (btc !== null && !btc.healthy))
+  const isWarning   = !stale && !isUnhealthy && btc !== null && btc.consecutiveApiErrors > 0
+  const isInactive  = !stale && btc !== null && !btc.running
+
+  let iconColor  = 'text-emerald-400'
+  let badgeClass = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+  let badgeLabel = 'Healthy'
+
+  if (stale) {
+    iconColor = 'text-gray-400'
+    badgeClass = 'bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300'; badgeLabel = 'Stale data'
+  } else if (isUnhealthy) {
+    iconColor = 'text-red-400'
+    badgeClass = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'; badgeLabel = 'Unhealthy'
+  } else if (isWarning) {
+    iconColor = 'text-amber-400'
+    badgeClass = 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'; badgeLabel = 'Warning'
+  } else if (isInactive) {
+    iconColor = 'text-gray-400'
+    badgeClass = 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400'; badgeLabel = 'Not configured'
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }} className="card col-span-2 lg:col-span-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center ${iconColor}`}>
+            <Bitcoin className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">Bitcoin Deposit Monitor</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {error ? 'Could not reach /health endpoint' : !btc ? 'Loading…' : btc.message}
+            </p>
+          </div>
+        </div>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>{badgeLabel}</span>
+      </div>
+
+      {btc && (
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-gray-500 dark:text-gray-400">
+          <div>
+            <p className="text-gray-400 dark:text-gray-500 mb-0.5">Last poll</p>
+            <p className="font-medium text-gray-700 dark:text-gray-200">{fmtRelative(btc.lastPollAt)}</p>
+          </div>
+          <div>
+            <p className="text-gray-400 dark:text-gray-500 mb-0.5">Last Blockstream success</p>
+            <p className="font-medium text-gray-700 dark:text-gray-200">{fmtRelative(btc.lastSuccessAt)}</p>
+          </div>
+          <div>
+            <p className="text-gray-400 dark:text-gray-500 mb-0.5">Consecutive errors</p>
+            <p className={`font-medium ${btc.consecutiveApiErrors > 0 ? 'text-amber-500' : 'text-gray-700 dark:text-gray-200'}`}>
+              {btc.consecutiveApiErrors}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isUnhealthy && btc && (
+        <div className="mt-4 flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 p-3">
+          <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-red-700 dark:text-red-300">
+            Blockstream API has been unreachable for {btc.consecutiveApiErrors} consecutive poll cycles.
+            BTC deposits may not be detected until connectivity is restored. An alert email has been sent to admins.
+          </p>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+function CircuitBreakerSetting() {
+  const [threshold, setThreshold] = useState<number | null>(null)
+  const [input, setInput]         = useState('')
+  const [saving, setSaving]       = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/settings/circuit-breaker', { credentials: 'include' })
+      .then(r => r.json())
+      .then(j => { setThreshold(j.threshold); setInput(String(j.threshold)) })
+      .catch(() => {})
+  }, [])
+
+  const save = async () => {
+    const n = parseInt(input, 10)
+    if (isNaN(n) || n < 1 || n > 20) { toast.error('Enter a number between 1 and 20'); return }
+    setSaving(true)
+    try {
+      const res = await fetch('/api/admin/settings/circuit-breaker', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threshold: n }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      setThreshold(n)
+      toast.success(`Circuit breaker threshold set to ${n}`)
+    } catch (e: any) {
+      toast.error(e.message ?? 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.36 }} className="card col-span-2 lg:col-span-4">
+      <div className="flex items-start gap-3 mb-4">
+        <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center text-violet-400">
+          <Settings2 className="w-4 h-4" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">ETH Listener Circuit Breaker</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Consecutive reconnect failures before the circuit opens and suppresses further attempts (currently{' '}
+            <span className="font-medium text-gray-600 dark:text-gray-300">{threshold ?? '…'}</span>).
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <input
+          type="number"
+          min={1}
+          max={20}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          className="input w-24 text-center"
+        />
+        <button onClick={save} disabled={saving || input === String(threshold)} className="btn-primary py-2 px-4 text-sm disabled:opacity-40">
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+        <p className="text-xs text-gray-400">Range: 1–20. Default: 3</p>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function AdminDashboard() {
   const [stats, setStats]   = useState({ users: 0, deposits: 0, invested: 0, pendingWithdrawals: 0, pendingPriceCount: 0 })
   const [loading, setLoading] = useState(true)
 
-  const [health, setHealth]       = useState<ListenerHealth | null>(null)
-  const [ethPrice, setEthPrice]   = useState<EthPriceStatus | null>(null)
+  const [health, setHealth]         = useState<ListenerHealth | null>(null)
+  const [ethPrice, setEthPrice]     = useState<EthPriceStatus | null>(null)
+  const [btcMonitor, setBtcMonitor] = useState<BtcMonitorStatus | null>(null)
   const [healthFetchedAt, setHealthFetchedAt] = useState<Date | null>(null)
   const [healthError, setHealthError]         = useState(false)
   const [consecutiveFailures, setConsecutiveFailures] = useState(0)
@@ -227,6 +377,7 @@ export default function AdminDashboard() {
         const json = await res.json()
         setHealth(json.listener as ListenerHealth)
         setEthPrice(json.ethPrice as EthPriceStatus)
+        setBtcMonitor(json.btcMonitor as BtcMonitorStatus ?? null)
         setHealthFetchedAt(new Date())
         setHealthError(false)
         setConsecutiveFailures(0)
@@ -301,6 +452,8 @@ export default function AdminDashboard() {
       </div>
       <EthPriceCard ethPrice={ethPrice} error={healthError} />
       <BlockchainListenerCard health={health} fetchedAt={healthFetchedAt} error={healthError} consecutiveFailures={consecutiveFailures} />
+      <BtcMonitorCard btc={btcMonitor} error={healthError} stale={consecutiveFailures > 1} />
+      <CircuitBreakerSetting />
     </div>
   )
 }

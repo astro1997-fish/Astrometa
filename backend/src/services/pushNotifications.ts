@@ -106,6 +106,49 @@ export async function removeSubscription(userId: string, endpoint: string) {
     .eq('endpoint', endpoint)
 }
 
+export interface DeviceInfo {
+  id:        string   // hashed endpoint used as a stable UI key
+  endpoint:  string
+  label:     string   // human-readable device label derived from endpoint
+  createdAt: string | null
+}
+
+/**
+ * Returns a list of push-subscription "devices" for the user.
+ * Extracts a human-readable label from the push endpoint URL so the UI
+ * can show "Chrome · fcm.googleapis.com" without storing a user-agent.
+ */
+export async function getUserSubscriptions(userId: string): Promise<DeviceInfo[]> {
+  const { data, error } = await supabase
+    .from('push_subscriptions')
+    .select('endpoint, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  if (!data) return []
+
+  return data.map((row, idx) => {
+    let label = 'Browser'
+    try {
+      const host = new URL(row.endpoint).hostname
+      if (host.includes('fcm.googleapis.com'))  label = 'Chrome / Android'
+      else if (host.includes('push.apple.com')) label = 'Safari'
+      else if (host.includes('mozilla.com') || host.includes('autopush')) label = 'Firefox'
+      else label = host
+    } catch { /* ignore invalid URLs */ }
+
+    // Use a simple index-based id since we don't have a real PK exposed here.
+    // The endpoint itself is the real key for removal.
+    return {
+      id:        Buffer.from(row.endpoint).toString('base64').slice(0, 16),
+      endpoint:  row.endpoint,
+      label:     `Device ${idx + 1} · ${label}`,
+      createdAt: row.created_at ?? null,
+    }
+  })
+}
+
 /**
  * Sends a real Web Push message to every subscription registered for a
  * user. Best-effort: failures for one subscription don't affect others.

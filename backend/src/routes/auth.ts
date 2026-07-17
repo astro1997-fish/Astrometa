@@ -532,6 +532,47 @@ adminRouter.delete('/btc-wallet', async (_req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// ── Circuit breaker settings ────────────────────────────────────────────────
+
+adminRouter.get('/settings/circuit-breaker', async (_req, res, next) => {
+  try {
+    const { getCircuitFailureThreshold } = await import('../services/blockchainListener')
+    const { data } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'circuit_failure_threshold')
+      .maybeSingle()
+    res.json({
+      threshold:    getCircuitFailureThreshold(),
+      defaultValue: 3,
+      dbValue:      data?.value ? parseInt(data.value, 10) : null,
+    })
+  } catch (err) { next(err) }
+})
+
+adminRouter.patch('/settings/circuit-breaker', async (req, res, next) => {
+  try {
+    const schema = z.object({ threshold: z.number().int().min(1).max(20) })
+    const { threshold } = schema.parse(req.body)
+
+    const { setCircuitFailureThreshold } = await import('../services/blockchainListener')
+    setCircuitFailureThreshold(threshold)
+
+    // Persist to DB so it survives a backend restart
+    await supabase
+      .from('system_settings')
+      .upsert({ key: 'circuit_failure_threshold', value: String(threshold), updated_at: new Date().toISOString() }, { onConflict: 'key' })
+
+    await supabase.from('audit_logs').insert({
+      action:    'circuit_breaker_threshold_updated',
+      metadata:  JSON.stringify({ threshold }),
+      ip_address: 'admin',
+    })
+
+    res.json({ success: true, threshold })
+  } catch (err) { next(err) }
+})
+
 adminRouter.post('/send-message', async (req, res, next) => {
   try {
     const schema = z.object({
