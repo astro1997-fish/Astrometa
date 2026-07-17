@@ -372,7 +372,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function pollHealth() {
       try {
-        const res = await fetch('/health')
+        const base = import.meta.env.VITE_API_URL ?? ''
+        const res = await fetch(`${base}/health`)
         if (!res.ok && res.status !== 503) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
         setHealth(json.listener as ListenerHealth)
