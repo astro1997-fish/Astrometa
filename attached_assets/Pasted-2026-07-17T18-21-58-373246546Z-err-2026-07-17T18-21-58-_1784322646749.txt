@@ -1,0 +1,1001 @@
+2026-07-17T18:21:58.373246546Z [err]      {
+2026-07-17T18:21:58.373250746Z [err]        code: -32005,
+2026-07-17T18:21:58.373255145Z [err]        message: 'Too Many Requests',
+2026-07-17T18:21:58.373259135Z [err]        data: { see: 'https://infura.io/dashboard' }
+2026-07-17T18:21:58.373262975Z [err]      }
+2026-07-17T18:21:58.374555054Z [err]    ],
+2026-07-17T18:21:58.374560184Z [err]    info: {
+2026-07-17T18:21:58.374564044Z [err]      payload: {
+2026-07-17T18:21:58.374566484Z [err]        method: 'eth_newFilter',
+2026-07-17T18:21:58.374569173Z [err]        params: [
+2026-07-17T18:21:58.374572433Z [err]          {
+2026-07-17T18:21:58.374575273Z [err]            topics: [
+2026-07-17T18:21:58.374577843Z [err]              '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+2026-07-17T18:21:58.374580283Z [err]              null,
+2026-07-17T18:21:58.374583133Z [err]              '0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5'
+2026-07-17T18:21:58.374585533Z [err]            ],
+2026-07-17T18:21:58.374588133Z [err]            address: [ '0xdac17f958d2ee523a2206206994597c13d831ec7' ]
+2026-07-17T18:21:58.374591163Z [err]          }
+2026-07-17T18:21:58.374593503Z [err]        ],
+2026-07-17T18:21:58.374598963Z [err]        id: 3,
+2026-07-17T18:21:58.374601293Z [err]        jsonrpc: '2.0'
+2026-07-17T18:21:58.374603813Z [err]      }
+2026-07-17T18:21:58.374606393Z [err]    },
+2026-07-17T18:21:58.374608783Z [err]    shortMessage: 'missing response for request'
+2026-07-17T18:21:58.374611143Z [err]  }
+2026-07-17T18:21:58.374613413Z [err]  
+2026-07-17T18:21:58.374615943Z [err]  Node.js v20.20.2
+2026-07-17T18:21:59.456593053Z [err]  [Static] frontend/dist not found — run "npm run build" in frontend/
+2026-07-17T18:21:59.456597763Z [inf]  [BTC] Monitor loop started (min 3 confirmations, polling every 60s)
+2026-07-17T18:21:59.456602113Z [inf]  ✅  ASTRO META-TRADE API running on port 10000 [production]
+2026-07-17T18:21:59.743645345Z [inf]  [BTC] Seeded price cache from DB: 63978 (157s old)
+2026-07-17T18:21:59.830593655Z [inf]  [Blockchain] Seeded ETH price cache from DB: 1839.93 (216s old)
+2026-07-17T18:21:59.830608655Z [inf]  [Blockchain] Watching for fixed-address ETH/USDT/USDC deposits (min 12 confirmations)
+2026-07-17T18:22:00.085365645Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:22:00.148561763Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958440 price=63978
+2026-07-17T18:22:00.306068060Z [inf]  [Blockchain] Pending-price retry loop started (interval: 5 min)
+2026-07-17T18:22:00.306073480Z [inf]  [Blockchain] Pending-price retry loop watchdog scheduled (interval: 15 min, stall threshold: 15 min)
+2026-07-17T18:22:00.306076760Z [inf]  [Blockchain] Health check scheduled (interval: 5 min, silence threshold: 10 min)
+2026-07-17T18:22:00.402477291Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:00.402480831Z [inf]  [Blockchain] Reconnect attempt 1/5 in 5s… (circuit: closed)
+2026-07-17T18:22:00.402484721Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:00.402490671Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:00.403344983Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:22:00.403347913Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:22:00.403350823Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:22:00.403353433Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:22:00.403355783Z [inf]    value: [
+2026-07-17T18:22:00.403358473Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:22:00.403361223Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:22:00.403364283Z [inf]    ],
+2026-07-17T18:22:00.403367203Z [inf]    info: {
+2026-07-17T18:22:00.403369913Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:22:00.403372743Z [inf]    },
+2026-07-17T18:22:00.403375543Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:22:00.403378023Z [inf]  }
+2026-07-17T18:22:00.403380793Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:00.403384093Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:22:00.403387123Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:22:00.403390383Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:22:00.404855588Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:22:00.404861298Z [inf]    value: [
+2026-07-17T18:22:00.404872538Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:22:00.404877958Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:22:00.404883308Z [inf]    ],
+2026-07-17T18:22:00.404888338Z [inf]    info: {
+2026-07-17T18:22:00.404893128Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:22:00.404898048Z [inf]    },
+2026-07-17T18:22:00.404902958Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:22:00.404907308Z [inf]  }
+2026-07-17T18:22:05.495110275Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:22:05.495115205Z [err]  [Blockchain] Reconnect attempt 1 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:05.495118055Z [inf]  [Blockchain] Reconnect attempt 2/5 in 10s… (circuit: closed)
+2026-07-17T18:22:25.489590004Z [err]  node:internal/process/promises:391
+2026-07-17T18:22:25.489594924Z [err]      triggerUncaughtException(err, true /* fromPromise */);
+2026-07-17T18:22:25.489599734Z [err]      ^
+2026-07-17T18:22:25.489603904Z [err]  
+2026-07-17T18:22:25.489608314Z [err]  Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:25.489612734Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:22:25.489617504Z [err]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:22:25.489621094Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:22:25.489625524Z [err]    code: 'BAD_DATA',
+2026-07-17T18:22:25.489629204Z [err]    value: [
+2026-07-17T18:22:25.489632734Z [err]      {
+2026-07-17T18:22:25.489636424Z [err]        code: -32005,
+2026-07-17T18:22:25.489639734Z [err]        message: 'Too Many Requests',
+2026-07-17T18:22:25.489643434Z [err]        data: { see: 'https://infura.io/dashboard' }
+2026-07-17T18:22:25.489646764Z [err]      },
+2026-07-17T18:22:25.489650063Z [err]      {
+2026-07-17T18:22:25.489653853Z [err]        code: -32005,
+2026-07-17T18:22:25.489659373Z [err]        message: 'Too Many Requests',
+2026-07-17T18:22:25.489663303Z [err]        data: { see: 'https://infura.io/dashboard' }
+2026-07-17T18:22:25.489667263Z [err]      }
+2026-07-17T18:22:25.490744213Z [err]    ],
+2026-07-17T18:22:25.490754993Z [err]    info: {
+2026-07-17T18:22:25.490759923Z [err]      payload: {
+2026-07-17T18:22:25.490763912Z [err]        method: 'eth_newFilter',
+2026-07-17T18:22:25.490767572Z [err]        params: [
+2026-07-17T18:22:25.490772372Z [err]          {
+2026-07-17T18:22:25.490775992Z [err]            topics: [
+2026-07-17T18:22:25.490779492Z [err]              '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+2026-07-17T18:22:25.490783092Z [err]              null,
+2026-07-17T18:22:25.490787062Z [err]              '0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5'
+2026-07-17T18:22:25.490791352Z [err]            ],
+2026-07-17T18:22:25.490795552Z [err]            address: [ '0xdac17f958d2ee523a2206206994597c13d831ec7' ]
+2026-07-17T18:22:25.490798812Z [err]          }
+2026-07-17T18:22:25.490802102Z [err]        ],
+2026-07-17T18:22:25.490805432Z [err]        id: 3,
+2026-07-17T18:22:25.490809002Z [err]        jsonrpc: '2.0'
+2026-07-17T18:22:25.490812542Z [err]      }
+2026-07-17T18:22:25.490816322Z [err]    },
+2026-07-17T18:22:25.490819622Z [err]    shortMessage: 'missing response for request'
+2026-07-17T18:22:25.490823072Z [err]  }
+2026-07-17T18:22:25.490826912Z [err]  
+2026-07-17T18:22:25.490830722Z [err]  Node.js v20.20.2
+2026-07-17T18:22:25.490834422Z [err]  [Static] frontend/dist not found — run "npm run build" in frontend/
+2026-07-17T18:22:25.490837742Z [inf]  [BTC] Monitor loop started (min 3 confirmations, polling every 60s)
+2026-07-17T18:22:25.490841082Z [inf]  ✅  ASTRO META-TRADE API running on port 10000 [production]
+2026-07-17T18:22:25.490844952Z [inf]  [BTC] Seeded price cache from DB: 63978 (175s old)
+2026-07-17T18:22:25.490848342Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958440 price=63978
+2026-07-17T18:22:25.490851812Z [inf]  [Blockchain] Seeded ETH price cache from DB: 1839.93 (234s old)
+2026-07-17T18:22:25.491664684Z [inf]  [Blockchain] Watching for fixed-address ETH/USDT/USDC deposits (min 12 confirmations)
+2026-07-17T18:22:25.491671473Z [inf]  [Blockchain] Pending-price retry loop started (interval: 5 min)
+2026-07-17T18:22:25.491674763Z [inf]  [Blockchain] Pending-price retry loop watchdog scheduled (interval: 15 min, stall threshold: 15 min)
+2026-07-17T18:22:25.491678293Z [inf]  [Blockchain] Health check scheduled (interval: 5 min, silence threshold: 10 min)
+2026-07-17T18:22:25.491748453Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 1, "jsonrpc": "2.0", "method": "eth_chainId", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:25.491751223Z [inf]  [Blockchain] Reconnect attempt 1/5 in 5s… (circuit: closed)
+2026-07-17T18:22:25.491754803Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:25.491758393Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:22:25.491761693Z [err]  [Blockchain] Provider error: failed to bootstrap network detection (event="initial-network-discovery", info={ "error": { "code": "BAD_DATA", "info": { "payload": { "id": 1, "jsonrpc": "2.0", "method": "eth_chainId", "params": [  ] } }, "shortMessage": "missing response for request", "value": [ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ] } }, code=NETWORK_ERROR, version=6.17.0)
+2026-07-17T18:22:25.492930982Z [err]  [Blockchain] Circuit breaker OPEN after 3 consecutive failures — suppressing reconnects for 300s
+2026-07-17T18:22:25.492934242Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:25.492938122Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:25.492941132Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:25.493939112Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:22:25.493942432Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:22:25.493945572Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:22:25.493949202Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:22:25.493952562Z [inf]    value: [
+2026-07-17T18:22:25.493955982Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:22:25.493959132Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:22:25.493962672Z [inf]    ],
+2026-07-17T18:22:25.493966232Z [inf]    info: {
+2026-07-17T18:22:25.493969492Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:22:25.493972812Z [inf]    },
+2026-07-17T18:22:25.493975902Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:22:25.493979282Z [inf]  }
+2026-07-17T18:22:25.493982452Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:25.493986602Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:22:25.493989992Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:22:25.493993132Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:22:25.495026012Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:22:25.495032402Z [err]  [Blockchain] Reconnect attempt 1 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:25.495037422Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:22:25.495040022Z [inf]  [Blockchain] Reconnect attempt 2/5 in 10s… (circuit: open)
+2026-07-17T18:22:25.495046152Z [inf]  }
+2026-07-17T18:22:25.495073872Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:22:25.495086302Z [inf]    value: [
+2026-07-17T18:22:25.495092662Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:22:25.495096662Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:22:25.495101002Z [inf]    ],
+2026-07-17T18:22:25.495106611Z [inf]    info: {
+2026-07-17T18:22:25.495110801Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:22:25.495115671Z [inf]    },
+2026-07-17T18:22:32.696890093Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:22:32.696895043Z [err]  [Blockchain] Reconnect attempt 2 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:32.696898993Z [inf]  [Blockchain] Reconnect attempt 3/5 in 30s… (circuit: open)
+2026-07-17T18:22:52.709817790Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:22:52.709821770Z [err]  [Blockchain] Health check: provider unreachable — missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:22:52.709824610Z [err]  [Blockchain] Health check FAILED: RPC provider unreachable
+2026-07-17T18:23:12.707572874Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:23:12.707578604Z [err]  [Blockchain] Reconnect attempt 3 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:23:12.707582234Z [inf]  [Blockchain] Reconnect attempt 4/5 in 60s… (circuit: open)
+2026-07-17T18:23:16.853370207Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958440 price=63978
+2026-07-17T18:24:06.799132071Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:24:06.799135451Z [err]  [Blockchain] Reconnect attempt 4 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:24:06.799138271Z [inf]  [Blockchain] Reconnect attempt 5/5 in 60s… (circuit: open)
+2026-07-17T18:24:26.797808739Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958440 price=63978
+2026-07-17T18:24:26.797813079Z [err]  [Blockchain] Failed to send admin alert email: Connection timeout
+2026-07-17T18:25:06.823997514Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:25:06.824000444Z [err]  [Blockchain] Reconnect attempt 5 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:25:06.824003924Z [err]  [Blockchain] All 5 reconnect attempts failed — listener is degraded. Manual intervention required.
+2026-07-17T18:25:26.656749688Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958440 price=63885
+2026-07-17T18:26:26.745498212Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958440 price=63885
+2026-07-17T18:27:26.837777322Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958440 price=63885
+2026-07-17T18:27:26.837780432Z [inf]  [Blockchain] Circuit breaker CLOSED — provider recovered after 7 consecutive failure(s)
+2026-07-17T18:27:26.837782952Z [inf]  [Blockchain] Health check: OK (provider reachable)
+2026-07-17T18:28:26.909826588Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958440 price=63885
+2026-07-17T18:29:26.900725012Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958441 price=63885
+2026-07-17T18:29:46.992789353Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:46.992792493Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:46.992795443Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:46.992798473Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:46.992801303Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:46.992804843Z [inf]    value: [
+2026-07-17T18:29:46.992808063Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:46.992812573Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:46.992815663Z [inf]    ],
+2026-07-17T18:29:46.992818623Z [inf]    info: {
+2026-07-17T18:29:46.992821653Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:46.992824573Z [inf]    },
+2026-07-17T18:29:46.992827483Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:46.992830803Z [inf]  }
+2026-07-17T18:29:46.992833873Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:46.993552216Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:46.993558016Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:46.993561666Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:46.993564985Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:46.993567985Z [inf]    value: [
+2026-07-17T18:29:46.993571075Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:46.993574075Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:46.993576625Z [inf]    ],
+2026-07-17T18:29:46.993579405Z [inf]    info: {
+2026-07-17T18:29:46.993581875Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:46.993584575Z [inf]    },
+2026-07-17T18:29:46.993587245Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:46.993589925Z [inf]  }
+2026-07-17T18:29:46.993593185Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:46.993595965Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:46.993598435Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:46.993601155Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:46.995003792Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:46.995008602Z [inf]    value: [
+2026-07-17T18:29:46.995012452Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:46.995016552Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:46.995022252Z [inf]    ],
+2026-07-17T18:29:46.995027272Z [inf]    info: {
+2026-07-17T18:29:46.995032162Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:46.995037462Z [inf]    },
+2026-07-17T18:29:46.995037682Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:46.995043842Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:46.995049982Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:46.995050222Z [inf]  }
+2026-07-17T18:29:46.995056792Z [inf]    value: [
+2026-07-17T18:29:46.995057662Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:46.995064502Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:46.995069042Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:46.995072632Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:46.995078172Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.001086225Z [inf]    ],
+2026-07-17T18:29:47.001090725Z [inf]    info: {
+2026-07-17T18:29:47.001094015Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.001097065Z [inf]    },
+2026-07-17T18:29:47.001100365Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.001104395Z [inf]  }
+2026-07-17T18:29:47.001107285Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.001110105Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.001112645Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.001115295Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.001118614Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.001121304Z [inf]    value: [
+2026-07-17T18:29:47.001123614Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.001126314Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.001128664Z [inf]    ],
+2026-07-17T18:29:47.001131494Z [inf]    info: {
+2026-07-17T18:29:47.001133734Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.001136274Z [inf]    },
+2026-07-17T18:29:47.002544720Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.002549270Z [inf]  }
+2026-07-17T18:29:47.002552250Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.002555110Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.002557720Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.002560490Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.002563310Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.002566280Z [inf]    value: [
+2026-07-17T18:29:47.002568970Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.002571560Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.002574040Z [inf]    ],
+2026-07-17T18:29:47.002576260Z [inf]    info: {
+2026-07-17T18:29:47.002579410Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.002584370Z [inf]    },
+2026-07-17T18:29:47.002589380Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.002592950Z [inf]  }
+2026-07-17T18:29:47.002597550Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.004105456Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.004113106Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.004119226Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.004125196Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.004127956Z [inf]  }
+2026-07-17T18:29:47.004132466Z [inf]    value: [
+2026-07-17T18:29:47.004138826Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.004139756Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.004145806Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.004148236Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.004151256Z [inf]    ],
+2026-07-17T18:29:47.004155245Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.004160135Z [inf]    info: {
+2026-07-17T18:29:47.004160435Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.004164775Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.004168295Z [inf]    },
+2026-07-17T18:29:47.004171955Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.006420754Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.006425304Z [inf]    value: [
+2026-07-17T18:29:47.006428464Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.006431784Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.006435314Z [inf]    ],
+2026-07-17T18:29:47.006438524Z [inf]    info: {
+2026-07-17T18:29:47.006441624Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.006446594Z [inf]    },
+2026-07-17T18:29:47.006456454Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.006460594Z [inf]  }
+2026-07-17T18:29:47.006464334Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.006468204Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.006471534Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.006474734Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.006477374Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.006480284Z [inf]    value: [
+2026-07-17T18:29:47.006483124Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.006485744Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.007417955Z [inf]    ],
+2026-07-17T18:29:47.007422655Z [inf]    info: {
+2026-07-17T18:29:47.007425415Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.007428154Z [inf]    },
+2026-07-17T18:29:47.007432754Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.007436314Z [inf]  }
+2026-07-17T18:29:47.007439444Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.007443104Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.007446534Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.007450474Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.007454204Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.007458584Z [inf]    value: [
+2026-07-17T18:29:47.007462214Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.007467244Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.007471064Z [inf]    ],
+2026-07-17T18:29:47.007473774Z [inf]    info: {
+2026-07-17T18:29:47.007477784Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.007480804Z [inf]    },
+2026-07-17T18:29:47.008734023Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.008739753Z [inf]  }
+2026-07-17T18:29:47.008753063Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.008758522Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.008762432Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.008766332Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.008769952Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.008773382Z [inf]    value: [
+2026-07-17T18:29:47.008776732Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.008780252Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.008783452Z [inf]    ],
+2026-07-17T18:29:47.008786322Z [inf]    info: {
+2026-07-17T18:29:47.008789052Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.008791902Z [inf]    },
+2026-07-17T18:29:47.008794802Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.008797372Z [inf]  }
+2026-07-17T18:29:47.008800602Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.009668404Z [inf]  }
+2026-07-17T18:29:47.009672234Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.009675914Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.009681123Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.009684553Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.009688523Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.009692103Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.009695683Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.009699193Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.009701823Z [inf]    value: [
+2026-07-17T18:29:47.009704693Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.009707423Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.009710033Z [inf]    ],
+2026-07-17T18:29:47.009712773Z [inf]    info: {
+2026-07-17T18:29:47.009715273Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.009718433Z [inf]    },
+2026-07-17T18:29:47.009721003Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.011027651Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.011032801Z [inf]    value: [
+2026-07-17T18:29:47.011036981Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.011040931Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.011044441Z [inf]    ],
+2026-07-17T18:29:47.011049161Z [inf]    info: {
+2026-07-17T18:29:47.011052841Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.011057231Z [inf]    },
+2026-07-17T18:29:47.011060611Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.011063951Z [inf]  }
+2026-07-17T18:29:47.011067331Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.011070541Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.011074431Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.011078071Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.011080971Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.011084041Z [inf]    value: [
+2026-07-17T18:29:47.011087331Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.011090641Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.011946832Z [inf]    ],
+2026-07-17T18:29:47.011952862Z [inf]    info: {
+2026-07-17T18:29:47.011957802Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.011962592Z [inf]    ],
+2026-07-17T18:29:47.011964132Z [inf]    },
+2026-07-17T18:29:47.011969652Z [inf]    info: {
+2026-07-17T18:29:47.011972802Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.011977242Z [inf]    },
+2026-07-17T18:29:47.011980382Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.011983652Z [inf]  }
+2026-07-17T18:29:47.011986452Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.011988992Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.011991712Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.011994132Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.011998582Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.012001542Z [inf]    value: [
+2026-07-17T18:29:47.012004082Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.012006582Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.014696226Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.014706676Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.014710036Z [inf]  }
+2026-07-17T18:29:47.014710456Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.014717086Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.014720946Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.014726436Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.014728266Z [inf]    ],
+2026-07-17T18:29:47.014737026Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.014737516Z [inf]    info: {
+2026-07-17T18:29:47.014744336Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.014746986Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.014750866Z [inf]    },
+2026-07-17T18:29:47.014755796Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.014758726Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.014765566Z [inf]    value: [
+2026-07-17T18:29:47.014765696Z [inf]  }
+2026-07-17T18:29:47.016816107Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.016820247Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.016824327Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.016828057Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.016831697Z [inf]    value: [
+2026-07-17T18:29:47.016836757Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.016842466Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.016846906Z [inf]    ],
+2026-07-17T18:29:47.016852046Z [inf]    info: {
+2026-07-17T18:29:47.016856106Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.016860536Z [inf]    },
+2026-07-17T18:29:47.016864276Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.016867296Z [inf]  }
+2026-07-17T18:29:47.016870786Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.016873836Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.016876956Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.016880606Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.018567451Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.018570821Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.018574231Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.018578061Z [inf]    value: [
+2026-07-17T18:29:47.018581640Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.018584930Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.018587890Z [inf]    ],
+2026-07-17T18:29:47.018591310Z [inf]    info: {
+2026-07-17T18:29:47.018594230Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.018596640Z [inf]    },
+2026-07-17T18:29:47.018599490Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.018602190Z [inf]  }
+2026-07-17T18:29:47.018605670Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.018608800Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.018612090Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.018615090Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.018617740Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.018621080Z [inf]    value: [
+2026-07-17T18:29:47.019437602Z [inf]    ],
+2026-07-17T18:29:47.019441542Z [inf]    info: {
+2026-07-17T18:29:47.019445622Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.019448842Z [inf]    },
+2026-07-17T18:29:47.019452472Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.019456032Z [inf]  }
+2026-07-17T18:29:47.019459592Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.019462672Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.019465632Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.019469062Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.019472382Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.019475852Z [inf]    value: [
+2026-07-17T18:29:47.019478912Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.019484892Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.019488122Z [inf]    ],
+2026-07-17T18:29:47.019491372Z [inf]    info: {
+2026-07-17T18:29:47.019495292Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.019498862Z [inf]    },
+2026-07-17T18:29:47.020974158Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.020978438Z [inf]  }
+2026-07-17T18:29:47.020982878Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.020986138Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.020992748Z [inf]  }
+2026-07-17T18:29:47.020996038Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.020999688Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.021002728Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.021007198Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.021010868Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.021013928Z [inf]    value: [
+2026-07-17T18:29:47.021017328Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.021020107Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.021022887Z [inf]    ],
+2026-07-17T18:29:47.021025647Z [inf]    info: {
+2026-07-17T18:29:47.021028167Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.021030877Z [inf]    },
+2026-07-17T18:29:47.023380854Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.023384834Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.023388254Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.023392394Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.023395944Z [inf]    value: [
+2026-07-17T18:29:47.023399084Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.023454494Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.023458024Z [inf]    ],
+2026-07-17T18:29:47.023461334Z [inf]    info: {
+2026-07-17T18:29:47.023464384Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.023467654Z [inf]    },
+2026-07-17T18:29:47.023470574Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.023473734Z [inf]  }
+2026-07-17T18:29:47.023487574Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.023491704Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.023496144Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.023500604Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.024631893Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.024634993Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.024642683Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.024645703Z [inf]    value: [
+2026-07-17T18:29:47.024653993Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.024655413Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.024662253Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.024664403Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.024668532Z [inf]    value: [
+2026-07-17T18:29:47.024672262Z [inf]    ],
+2026-07-17T18:29:47.024675072Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.024679122Z [inf]    info: {
+2026-07-17T18:29:47.024683112Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.024686702Z [inf]    },
+2026-07-17T18:29:47.024690742Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.024694342Z [inf]  }
+2026-07-17T18:29:47.024698012Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.024702562Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.025576054Z [inf]    ],
+2026-07-17T18:29:47.025580654Z [inf]    info: {
+2026-07-17T18:29:47.025588963Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.025592763Z [inf]    },
+2026-07-17T18:29:47.025596413Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.025599973Z [inf]  }
+2026-07-17T18:29:47.025604103Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.025606873Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.025611313Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.025614223Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.025617253Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.025620593Z [inf]    value: [
+2026-07-17T18:29:47.025623713Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.025626763Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.025629633Z [inf]    ],
+2026-07-17T18:29:47.025632663Z [inf]    info: {
+2026-07-17T18:29:47.025635733Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.025639323Z [inf]    },
+2026-07-17T18:29:47.026459356Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.026468086Z [inf]  }
+2026-07-17T18:29:47.026472526Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.026476106Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.026479506Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.026483726Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.026487006Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.026490656Z [inf]    value: [
+2026-07-17T18:29:47.026493876Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.026497256Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.026500216Z [inf]    ],
+2026-07-17T18:29:47.026503736Z [inf]    info: {
+2026-07-17T18:29:47.026507266Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.026510365Z [inf]    },
+2026-07-17T18:29:47.026513355Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.026516515Z [inf]  }
+2026-07-17T18:29:47.026519685Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.027371257Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.027375467Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.027378977Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.027383397Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.027386927Z [inf]    value: [
+2026-07-17T18:29:47.027390927Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.027394247Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.027397327Z [inf]    ],
+2026-07-17T18:29:47.027400247Z [inf]    info: {
+2026-07-17T18:29:47.027403477Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.027406767Z [inf]    },
+2026-07-17T18:29:47.027409727Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.027412677Z [inf]  }
+2026-07-17T18:29:47.027416767Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.027419957Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.027422947Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.027425927Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.028997352Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.029003722Z [inf]    value: [
+2026-07-17T18:29:47.029008662Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.029012042Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.029015422Z [inf]    ],
+2026-07-17T18:29:47.029018682Z [inf]    info: {
+2026-07-17T18:29:47.029021912Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.029024832Z [inf]    },
+2026-07-17T18:29:47.029027882Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.029038252Z [inf]  }
+2026-07-17T18:29:47.029042752Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.029046922Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.029051382Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.029055712Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.029059932Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.029065342Z [inf]    value: [
+2026-07-17T18:29:47.029069281Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.029072551Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.029686545Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.029687485Z [inf]    ],
+2026-07-17T18:29:47.029692095Z [inf]    ],
+2026-07-17T18:29:47.029696755Z [inf]    info: {
+2026-07-17T18:29:47.029698855Z [inf]    info: {
+2026-07-17T18:29:47.029703315Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.029705795Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.029709815Z [inf]    },
+2026-07-17T18:29:47.029712485Z [inf]    },
+2026-07-17T18:29:47.029720405Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.029723845Z [inf]  }
+2026-07-17T18:29:47.029726815Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.029729345Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.029732535Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.029736445Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.029739595Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.029742235Z [inf]    value: [
+2026-07-17T18:29:47.029744815Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.030932073Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.030938163Z [inf]  }
+2026-07-17T18:29:47.030941953Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.030949013Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.030952723Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.030956233Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.030959443Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.030962913Z [inf]    value: [
+2026-07-17T18:29:47.030966583Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.030969443Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.030972243Z [inf]    ],
+2026-07-17T18:29:47.030975683Z [inf]    info: {
+2026-07-17T18:29:47.030979033Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.030981893Z [inf]    },
+2026-07-17T18:29:47.030985063Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.030988053Z [inf]  }
+2026-07-17T18:29:47.030991093Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.034110694Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.034135424Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.034139444Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.034142814Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.034146244Z [inf]    value: [
+2026-07-17T18:29:47.034149674Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.034153044Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.034156154Z [inf]    ],
+2026-07-17T18:29:47.034159994Z [inf]    info: {
+2026-07-17T18:29:47.034162944Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.034166084Z [inf]    },
+2026-07-17T18:29:47.034169204Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.034173024Z [inf]  }
+2026-07-17T18:29:47.034175984Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.034179254Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.034182103Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.034185523Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.035655249Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.035661619Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.035666429Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.035672589Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.035675889Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.035689989Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.035697389Z [inf]    value: [
+2026-07-17T18:29:47.035698499Z [inf]    value: [
+2026-07-17T18:29:47.035705569Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.035711699Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.035713099Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.035716748Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.035719688Z [inf]    ],
+2026-07-17T18:29:47.035722458Z [inf]    info: {
+2026-07-17T18:29:47.035726678Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.035729348Z [inf]    },
+2026-07-17T18:29:47.035731928Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.035734798Z [inf]  }
+2026-07-17T18:29:47.036609901Z [inf]    ],
+2026-07-17T18:29:47.036615691Z [inf]    info: {
+2026-07-17T18:29:47.036620391Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.036624961Z [inf]    },
+2026-07-17T18:29:47.036628491Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.036632581Z [inf]  }
+2026-07-17T18:29:47.036635941Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.036640340Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.036644800Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.036648650Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.036651740Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.036655420Z [inf]    value: [
+2026-07-17T18:29:47.036671240Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.036675190Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.036680190Z [inf]    ],
+2026-07-17T18:29:47.036685470Z [inf]    info: {
+2026-07-17T18:29:47.036690260Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.036695050Z [inf]    },
+2026-07-17T18:29:47.038381603Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.038386403Z [inf]  }
+2026-07-17T18:29:47.038390123Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.038394933Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.038398503Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.038404933Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.038408133Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.038411303Z [inf]    value: [
+2026-07-17T18:29:47.038414933Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.038418363Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.038421403Z [inf]    ],
+2026-07-17T18:29:47.038425623Z [inf]    info: {
+2026-07-17T18:29:47.038428513Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:29:47.038431723Z [inf]    },
+2026-07-17T18:29:47.038435223Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.038438803Z [inf]  }
+2026-07-17T18:29:47.038443073Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.040164497Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.040169967Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.040173947Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.040177637Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.040180847Z [inf]    value: [
+2026-07-17T18:29:47.040184347Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.040187947Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:29:47.040191777Z [inf]    ],
+2026-07-17T18:29:47.040195407Z [inf]    info: {
+2026-07-17T18:29:47.040198267Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:29:47.040201267Z [inf]    },
+2026-07-17T18:29:47.040213686Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.040216986Z [inf]  }
+2026-07-17T18:29:47.040221726Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.040225346Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.040229156Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:29:47.040234746Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.041322955Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.041328895Z [inf]    value: [
+2026-07-17T18:29:47.043115579Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.045563296Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.046676485Z [inf]    ],
+2026-07-17T18:29:47.049203091Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.051098734Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.052893467Z [inf]    ],
+2026-07-17T18:29:47.055510483Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.056816880Z [inf]    ],
+2026-07-17T18:29:47.059773981Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.060907261Z [inf]    ],
+2026-07-17T18:29:47.062834483Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.064666266Z [inf]    ],
+2026-07-17T18:29:47.066703397Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.069192693Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:29:47.072308684Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.073787530Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.075458695Z [err]  [Blockchain] Error handling block 25554195: Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 9, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed13", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.076714313Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.080311748Z [err]    shortMessage: 'missing response for request'
+2026-07-17T18:29:47.081971343Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.084515529Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.085714457Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 17, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed0d", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.087486311Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 21, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed19", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.089011697Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 23, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed21", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.091641922Z [err]  }
+2026-07-17T18:29:47.092820051Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.096105490Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.097724965Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.098918354Z [err]  }
+2026-07-17T18:29:47.101057083Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.103180673Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.104898427Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.106862089Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.111123998Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 26, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed02", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.111128038Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 27, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed01", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:47.113235379Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.116494277Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.117457459Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:29:47.119250372Z [err]    ],
+2026-07-17T18:29:47.120921316Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.122664800Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.125408504Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:29:47.127165167Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:29:47.128858432Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 40, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed10", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:29:52.712673075Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:29:52.712682495Z [inf]  [Blockchain] Reconnect attempt 3/5 in 30s… (circuit: open)
+2026-07-17T18:29:52.712687555Z [err]  [Blockchain] Reconnect attempt 2 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:30:06.619481239Z [err]  Railway rate limit of 500 logs/sec reached for replica, update your application to reduce the logging rate. Messages dropped: 1136
+2026-07-17T18:30:22.743010361Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958441 price=63865
+2026-07-17T18:30:22.816952855Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:30:22.816957675Z [err]  [Blockchain] Reconnect attempt 3 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:30:22.816961705Z [inf]  [Blockchain] Reconnect attempt 4/5 in 60s… (circuit: open)
+2026-07-17T18:31:22.945728292Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958441 price=63865
+2026-07-17T18:31:22.945735232Z [err]  node:internal/process/promises:391
+2026-07-17T18:31:22.945739982Z [err]      triggerUncaughtException(err, true /* fromPromise */);
+2026-07-17T18:31:22.945743952Z [err]      ^
+2026-07-17T18:31:22.945748762Z [err]  
+2026-07-17T18:31:22.945752592Z [err]  Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:22.945756312Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:22.945760012Z [err]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:22.945763582Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:22.945767002Z [err]    code: 'BAD_DATA',
+2026-07-17T18:31:22.945770932Z [err]    value: [
+2026-07-17T18:31:22.945775462Z [err]      {
+2026-07-17T18:31:22.945780111Z [err]        code: -32005,
+2026-07-17T18:31:22.945784091Z [err]        message: 'Too Many Requests',
+2026-07-17T18:31:22.945788001Z [err]        data: { see: 'https://infura.io/dashboard' }
+2026-07-17T18:31:22.945791831Z [err]      },
+2026-07-17T18:31:22.945795951Z [err]      {
+2026-07-17T18:31:22.945799641Z [err]        code: -32005,
+2026-07-17T18:31:22.945802911Z [err]        message: 'Too Many Requests',
+2026-07-17T18:31:22.946213887Z [err]    shortMessage: 'missing response for request'
+2026-07-17T18:31:22.946215147Z [err]          {
+2026-07-17T18:31:22.946215467Z [err]        data: { see: 'https://infura.io/dashboard' }
+2026-07-17T18:31:22.946221377Z [err]  }
+2026-07-17T18:31:22.946224067Z [err]            topics: [
+2026-07-17T18:31:22.946227797Z [err]  
+2026-07-17T18:31:22.946227957Z [err]      }
+2026-07-17T18:31:22.946235207Z [err]              '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+2026-07-17T18:31:22.946236257Z [err]  Node.js v20.20.2
+2026-07-17T18:31:22.946238947Z [err]    ],
+2026-07-17T18:31:22.946244297Z [err]              null,
+2026-07-17T18:31:22.946248237Z [err]              '0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5'
+2026-07-17T18:31:22.946250667Z [err]    info: {
+2026-07-17T18:31:22.946254047Z [err]            ],
+2026-07-17T18:31:22.946256817Z [err]      payload: {
+2026-07-17T18:31:22.946261367Z [err]            address: [ '0xdac17f958d2ee523a2206206994597c13d831ec7' ]
+2026-07-17T18:31:22.946262827Z [err]        method: 'eth_newFilter',
+2026-07-17T18:31:22.946268967Z [err]          }
+2026-07-17T18:31:22.946269967Z [err]        params: [
+2026-07-17T18:31:22.946274537Z [err]        ],
+2026-07-17T18:31:22.946278887Z [err]        id: 3,
+2026-07-17T18:31:22.946282277Z [err]        jsonrpc: '2.0'
+2026-07-17T18:31:22.946285477Z [err]      }
+2026-07-17T18:31:22.946289347Z [err]    },
+2026-07-17T18:31:24.235021760Z [err]  [Static] frontend/dist not found — run "npm run build" in frontend/
+2026-07-17T18:31:24.235031060Z [inf]  [BTC] Monitor loop started (min 3 confirmations, polling every 60s)
+2026-07-17T18:31:24.235035410Z [inf]  ✅  ASTRO META-TRADE API running on port 10000 [production]
+2026-07-17T18:31:24.828685818Z [inf]  [BTC] Seeded price cache from DB: 63904 (37s old)
+2026-07-17T18:31:24.998826018Z [inf]  [Blockchain] Seeded ETH price cache from DB: 1834.83 (247s old)
+2026-07-17T18:31:24.998833518Z [inf]  [Blockchain] Watching for fixed-address ETH/USDT/USDC deposits (min 12 confirmations)
+2026-07-17T18:31:25.270850251Z [inf]  [Blockchain] Pending-price retry loop started (interval: 5 min)
+2026-07-17T18:31:25.270853451Z [inf]  [Blockchain] Pending-price retry loop watchdog scheduled (interval: 15 min, stall threshold: 15 min)
+2026-07-17T18:31:25.270856191Z [inf]  [Blockchain] Health check scheduled (interval: 5 min, silence threshold: 10 min)
+2026-07-17T18:31:25.345741857Z [inf]  [BTC] Polling 1 pending deposit(s) | height=958441 price=63904
+2026-07-17T18:31:25.615874356Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:25.615877486Z [inf]  [Blockchain] Reconnect attempt 1/5 in 5s… (circuit: closed)
+2026-07-17T18:31:25.615880686Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:25.615884316Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:25.616426211Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:25.616440521Z [inf]    info: {
+2026-07-17T18:31:25.616440671Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:25.616448601Z [inf]  }
+2026-07-17T18:31:25.616448731Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:31:25.616450891Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:25.616453511Z [inf]    },
+2026-07-17T18:31:25.616456611Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:25.616457481Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:31:25.616457921Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:25.616461831Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:31:25.616462511Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:25.616466861Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:25.616467081Z [inf]    value: [
+2026-07-17T18:31:25.616473231Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:31:25.616477511Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:31:25.616481921Z [inf]    ],
+2026-07-17T18:31:25.617248443Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:31:25.617253933Z [inf]    value: [
+2026-07-17T18:31:25.617257193Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:31:25.617259863Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:31:25.617262473Z [inf]    ],
+2026-07-17T18:31:25.617265673Z [inf]    info: {
+2026-07-17T18:31:25.617268323Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:31:25.617270693Z [inf]    },
+2026-07-17T18:31:25.617273173Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:31:25.617275713Z [inf]  }
+2026-07-17T18:31:30.580366871Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:31:30.580370011Z [err]  [Blockchain] Reconnect attempt 1 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:30.580375791Z [inf]  [Blockchain] Reconnect attempt 2/5 in 10s… (circuit: closed)
+2026-07-17T18:31:37.406184070Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:37.406188890Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:37.406192920Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:37.406196920Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:37.406200230Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:31:37.406203090Z [inf]    value: [
+2026-07-17T18:31:37.406207470Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:31:37.406210910Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:31:37.406214090Z [inf]    ],
+2026-07-17T18:31:37.406217490Z [inf]    info: {
+2026-07-17T18:31:37.406221570Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:31:37.406225200Z [inf]    },
+2026-07-17T18:31:37.406228940Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:31:37.406233350Z [inf]  }
+2026-07-17T18:31:37.406236980Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:37.407095311Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:37.407103931Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:37.407108541Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:37.407112011Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:31:37.407115971Z [inf]    value: [
+2026-07-17T18:31:37.407120051Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:31:37.407123651Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:31:37.407133361Z [inf]    ],
+2026-07-17T18:31:37.407136971Z [inf]    info: {
+2026-07-17T18:31:37.407141251Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:31:37.407144731Z [inf]    },
+2026-07-17T18:31:37.407148911Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:31:37.407154200Z [inf]  }
+2026-07-17T18:31:37.808749066Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:31:37.808758466Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:31:37.808791626Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 9, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed2d", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:37.808797345Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 8, "jsonrpc": "2.0", "method": "eth_chainId", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:37.808802765Z [err]  [Blockchain] Error handling block 25554221: Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 9, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed2d", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:37.808807835Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:37.808812515Z [err]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:37.808817415Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:37.808821365Z [err]    code: 'BAD_DATA',
+2026-07-17T18:31:37.808825625Z [err]    value: [
+2026-07-17T18:31:37.809535258Z [err]    ],
+2026-07-17T18:31:37.809538928Z [err]    info: {
+2026-07-17T18:31:37.809541298Z [err]      payload: {
+2026-07-17T18:31:37.809543848Z [err]        method: 'eth_getBlockByNumber',
+2026-07-17T18:31:37.809546928Z [err]        params: [Array],
+2026-07-17T18:31:37.809550038Z [err]        id: 9,
+2026-07-17T18:31:37.809552638Z [err]        jsonrpc: '2.0'
+2026-07-17T18:31:37.809555028Z [err]      }
+2026-07-17T18:31:37.809558448Z [err]    },
+2026-07-17T18:31:37.809560838Z [err]    shortMessage: 'missing response for request'
+2026-07-17T18:31:37.809563448Z [err]  }
+2026-07-17T18:31:40.617950148Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:31:40.617960628Z [err]  [Blockchain] Reconnect attempt 2 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:40.617965958Z [inf]  [Blockchain] Reconnect attempt 1/5 in 5s… (circuit: closed)
+2026-07-17T18:31:45.851899619Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:31:45.851906869Z [err]  [Blockchain] Reconnect attempt 1 failed: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:45.851912439Z [inf]  [Blockchain] Reconnect attempt 2/5 in 10s… (circuit: closed)
+2026-07-17T18:31:54.097662067Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:54.097665417Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:54.097668296Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:54.097671056Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:54.097673596Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:31:54.097677786Z [inf]    value: [
+2026-07-17T18:31:54.097680616Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:31:54.097683266Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:31:54.097685966Z [inf]    ],
+2026-07-17T18:31:54.097688826Z [inf]    info: {
+2026-07-17T18:31:54.097691526Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 3, jsonrpc: '2.0' }
+2026-07-17T18:31:54.097694366Z [inf]    },
+2026-07-17T18:31:54.097697706Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:31:54.097701006Z [inf]  }
+2026-07-17T18:31:54.097704706Z [inf]  @TODO Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 4, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:54.099129932Z [inf]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:54.099134202Z [inf]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:54.099137332Z [inf]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:54.099139962Z [inf]    code: 'BAD_DATA',
+2026-07-17T18:31:54.099142842Z [inf]    value: [
+2026-07-17T18:31:54.099145922Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:31:54.099148662Z [inf]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:31:54.099151172Z [inf]    ],
+2026-07-17T18:31:54.099153852Z [inf]    info: {
+2026-07-17T18:31:54.099156532Z [inf]      payload: { method: 'eth_newFilter', params: [Array], id: 4, jsonrpc: '2.0' }
+2026-07-17T18:31:54.099159252Z [inf]    },
+2026-07-17T18:31:54.099161652Z [inf]    shortMessage: 'missing response for request'
+2026-07-17T18:31:54.099164122Z [inf]  }
+2026-07-17T18:31:54.407398415Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 13, "jsonrpc": "2.0", "method": "eth_chainId", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:54.407402695Z [err]  [Blockchain] Provider error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 14, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed2e", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:54.407413865Z [err]  [Blockchain] Error handling block 25554222: Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 14, "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [ "0x185ed2e", true ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:54.407417035Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:54.407419795Z [err]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:54.407422325Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:54.407425115Z [err]    code: 'BAD_DATA',
+2026-07-17T18:31:54.407427665Z [err]    value: [
+2026-07-17T18:31:54.407430435Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] },
+2026-07-17T18:31:54.407433265Z [err]      { code: -32005, message: 'Too Many Requests', data: [Object] }
+2026-07-17T18:31:54.408851701Z [err]    ],
+2026-07-17T18:31:54.408855941Z [err]    info: {
+2026-07-17T18:31:54.408859081Z [err]      payload: {
+2026-07-17T18:31:54.408862071Z [err]        method: 'eth_getBlockByNumber',
+2026-07-17T18:31:54.408865071Z [err]        params: [Array],
+2026-07-17T18:31:54.408867621Z [err]        id: 14,
+2026-07-17T18:31:54.408869991Z [err]        jsonrpc: '2.0'
+2026-07-17T18:31:54.408872751Z [err]      }
+2026-07-17T18:31:54.408875131Z [err]    },
+2026-07-17T18:31:54.408877831Z [err]    shortMessage: 'missing response for request'
+2026-07-17T18:31:54.408880241Z [err]  }
+2026-07-17T18:31:55.294058722Z [inf]  JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)
+2026-07-17T18:31:55.294063312Z [err]  [Blockchain] Health check: provider unreachable — missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 2, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": [  ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:55.294067352Z [err]  [Blockchain] Health check FAILED: RPC provider unreachable
+2026-07-17T18:31:55.294072352Z [err]  [Blockchain] Circuit breaker OPEN after 3 consecutive failures — suppressing reconnects for 300s
+2026-07-17T18:31:55.946794038Z [err]      }
+2026-07-17T18:31:55.946922106Z [err]  node:internal/process/promises:391
+2026-07-17T18:31:55.946925026Z [err]      triggerUncaughtException(err, true /* fromPromise */);
+2026-07-17T18:31:55.946927636Z [err]      ^
+2026-07-17T18:31:55.946930546Z [err]  
+2026-07-17T18:31:55.946934786Z [err]  Error: missing response for request (value=[ { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" }, { "code": -32005, "data": { "see": "https://infura.io/dashboard" }, "message": "Too Many Requests" } ], info={ "payload": { "id": 3, "jsonrpc": "2.0", "method": "eth_newFilter", "params": [ { "address": [ "0xdac17f958d2ee523a2206206994597c13d831ec7" ], "topics": [ "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", null, "0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5" ] } ] } }, code=BAD_DATA, version=6.17.0)
+2026-07-17T18:31:55.946937806Z [err]      at makeError (/app/node_modules/ethers/lib.commonjs/utils/errors.js:137:21)
+2026-07-17T18:31:55.946941016Z [err]      at /app/node_modules/ethers/lib.commonjs/providers/provider-jsonrpc.js:293:72
+2026-07-17T18:31:55.946944726Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2026-07-17T18:31:55.946947536Z [err]    code: 'BAD_DATA',
+2026-07-17T18:31:55.946950286Z [err]    value: [
+2026-07-17T18:31:55.946953116Z [err]      {
+2026-07-17T18:31:55.946955876Z [err]        code: -32005,
+2026-07-17T18:31:55.946958766Z [err]        message: 'Too Many Requests',
+2026-07-17T18:31:55.946961286Z [err]        data: { see: 'https://infura.io/dashboard' }
+2026-07-17T18:31:55.946964176Z [err]      },
+2026-07-17T18:31:55.946967296Z [err]      {
+2026-07-17T18:31:55.946970366Z [err]        code: -32005,
+2026-07-17T18:31:55.946973186Z [err]        message: 'Too Many Requests',
+2026-07-17T18:31:55.946975576Z [err]        data: { see: 'https://infura.io/dashboard' }
+2026-07-17T18:31:55.949355223Z [err]              null,
+2026-07-17T18:31:55.949360973Z [err]              '0x0000000000000000000000009fd4dcff935f4b9f31384db4e91e11d1eda7fdb5'
+2026-07-17T18:31:55.949363863Z [err]    ],
+2026-07-17T18:31:55.949364563Z [err]            ],
+2026-07-17T18:31:55.949367803Z [err]            address: [ '0xdac17f958d2ee523a2206206994597c13d831ec7' ]
+2026-07-17T18:31:55.949367933Z [err]    info: {
+2026-07-17T18:31:55.949372973Z [err]          }
+2026-07-17T18:31:55.949373413Z [err]    shortMessage: 'missing response for request'
+2026-07-17T18:31:55.949373483Z [err]      payload: {
+2026-07-17T18:31:55.949376933Z [err]        method: 'eth_newFilter',
+2026-07-17T18:31:55.949377663Z [err]        ],
+2026-07-17T18:31:55.949384383Z [err]        params: [
+2026-07-17T18:31:55.949384403Z [err]        id: 3,
+2026-07-17T18:31:55.949384573Z [err]  }
+2026-07-17T18:31:55.949391163Z [err]          {
+2026-07-17T18:31:55.949391183Z [err]        jsonrpc: '2.0'
+2026-07-17T18:31:55.949394953Z [err]  
+2026-07-17T18:31:55.949397913Z [err]            topics: [
+2026-07-17T18:31:55.949398713Z [err]      }
+2026-07-17T18:31:55.949403683Z [err]              '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+2026-07-17T18:31:55.949404423Z [err]  Node.js v20.20.2
+2026-07-17T18:31:55.949405273Z [err]    },
