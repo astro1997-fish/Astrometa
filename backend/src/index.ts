@@ -1,4 +1,7 @@
-import 'dotenv/config'
+// Load .env file only in local development (Railway injects env vars directly)
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv/config')
+}
 import express from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
