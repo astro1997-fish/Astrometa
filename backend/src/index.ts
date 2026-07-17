@@ -60,14 +60,17 @@ const allowedOrigins = new Set<string>([
 ])
 
 // Replit URLs are dynamic — allow all *.replit.dev (dev previews) and *.replit.app (production)
-const REPLIT_URL_RE = /^https:\/\/.+\.replit\.(dev|app)$/
+const REPLIT_URL_RE  = /^https:\/\/.+\.replit\.(dev|app)$/
+// Cloudflare Pages preview + production URLs
+const CF_PAGES_RE    = /^https:\/\/.+\.pages\.dev$/
 
 app.use(cors({
   origin: (origin, cb) => {
     // Allow requests with no Origin header (server-to-server, curl, Stripe webhooks)
     if (!origin) return cb(null, true)
     if (allowedOrigins.has(origin)) return cb(null, true)
-    if (REPLIT_URL_RE.test(origin)) return cb(null, true)
+    if (REPLIT_URL_RE.test(origin))  return cb(null, true)
+    if (CF_PAGES_RE.test(origin))    return cb(null, true)
     cb(new Error(`CORS: origin "${origin}" not allowed`))
   },
   credentials: true,

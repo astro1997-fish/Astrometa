@@ -5,7 +5,9 @@ buildCommand = "cd backend && npm ci && npm run build"
 [deploy]
 startCommand = "cd backend && NODE_ENV=production node dist/index.js"
 restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3
+restartPolicyMaxRetries = 10
 
 [deploy.healthcheck]
 path = "/health"
+initialDelaySeconds = 10
+timeoutSeconds = 10
