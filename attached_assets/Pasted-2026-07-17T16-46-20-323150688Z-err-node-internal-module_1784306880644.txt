@@ -1,0 +1,485 @@
+2026-07-17T16:46:20.323150688Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:20.323154338Z [err]    throw err;
+2026-07-17T16:46:20.323157958Z [err]    ^
+2026-07-17T16:46:20.323161638Z [err]  
+2026-07-17T16:46:20.323164978Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:20.323168298Z [err]  Require stack:
+2026-07-17T16:46:20.323171348Z [err]  - /app/dist/index.js
+2026-07-17T16:46:20.323175098Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:20.323178568Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:20.323181838Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:20.323185418Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:20.323188728Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:20.323192298Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:20.323195908Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:20.323199348Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:20.323202478Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:20.323205768Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:20.323209078Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:20.323213118Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:20.323216998Z [err]  }
+2026-07-17T16:46:20.323220878Z [err]  
+2026-07-17T16:46:20.323224288Z [err]  Node.js v20.20.2
+2026-07-17T16:46:20.463773707Z [inf]  Starting Container
+2026-07-17T16:46:20.524068255Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:20.524072275Z [err]    throw err;
+2026-07-17T16:46:20.524075605Z [err]    ^
+2026-07-17T16:46:20.524079105Z [err]  
+2026-07-17T16:46:20.524082995Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:20.524086895Z [err]  Require stack:
+2026-07-17T16:46:20.524090515Z [err]  - /app/dist/index.js
+2026-07-17T16:46:20.524093495Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:20.524096655Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:20.524099955Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:20.524103125Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:20.524106005Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:20.524109235Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:20.524112685Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:20.524115865Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:20.524119035Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:20.524122425Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:20.524125445Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:20.524128895Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:20.524132175Z [err]  }
+2026-07-17T16:46:20.524137475Z [err]  
+2026-07-17T16:46:20.524141035Z [err]  Node.js v20.20.2
+2026-07-17T16:46:21.333428093Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:21.333439153Z [err]    throw err;
+2026-07-17T16:46:21.333443773Z [err]    ^
+2026-07-17T16:46:21.333448533Z [err]  
+2026-07-17T16:46:21.333452943Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:21.333457343Z [err]  Require stack:
+2026-07-17T16:46:21.333460543Z [err]  - /app/dist/index.js
+2026-07-17T16:46:21.333463743Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:21.333467503Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:21.333470894Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:21.333474704Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:21.333477614Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:21.333482634Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:21.333486694Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:21.333492194Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:21.333495464Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:21.333498684Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:21.333502254Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:21.333506914Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:21.333509984Z [err]  }
+2026-07-17T16:46:21.333513204Z [err]  
+2026-07-17T16:46:21.333516884Z [err]  Node.js v20.20.2
+2026-07-17T16:46:21.956253155Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:21.956263415Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:21.956268905Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:21.956272495Z [err]  }
+2026-07-17T16:46:21.956277045Z [err]  
+2026-07-17T16:46:21.956282165Z [err]  Node.js v20.20.2
+2026-07-17T16:46:21.956376655Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:21.956379895Z [err]    throw err;
+2026-07-17T16:46:21.956383065Z [err]    ^
+2026-07-17T16:46:21.956387005Z [err]  
+2026-07-17T16:46:21.956390615Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:21.956393495Z [err]  Require stack:
+2026-07-17T16:46:21.956396915Z [err]  - /app/dist/index.js
+2026-07-17T16:46:21.956402085Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:21.956405585Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:21.956408895Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:21.956412135Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:21.956415075Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:21.956418365Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:21.956421806Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:21.956425396Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:21.956428786Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:22.686337764Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:22.686349724Z [err]  }
+2026-07-17T16:46:22.686354954Z [err]  
+2026-07-17T16:46:22.686359144Z [err]  Node.js v20.20.2
+2026-07-17T16:46:22.686379454Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:22.686381964Z [err]    throw err;
+2026-07-17T16:46:22.686384464Z [err]    ^
+2026-07-17T16:46:22.686388134Z [err]  
+2026-07-17T16:46:22.686390964Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:22.686393554Z [err]  Require stack:
+2026-07-17T16:46:22.686396114Z [err]  - /app/dist/index.js
+2026-07-17T16:46:22.686399104Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:22.686402004Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:22.686404544Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:22.686407404Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:22.686410074Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:22.686412584Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:22.686415044Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:22.686417784Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:22.686420304Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:22.686423114Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:22.686427514Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:23.368632652Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:23.368640832Z [err]    throw err;
+2026-07-17T16:46:23.368646132Z [err]    ^
+2026-07-17T16:46:23.368651002Z [err]  
+2026-07-17T16:46:23.368655912Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:23.368661132Z [err]  Require stack:
+2026-07-17T16:46:23.368667032Z [err]  - /app/dist/index.js
+2026-07-17T16:46:23.368671732Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:23.368675842Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:23.368684722Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:23.368689502Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:23.368694782Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:23.368699352Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:23.368704092Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:23.368709732Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:23.368714502Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:23.368718842Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:23.368723902Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:23.368728082Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:23.368732382Z [err]  }
+2026-07-17T16:46:23.368736912Z [err]  
+2026-07-17T16:46:23.368741572Z [err]  Node.js v20.20.2
+2026-07-17T16:46:24.105445553Z [err]  }
+2026-07-17T16:46:24.105445653Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:24.105451903Z [err]  
+2026-07-17T16:46:24.105452693Z [err]    throw err;
+2026-07-17T16:46:24.105459253Z [err]  Node.js v20.20.2
+2026-07-17T16:46:24.105459353Z [err]    ^
+2026-07-17T16:46:24.105463853Z [err]  
+2026-07-17T16:46:24.105466823Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:24.105469203Z [err]  Require stack:
+2026-07-17T16:46:24.105471763Z [err]  - /app/dist/index.js
+2026-07-17T16:46:24.105475353Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:24.105477753Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:24.105480223Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:24.105482903Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:24.105485353Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:24.105488043Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:24.105490663Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:24.105493333Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:24.105496373Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:24.105499153Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:24.105501683Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:24.105504353Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:24.824170441Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:24.824313791Z [err]    throw err;
+2026-07-17T16:46:24.824325671Z [err]    ^
+2026-07-17T16:46:24.824331941Z [err]  
+2026-07-17T16:46:24.824341941Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:24.824346441Z [err]  Require stack:
+2026-07-17T16:46:24.824350871Z [err]  - /app/dist/index.js
+2026-07-17T16:46:24.824355541Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:24.824360541Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:24.824364411Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:24.824368381Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:24.824372201Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:24.824377001Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:24.824380441Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:24.824383801Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:24.824386771Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:24.824389981Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:24.824393471Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:24.824397121Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:24.824400101Z [err]  }
+2026-07-17T16:46:24.824403121Z [err]  
+2026-07-17T16:46:24.824406301Z [err]  Node.js v20.20.2
+2026-07-17T16:46:25.564197393Z [err]  }
+2026-07-17T16:46:25.564204673Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:25.564205963Z [err]  
+2026-07-17T16:46:25.564212493Z [err]  Node.js v20.20.2
+2026-07-17T16:46:25.564215993Z [err]    throw err;
+2026-07-17T16:46:25.564220283Z [err]    ^
+2026-07-17T16:46:25.564226613Z [err]  
+2026-07-17T16:46:25.564230283Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:25.564234153Z [err]  Require stack:
+2026-07-17T16:46:25.564238503Z [err]  - /app/dist/index.js
+2026-07-17T16:46:25.564241663Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:25.564245543Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:25.564249063Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:25.564258763Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:25.564274333Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:25.564281783Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:25.564287083Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:25.564293393Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:25.564302973Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:25.564309543Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:25.564323154Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:25.564328564Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:26.340639257Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:26.340643497Z [err]    throw err;
+2026-07-17T16:46:26.340646637Z [err]    ^
+2026-07-17T16:46:26.340650227Z [err]  
+2026-07-17T16:46:26.340653417Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:26.340656637Z [err]  Require stack:
+2026-07-17T16:46:26.340659287Z [err]  - /app/dist/index.js
+2026-07-17T16:46:26.340662377Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:26.340667287Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:26.340670107Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:26.340673037Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:26.340675867Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:26.340678757Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:26.340682147Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:26.340685347Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:26.340688897Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:26.340691557Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:26.340694677Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:26.340697727Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:26.340700787Z [err]  }
+2026-07-17T16:46:26.340703837Z [err]  
+2026-07-17T16:46:26.340706537Z [err]  Node.js v20.20.2
+2026-07-17T16:46:27.032812038Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:27.032815128Z [err]    throw err;
+2026-07-17T16:46:27.032817658Z [err]    ^
+2026-07-17T16:46:27.032819968Z [err]  
+2026-07-17T16:46:27.032822418Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:27.032824658Z [err]  Require stack:
+2026-07-17T16:46:27.032826838Z [err]  - /app/dist/index.js
+2026-07-17T16:46:27.032828958Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:27.032831128Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:27.032834368Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:27.032836828Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:27.032839188Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:27.032842148Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:27.032844518Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:27.032847538Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:27.032849838Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:27.032852158Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:27.032854988Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:27.032857218Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:27.032859358Z [err]  }
+2026-07-17T16:46:27.032861708Z [err]  
+2026-07-17T16:46:27.032864298Z [err]  Node.js v20.20.2
+2026-07-17T16:46:35.593999473Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:35.594003913Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:35.594006613Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:35.594009473Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:35.594012243Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:35.594014133Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:35.594015753Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:35.594017143Z [err]    throw err;
+2026-07-17T16:46:35.594019303Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:35.594020083Z [err]    ^
+2026-07-17T16:46:35.594021913Z [err]  }
+2026-07-17T16:46:35.594024993Z [err]  
+2026-07-17T16:46:35.594025283Z [err]  
+2026-07-17T16:46:35.594027623Z [err]  Node.js v20.20.2
+2026-07-17T16:46:35.594029463Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:35.594033273Z [err]  Require stack:
+2026-07-17T16:46:35.594036403Z [err]  - /app/dist/index.js
+2026-07-17T16:46:35.594039523Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:35.594042373Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:35.594045543Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:35.594048613Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:35.594053103Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:36.546274555Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:36.546282085Z [err]  }
+2026-07-17T16:46:36.546287265Z [err]  
+2026-07-17T16:46:36.546293515Z [err]  Node.js v20.20.2
+2026-07-17T16:46:36.546294585Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:36.546300465Z [err]    throw err;
+2026-07-17T16:46:36.546313825Z [err]    ^
+2026-07-17T16:46:36.546319695Z [err]  
+2026-07-17T16:46:36.546324755Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:36.546330695Z [err]  Require stack:
+2026-07-17T16:46:36.546334245Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:36.546335415Z [err]  - /app/dist/index.js
+2026-07-17T16:46:36.546347635Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:36.546355345Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:36.546359375Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:36.546363385Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:36.546367805Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:36.546372485Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:36.546376715Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:36.546380685Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:36.546385825Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:36.546390345Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:37.355254328Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:37.355256368Z [err]    throw err;
+2026-07-17T16:46:37.355258608Z [err]    ^
+2026-07-17T16:46:37.355260828Z [err]  
+2026-07-17T16:46:37.355263348Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:37.355266058Z [err]  Require stack:
+2026-07-17T16:46:37.355268728Z [err]  - /app/dist/index.js
+2026-07-17T16:46:37.355270928Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:37.355273208Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:37.355275818Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:37.355278528Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:37.355280728Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:37.355283968Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:37.355286308Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:37.355288688Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:37.355291338Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:37.355294278Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:37.355296588Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:37.355298678Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:37.355300818Z [err]  }
+2026-07-17T16:46:37.355303208Z [err]  
+2026-07-17T16:46:37.355305688Z [err]  Node.js v20.20.2
+2026-07-17T16:46:37.972220724Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:37.972224194Z [err]    throw err;
+2026-07-17T16:46:37.972227814Z [err]    ^
+2026-07-17T16:46:37.972231334Z [err]  
+2026-07-17T16:46:37.972234184Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:37.972236914Z [err]  Require stack:
+2026-07-17T16:46:37.972239684Z [err]  - /app/dist/index.js
+2026-07-17T16:46:37.972242614Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:37.972245944Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:37.972249124Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:37.972252184Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:37.972255354Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:37.972258314Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:37.972261154Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:37.972263834Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:37.972266624Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:37.972269194Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:37.972273204Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:37.972276154Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:37.972278844Z [err]  }
+2026-07-17T16:46:37.972281554Z [err]  
+2026-07-17T16:46:37.972284604Z [err]  Node.js v20.20.2
+2026-07-17T16:46:38.691361960Z [err]  }
+2026-07-17T16:46:38.691367460Z [err]  
+2026-07-17T16:46:38.691372440Z [err]  Node.js v20.20.2
+2026-07-17T16:46:38.691386130Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:38.691389860Z [err]    throw err;
+2026-07-17T16:46:38.691392740Z [err]    ^
+2026-07-17T16:46:38.691395970Z [err]  
+2026-07-17T16:46:38.691399360Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:38.691403750Z [err]  Require stack:
+2026-07-17T16:46:38.691406840Z [err]  - /app/dist/index.js
+2026-07-17T16:46:38.691410150Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:38.691413030Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:38.691415850Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:38.691418940Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:38.691421910Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:38.691425040Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:38.691427690Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:38.691430290Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:38.691433190Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:38.691436720Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:38.691439770Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:38.691443020Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:39.423390354Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:39.423392904Z [err]    throw err;
+2026-07-17T16:46:39.423395264Z [err]    ^
+2026-07-17T16:46:39.423397514Z [err]  
+2026-07-17T16:46:39.423400334Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:39.423402574Z [err]  Require stack:
+2026-07-17T16:46:39.423405044Z [err]  - /app/dist/index.js
+2026-07-17T16:46:39.423407624Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:39.423410114Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:39.423412234Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:39.423414414Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:39.423416664Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:39.423419284Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:39.423421564Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:39.423423994Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:39.423426754Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:39.423429214Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:39.423431674Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:39.423434354Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:39.423436524Z [err]  }
+2026-07-17T16:46:39.423438924Z [err]  
+2026-07-17T16:46:39.423441804Z [err]  Node.js v20.20.2
+2026-07-17T16:46:40.136294116Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:40.136297036Z [err]    throw err;
+2026-07-17T16:46:40.136299346Z [err]    ^
+2026-07-17T16:46:40.136301696Z [err]  
+2026-07-17T16:46:40.136304096Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:40.136306506Z [err]  Require stack:
+2026-07-17T16:46:40.136309036Z [err]  - /app/dist/index.js
+2026-07-17T16:46:40.136311806Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:40.136314476Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:40.136316726Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:40.136318996Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:40.136321256Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:40.136323436Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:40.136326166Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:40.136330086Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:40.136332176Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:40.136334486Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:40.136336626Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:40.136339466Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:40.136341816Z [err]  }
+2026-07-17T16:46:40.136343906Z [err]  
+2026-07-17T16:46:40.136345966Z [err]  Node.js v20.20.2
+2026-07-17T16:46:40.882336167Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:40.882341547Z [err]    throw err;
+2026-07-17T16:46:40.882345697Z [err]    ^
+2026-07-17T16:46:40.882349367Z [err]  
+2026-07-17T16:46:40.882353577Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:40.882357387Z [err]  Require stack:
+2026-07-17T16:46:40.882362207Z [err]  - /app/dist/index.js
+2026-07-17T16:46:40.882366017Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:40.882370037Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:40.882373577Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:40.882377607Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:40.882380917Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:40.882383877Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:40.882387387Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:40.882390747Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:40.882394047Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:40.882399597Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:40.882403647Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:40.882406667Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:40.882409927Z [err]  }
+2026-07-17T16:46:40.882413247Z [err]  
+2026-07-17T16:46:40.882416157Z [err]  Node.js v20.20.2
+2026-07-17T16:46:41.583681761Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:41.583687391Z [err]    throw err;
+2026-07-17T16:46:41.583690641Z [err]    ^
+2026-07-17T16:46:41.583699431Z [err]  
+2026-07-17T16:46:41.583702081Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:41.583704951Z [err]  Require stack:
+2026-07-17T16:46:41.583707671Z [err]  - /app/dist/index.js
+2026-07-17T16:46:41.583709981Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:41.583712331Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:41.583714721Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:41.583717481Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:41.583720241Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:41.583722711Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:41.583725141Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:41.583727401Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:41.583729711Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:41.583732121Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:41.583734481Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:41.583736901Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:41.583739201Z [err]  }
+2026-07-17T16:46:41.583741661Z [err]  
+2026-07-17T16:46:41.583744291Z [err]  Node.js v20.20.2
+2026-07-17T16:46:42.372245006Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:42.372251316Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:42.372253206Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:42.372255896Z [err]  }
+2026-07-17T16:46:42.372256576Z [err]    throw err;
+2026-07-17T16:46:42.372258946Z [err]  
+2026-07-17T16:46:42.372259216Z [err]    ^
+2026-07-17T16:46:42.372262256Z [err]  Node.js v20.20.2
+2026-07-17T16:46:42.372262836Z [err]  
+2026-07-17T16:46:42.372266906Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:42.372273086Z [err]  Require stack:
+2026-07-17T16:46:42.372275516Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2026-07-17T16:46:42.372277746Z [err]  - /app/dist/index.js
+2026-07-17T16:46:42.372281096Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:42.372286866Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:42.372287126Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:42.372292876Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:42.372296206Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:42.372299806Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:42.372305926Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:42.372306106Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:42.372312006Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:42.956845308Z [err]      at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2026-07-17T16:46:42.956856398Z [err]      at Module.load (node:internal/modules/cjs/loader:1266:32)
+2026-07-17T16:46:42.956861298Z [err]      at Module._load (node:internal/modules/cjs/loader:1091:12)
+2026-07-17T16:46:42.956868338Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {
+2026-07-17T16:46:42.956873198Z [err]    code: 'MODULE_NOT_FOUND',
+2026-07-17T16:46:42.956876948Z [err]  node:internal/modules/cjs/loader:1210
+2026-07-17T16:46:42.956879888Z [err]    requireStack: [ '/app/dist/index.js' ]
+2026-07-17T16:46:42.956884228Z [err]    throw err;
+2026-07-17T16:46:42.956886368Z [err]  }
+2026-07-17T16:46:42.956890628Z [err]  
+2026-07-17T16:46:42.956894208Z [err]  Node.js v20.20.2
+2026-07-17T16:46:42.956904888Z [err]    ^
+2026-07-17T16:46:42.956908078Z [err]  
+2026-07-17T16:46:42.956911138Z [err]  Error: Cannot find module 'express'
+2026-07-17T16:46:42.956914318Z [err]  Require stack:
+2026-07-17T16:46:42.956917248Z [err]  - /app/dist/index.js
+2026-07-17T16:46:42.956920168Z [err]      at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+2026-07-17T16:46:42.956922688Z [err]      at Module._load (node:internal/modules/cjs/loader:1038:27)
+2026-07-17T16:46:42.956926228Z [err]      at Module.require (node:internal/modules/cjs/loader:1289:19)
+2026-07-17T16:46:42.956929078Z [err]      at require (node:internal/modules/helpers:182:18)
+2026-07-17T16:46:42.956931818Z [err]      at Object.<anonymous> (/app/dist/index.js:10:35)
+2026-07-17T16:46:42.956935168Z [err]      at Module._compile (node:internal/modules/cjs/loader:1521:14)
