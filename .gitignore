@@ -1,5 +1,4 @@
 frontend/dist/
-backend/dist/
 
 # Local Netlify folder
 .netlify
