@@ -1,0 +1,34 @@
+2026-07-17T16:55:22.812803Z	Cloning repository...
+2026-07-17T16:55:25.306332Z	From https://github.com/astro1997-fish/Astrometa
+2026-07-17T16:55:25.308605Z	 * branch            9a2c1cd942fdb8bcc415443b33bf06108bbfb7dc -> FETCH_HEAD
+2026-07-17T16:55:25.309381Z	
+2026-07-17T16:55:25.591383Z	HEAD is now at 9a2c1cd Add seven asset images to attached_assets directory
+2026-07-17T16:55:25.592093Z	
+2026-07-17T16:55:25.728042Z	
+2026-07-17T16:55:25.728585Z	Using v2 root directory strategy
+2026-07-17T16:55:26.249474Z	Success: Finished cloning repository files
+2026-07-17T16:55:28.23272Z	Checking for configuration in a Wrangler configuration file (BETA)
+2026-07-17T16:55:28.233726Z	
+2026-07-17T16:55:28.448566Z	No Wrangler configuration file found. Continuing.
+2026-07-17T16:55:28.605494Z	Detected the following tools from environment: 
+2026-07-17T16:55:28.606268Z	Executing user command: cd frontend && npm ci && npm run build
+2026-07-17T16:55:35.080232Z	npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-07-17T16:55:35.935598Z	npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-07-17T16:55:35.936592Z	npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-17T16:55:36.481655Z	npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2026-07-17T16:55:36.565217Z	npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2026-07-17T16:55:39.073907Z	npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2026-07-17T16:55:39.086414Z	npm warn deprecated recharts@2.15.4: 1.x and 2.x branches are no longer active. Bump to Recharts v3 to receive latest features and bugfixes. See https://github.com/recharts/recharts/wiki/3.0-migration-guide
+2026-07-17T16:56:44.112642Z	npm error code ENOTFOUND
+2026-07-17T16:56:44.113175Z	npm error syscall getaddrinfo
+2026-07-17T16:56:44.113349Z	npm error errno ENOTFOUND
+2026-07-17T16:56:44.113427Z	npm error network request to http://package-firewall.replit.local/npm/ws/-/ws-8.21.0.tgz failed, reason: getaddrinfo ENOTFOUND package-firewall.replit.local
+2026-07-17T16:56:44.113471Z	npm error network This is a problem related to network connectivity.
+2026-07-17T16:56:44.113506Z	npm error network In most cases you are behind a proxy or have bad network settings.
+2026-07-17T16:56:44.113546Z	npm error network
+2026-07-17T16:56:44.113579Z	npm error network If you are behind a proxy, please make sure that the
+2026-07-17T16:56:44.113612Z	npm error network 'proxy' config is set properly.  See: 'npm help config'
+2026-07-17T16:56:44.11415Z	npm error A complete log of this run can be found in: /opt/buildhome/.npm/_logs/2026-07-17T16_55_31_880Z-debug-0.log
+2026-07-17T16:56:44.508348Z	Failed: Error while executing user command. Exited with error code: 1
+2026-07-17T16:56:44.515301Z	Failed: build command exited with code: 1
+2026-07-17T16:56:45.130293Z	Failed: error occurred while running build command
