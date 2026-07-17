@@ -2,12 +2,15 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Copy pre-built dist and package files
-COPY backend/dist/ ./dist/
-COPY backend/package*.json ./
+# Copy lock files first for better layer caching
+COPY backend/package.json ./package.json
+COPY backend/package-lock.json ./package-lock.json
 
-# Install all dependencies (dotenv and others needed at runtime)
-RUN npm install
+# Install only production dependencies using the exact lock file
+RUN npm ci --omit=dev
+
+# Copy pre-built dist
+COPY backend/dist/ ./dist/
 
 EXPOSE 8000
 ENV NODE_ENV=production
