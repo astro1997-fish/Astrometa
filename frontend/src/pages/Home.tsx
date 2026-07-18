@@ -472,7 +472,7 @@ export default function Home() {
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
             {[
-              { name: 'Bronze', min: '$5', ret: '8–15%', icon: '🥉', glow: 'hover:ring-glow-bronze' },
+              { name: 'Bronze', min: '$2,000', ret: '8–15%', icon: '🥉', glow: 'hover:ring-glow-bronze' },
               { name: 'Silver', min: '$5,000', ret: '15–30%', icon: '🥈', glow: 'hover:ring-glow-blue' },
               { name: 'Gold',   min: '$18,000', ret: '25–50%', icon: '🥇', glow: 'hover:ring-glow-gold', popular: true },
               { name: 'Platinum', min: '$35,000', ret: 'Custom', icon: '💎', glow: 'hover:ring-glow-violet' },

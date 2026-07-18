@@ -28,7 +28,7 @@ const PACKAGES: Package[] = [
     id: 'bronze',
     icon: '🥉',
     nameKey: 'packages.bronzeName',
-    min: 5,
+    min: 2000,
     max: 4999,
     returnRange: '8%–15%',
     risk: 2,
