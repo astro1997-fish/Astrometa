@@ -2,6 +2,15 @@
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv/config')
 }
+
+// Prevent unhandled promise rejections (e.g. from ethers.js RPC errors) from
+// crashing the entire process and taking the API down with it.
+process.on('unhandledRejection', (reason) => {
+  console.error('[process] Unhandled promise rejection (suppressed crash):', reason)
+})
+process.on('uncaughtException', (err) => {
+  console.error('[process] Uncaught exception (suppressed crash):', err)
+})
 import express from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
