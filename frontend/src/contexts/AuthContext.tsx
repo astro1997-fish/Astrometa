@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string, country: string) => {
     // Use the backend admin API so no confirmation email is sent (avoids Supabase rate limits)
-    const res = await fetch('/api/auth/register', {
+    const res = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, fullName, country }),
